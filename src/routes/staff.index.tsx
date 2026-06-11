@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, Lock, User, ShieldCheck, ArrowLeft } from "lucide-react";
 import symbol from "@/assets/fli-symbol.png.asset.json";
 
-export const Route = createFileRoute("/staff")({
+export const Route = createFileRoute("/staff/")({
   head: () => ({
     meta: [
       { title: "Painel de Staff — Furry's Life Inc." },
