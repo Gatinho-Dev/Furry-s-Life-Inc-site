@@ -1,4 +1,6 @@
 import symbol from "@/assets/fli-symbol.png.asset.json";
+import { DISCORD_URL } from "@/lib/site-data";
+import { MessageCircle } from "lucide-react";
 
 export function Footer() {
   const cols = [
@@ -7,7 +9,7 @@ export function Footer() {
     { title: "Contato", links: ["Imprensa", "Parcerias", "Suporte", "Investidores"] },
   ];
   return (
-    <footer className="mt-10 border-t border-border">
+    <footer className="mt-10 border-t border-border bg-secondary/40">
       <div className="mx-auto max-w-6xl px-6 py-12">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
@@ -18,6 +20,11 @@ export function Footer() {
             <p className="mt-3 max-w-sm text-sm text-muted-foreground">
               Conectando criatividade, tecnologia e experiências para o futuro.
             </p>
+            <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background">
+              <MessageCircle className="h-4 w-4 text-[color:var(--color-discord)]" />
+              Entrar no Discord
+            </a>
           </div>
           {cols.map((c) => (
             <div key={c.title}>

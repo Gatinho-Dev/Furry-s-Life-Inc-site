@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, Lock, User, ShieldCheck, ArrowLeft } from "lucide-react";
 import symbol from "@/assets/fli-symbol.png.asset.json";
 
+export const STAFF_USER = "Gatinho_Dev";
+export const STAFF_PASS = "Lobo_2033";
+
 export const Route = createFileRoute("/staff/")({
   head: () => ({
     meta: [
@@ -32,14 +35,14 @@ function StaffLogin() {
     setErr(false);
     setLoading(true);
     setTimeout(() => {
-      if (user === "Lobo_2033" && pass === "L") {
+      if (user === STAFF_USER && pass === STAFF_PASS) {
         sessionStorage.setItem("fli_staff", "1");
         nav({ to: "/staff/dashboard" });
       } else {
         setErr(true);
         setLoading(false);
       }
-    }, 700);
+    }, 600);
   };
 
   return (
@@ -52,9 +55,9 @@ function StaffLogin() {
       <div className="relative w-full max-w-md">
         <div className="glass-card animate-fade-up rounded-3xl p-8">
           <div className="flex flex-col items-center text-center">
-            <div className="relative">
-              <img src={symbol.url} alt="" className="h-14 w-14" />
-              <span className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary glow-primary">
+            <div className="relative rounded-2xl border border-border bg-secondary/60 p-3">
+              <img src={symbol.url} alt="" className="h-10 w-10" />
+              <span className="absolute -right-1.5 -top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary shadow">
                 <ShieldCheck className="h-3 w-3 text-primary-foreground" />
               </span>
             </div>
@@ -68,7 +71,7 @@ function StaffLogin() {
               <div className="relative">
                 <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input value={user} onChange={(e) => setUser(e.target.value)} required
-                  className="w-full rounded-xl border border-border bg-secondary/40 py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-primary focus:bg-secondary/70"
+                  className="w-full rounded-xl border border-border bg-card py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
                   placeholder="Digite seu usuário" />
               </div>
             </label>
@@ -77,7 +80,7 @@ function StaffLogin() {
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input type={show ? "text" : "password"} value={pass} onChange={(e) => setPass(e.target.value)} required
-                  className="w-full rounded-xl border border-border bg-secondary/40 py-3 pl-10 pr-10 text-sm outline-none transition-colors focus:border-primary focus:bg-secondary/70"
+                  className="w-full rounded-xl border border-border bg-card py-3 pl-10 pr-10 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
                   placeholder="••••••" />
                 <button type="button" onClick={() => setShow(!show)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -93,14 +96,10 @@ function StaffLogin() {
             )}
 
             <button type="submit" disabled={loading}
-              className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-all hover:opacity-90 glow-primary disabled:opacity-70">
+              className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-70">
               {loading ? "Autenticando..." : "Entrar no painel"}
             </button>
           </form>
-
-          <div className="mt-6 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-xs text-muted-foreground">
-            <span className="text-foreground">Demo:</span> usuário <code className="text-primary">Lobo_2033</code> · senha <code className="text-primary">L</code>
-          </div>
         </div>
       </div>
     </div>
