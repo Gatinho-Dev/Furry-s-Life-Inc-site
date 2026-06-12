@@ -1,11 +1,5 @@
 import { subsidiaries } from "@/lib/site-data";
 
-const accentMap: Record<string, string> = {
-  blue: "from-primary/30 to-primary/0 text-primary",
-  purple: "from-accent/30 to-accent/0 text-accent",
-  green: "from-success/30 to-success/0 text-success",
-};
-
 export function Subsidiaries() {
   return (
     <section id="subsidiarias" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-20">
@@ -24,16 +18,15 @@ export function Subsidiaries() {
           const Icon = s.icon;
           return (
             <article key={s.name}
-              className="glass-card group relative overflow-hidden rounded-2xl p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40">
-              <div className={`pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-radial bg-gradient-to-br ${accentMap[s.accent]} opacity-50 blur-2xl transition-opacity group-hover:opacity-80`} />
-              <div className={`relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-secondary/60 ${accentMap[s.accent].split(" ").pop()}`}>
+              className="glass-card group rounded-2xl p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-primary/5 text-primary">
                 <Icon className="h-5 w-5" />
               </div>
-              <div className="relative mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {s.category}
               </div>
-              <h3 className="relative mt-1 font-display text-lg font-semibold">{s.name}</h3>
-              <p className="relative mt-2 text-sm text-muted-foreground">{s.description}</p>
+              <h3 className="mt-1 font-display text-lg font-semibold">{s.name}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{s.description}</p>
             </article>
           );
         })}

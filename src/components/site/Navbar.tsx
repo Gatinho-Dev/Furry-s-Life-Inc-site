@@ -1,5 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import symbol from "@/assets/fli-symbol.png.asset.json";
+import { DISCORD_URL } from "@/lib/site-data";
+import { MessageCircle } from "lucide-react";
 
 export function Navbar() {
   const links = [
@@ -26,10 +28,17 @@ export function Navbar() {
               </a>
             ))}
           </div>
-          <Link to="/staff"
-            className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90 glow-primary">
-            Painel de Staff
-          </Link>
+          <div className="flex items-center gap-2">
+            <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer"
+              className="hidden items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary sm:inline-flex">
+              <MessageCircle className="h-4 w-4 text-[color:var(--color-discord)]" />
+              Discord
+            </a>
+            <Link to="/staff"
+              className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90">
+              Painel de Staff
+            </Link>
+          </div>
         </nav>
       </div>
     </header>
