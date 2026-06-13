@@ -1,0 +1,7 @@
+# Furry's Life Inc.
+
+> Holding corporativa fictícia multissetorial que reúne 14 subsidiárias em tecnologia, jogos, turismo, educação, energia, saúde e entretenimento.
+
+## Pages
+
+- [Home](/): Visão geral da holding, subsidiárias, notícias e contato.

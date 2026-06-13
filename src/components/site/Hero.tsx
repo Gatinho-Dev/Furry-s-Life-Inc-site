@@ -16,6 +16,9 @@ export function Hero() {
 
         <h1 className="mt-6 animate-fade-up text-balance font-display text-4xl font-bold leading-tight md:text-6xl">
           <span className="text-gradient">Furry's Life Inc.</span>
+          <span className="mt-2 block text-xl font-medium text-muted-foreground md:text-2xl">
+            Holding corporativa multissetorial
+          </span>
         </h1>
 
         <p className="mx-auto mt-5 max-w-2xl animate-fade-up text-balance text-base text-muted-foreground md:text-lg">
