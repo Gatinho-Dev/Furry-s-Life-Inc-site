@@ -83,6 +83,7 @@ function StaffLogin() {
                   className="w-full rounded-xl border border-border bg-card py-3 pl-10 pr-10 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
                   placeholder="••••••" />
                 <button type="button" onClick={() => setShow(!show)}
+                  aria-label={show ? "Ocultar senha" : "Mostrar senha"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>

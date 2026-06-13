@@ -11,7 +11,8 @@ export const Route = createFileRoute("/staff/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — Painel de Staff · Furry's Life Inc." },
-      { name: "description", content: "Painel interno da Furry's Life Inc." },
+      { name: "description", content: "Painel interno restrito da Furry's Life Inc. para gestão de administradores, avisos e subsidiárias da holding." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: Dashboard,
@@ -135,6 +136,7 @@ function Dashboard() {
                 <div className="hidden items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 md:flex">
                   <Search className="h-4 w-4 text-muted-foreground" />
                   <input value={search} onChange={(e) => setSearch(e.target.value)}
+                    aria-label="Buscar administrador"
                     placeholder="Buscar administrador..."
                     className="w-56 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60" />
                 </div>
