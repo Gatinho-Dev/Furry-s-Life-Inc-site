@@ -77,6 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "google-site-verification", content: "xB3GJr00-U0Xr9BJcVtmzQvupi5m4UfMXBeLD2BXFmo" },
       { title: "Furry's Life Inc. — Inovação e Tecnologia" },
       { name: "description", content: "Furry's Life Inc. é uma holding corporativa multissetorial que reúne subsidiárias em tecnologia, jogos, turismo, educação, energia e saúde." },
       { name: "author", content: "Furry's Life Inc." },
