@@ -40,7 +40,7 @@ export function Contact() {
             <textarea required rows={5} placeholder="Mensagem" className={field}
               value={form.mensagem} onChange={(e) => setForm({ ...form, mensagem: e.target.value })} />
             <button type="submit"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-all hover:opacity-90 glow-primary disabled:opacity-70"
+              className="glass-button inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:opacity-70"
               disabled={sent}>
               {sent ? (<><Check className="h-4 w-4" /> Mensagem enviada</>) : (<><Send className="h-4 w-4" /> Enviar mensagem</>)}
             </button>

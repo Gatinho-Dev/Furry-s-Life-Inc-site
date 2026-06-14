@@ -30,12 +30,12 @@ export function Navbar() {
           </div>
           <div className="flex items-center gap-2">
             <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer"
-              className="glass-button hidden items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium hover:[&]:glass-button-hover sm:inline-flex">
+              className="glass-button hidden items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium sm:inline-flex">
               <MessageCircle className="h-4 w-4 text-[color:var(--color-discord)]" />
               Discord
             </a>
             <Link to="/staff"
-              className="glass-button rounded-full px-3.5 py-1.5 text-[13px] font-medium hover:[&]:glass-button-hover">
+              className="glass-button rounded-full px-3.5 py-1.5 text-[13px] font-medium">
               Painel de Staff
             </Link>
           </div>
