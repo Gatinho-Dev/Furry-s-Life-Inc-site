@@ -71,6 +71,12 @@ function Dashboard() {
 
   const logout = () => { sessionStorage.removeItem("fli_staff"); nav({ to: "/staff" }); };
 
+  const filteredAdmins = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return admins;
+    return admins.filter((a) => a.name.toLowerCase().includes(q) || a.role.toLowerCase().includes(q));
+  }, [admins, search]);
+
   if (!ready) return null;
 
   const onlineCount = admins.filter((a) => a.status === "online").length;
@@ -81,12 +87,6 @@ function Dashboard() {
     { key: "subs", icon: Building2, label: "Subsidiárias" },
     { key: "settings", icon: Settings, label: "Configurações" },
   ];
-
-  const filteredAdmins = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return admins;
-    return admins.filter((a) => a.name.toLowerCase().includes(q) || a.role.toLowerCase().includes(q));
-  }, [admins, search]);
 
   return (
     <div className="min-h-screen">
