@@ -31,25 +31,24 @@
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-discord: var(--discord);
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
-  --radius: 0.875rem;
-  /* Light, professional, corporate */
-  --background: oklch(0.99 0.003 250);
+  --radius: 1.25rem;
+  --background: oklch(0.985 0.005 250);
   --foreground: oklch(0.20 0.03 260);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.20 0.03 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.20 0.03 260);
-  --primary: oklch(0.52 0.18 258);          /* corporate blue */
+  --primary: oklch(0.52 0.18 258);
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.96 0.012 250);
   --secondary-foreground: oklch(0.25 0.03 260);
   --muted: oklch(0.96 0.012 250);
-  --muted-foreground: oklch(0.50 0.02 260);
+  --muted-foreground: oklch(0.48 0.02 260);
   --accent: oklch(0.96 0.012 250);
   --accent-foreground: oklch(0.25 0.03 260);
   --destructive: oklch(0.60 0.22 25);
@@ -58,7 +57,7 @@
   --input: oklch(0.95 0.01 250);
   --ring: oklch(0.52 0.18 258);
   --success: oklch(0.62 0.15 155);
-  --discord: oklch(0.55 0.18 275);          /* discord blurple */
+  --discord: oklch(0.55 0.18 275);
 }
 
 @layer base {
@@ -68,47 +67,96 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
     background-image:
-      radial-gradient(900px 600px at 12% -10%, color-mix(in oklab, var(--primary) 16%, transparent), transparent 60%),
-      radial-gradient(800px 500px at 110% 10%, color-mix(in oklab, var(--discord) 18%, transparent), transparent 60%),
-      radial-gradient(700px 500px at 50% 110%, color-mix(in oklab, var(--success) 12%, transparent), transparent 60%);
+      radial-gradient(1100px 700px at 8% -8%, color-mix(in oklab, var(--primary) 28%, transparent), transparent 60%),
+      radial-gradient(900px 600px at 105% 5%, color-mix(in oklab, var(--discord) 32%, transparent), transparent 60%),
+      radial-gradient(800px 600px at 50% 50%, color-mix(in oklab, oklch(0.75 0.18 330) 22%, transparent), transparent 65%),
+      radial-gradient(800px 600px at 95% 95%, color-mix(in oklab, var(--success) 22%, transparent), transparent 60%),
+      radial-gradient(700px 500px at 5% 100%, color-mix(in oklab, oklch(0.78 0.16 60) 24%, transparent), transparent 60%);
     background-attachment: fixed;
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.022em; font-weight: 700; }
 }
+
+/* ============ Liquid Glass (iOS 26 / macOS 26) ============ */
 
 @utility glass-card {
   background: linear-gradient(
       135deg,
-      color-mix(in oklab, white 70%, transparent) 0%,
-      color-mix(in oklab, white 38%, transparent) 100%
+      color-mix(in oklab, white 22%, transparent) 0%,
+      color-mix(in oklab, white 8%, transparent) 100%
     );
-  backdrop-filter: blur(22px) saturate(180%);
-  border: 1px solid color-mix(in oklab, white 60%, transparent);
+  backdrop-filter: blur(30px) saturate(190%);
+  border: 1px solid color-mix(in oklab, white 35%, transparent);
   box-shadow:
-    inset 0 1px 0 0 color-mix(in oklab, white 70%, transparent),
-    inset 0 -1px 0 0 color-mix(in oklab, var(--primary) 8%, transparent),
+    inset 0 1px 0 0 color-mix(in oklab, white 55%, transparent),
+    inset 0 -1px 0 0 color-mix(in oklab, white 12%, transparent),
+    inset 1px 0 0 0 color-mix(in oklab, white 25%, transparent),
     0 1px 2px 0 rgb(15 23 42 / 0.04),
-    0 20px 50px -20px rgb(15 23 42 / 0.18);
+    0 24px 60px -28px rgb(15 23 42 / 0.30);
 }
 
 @utility glass-pill {
   background: linear-gradient(
       135deg,
-      color-mix(in oklab, white 75%, transparent),
-      color-mix(in oklab, white 35%, transparent)
+      color-mix(in oklab, white 28%, transparent),
+      color-mix(in oklab, white 10%, transparent)
     );
-  backdrop-filter: blur(18px) saturate(180%);
-  border: 1px solid color-mix(in oklab, white 65%, transparent);
+  backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid color-mix(in oklab, white 40%, transparent);
   box-shadow:
-    inset 0 1px 0 0 color-mix(in oklab, white 80%, transparent),
-    0 10px 30px -15px rgb(15 23 42 / 0.18);
+    inset 0 1px 0 0 color-mix(in oklab, white 70%, transparent),
+    inset 0 -1px 0 0 color-mix(in oklab, white 10%, transparent),
+    0 14px 38px -18px rgb(15 23 42 / 0.28);
 }
 
 @utility glass-panel {
-  background: color-mix(in oklab, white 55%, transparent);
-  backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid color-mix(in oklab, white 55%, transparent);
+  background: color-mix(in oklab, white 14%, transparent);
+  backdrop-filter: blur(36px) saturate(200%);
+  border: 1px solid color-mix(in oklab, white 30%, transparent);
+}
+
+/* Pure, colorless liquid-glass button (used everywhere) */
+@utility glass-button {
+  position: relative;
+  background: linear-gradient(
+      135deg,
+      color-mix(in oklab, white 30%, transparent) 0%,
+      color-mix(in oklab, white 10%, transparent) 100%
+    );
+  backdrop-filter: blur(22px) saturate(190%);
+  border: 1px solid color-mix(in oklab, white 45%, transparent);
+  color: var(--foreground);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklab, white 75%, transparent),
+    inset 0 -1px 0 0 color-mix(in oklab, white 8%, transparent),
+    0 10px 28px -14px rgb(15 23 42 / 0.30);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1),
+              background 320ms ease;
+  &:hover {
+    background: linear-gradient(
+        135deg,
+        color-mix(in oklab, white 48%, transparent) 0%,
+        color-mix(in oklab, white 20%, transparent) 100%
+      );
+    transform: translateY(-2px) scale(1.02);
+    box-shadow:
+      inset 0 1px 0 0 color-mix(in oklab, white 90%, transparent),
+      inset 0 0 24px 0 color-mix(in oklab, white 22%, transparent),
+      0 22px 48px -18px rgb(15 23 42 / 0.40);
+  }
+  &:active { transform: translateY(0) scale(0.99); }
+}
+
+/* macOS-dock-style hover lift for nav links */
+@utility dock-link {
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+              background 280ms ease,
+              color 280ms ease;
+  transform-origin: bottom center;
 }
 
 @utility text-gradient {
@@ -124,6 +172,39 @@
     linear-gradient(to bottom, color-mix(in oklab, var(--border) 80%, transparent) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent 75%);
+}
+
+/* iOS 26 toggle */
+@utility ios-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 56px;
+  height: 32px;
+  border-radius: 9999px;
+  background: color-mix(in oklab, white 18%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid color-mix(in oklab, white 35%, transparent);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklab, white 50%, transparent),
+    inset 0 -1px 2px 0 rgb(15 23 42 / 0.08);
+  transition: background 300ms ease;
+  cursor: pointer;
+}
+@utility ios-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #ffffff, #e8edf3);
+  box-shadow:
+    0 2px 4px rgb(15 23 42 / 0.15),
+    0 6px 14px -6px rgb(15 23 42 / 0.30),
+    inset 0 1px 0 0 rgb(255 255 255 / 0.9);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 320ms ease;
 }
 
 @keyframes float-slow {
