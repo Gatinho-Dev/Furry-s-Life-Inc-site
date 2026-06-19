@@ -9,20 +9,20 @@ export const Route = createFileRoute("/cond/staff")({
   component: CondStaff,
 });
 
-type Resident = { id: string; full_name: string; unit: string; contact: string | null; notes: string | null };
+type Resident = { id: string; full_name: string; unit: string; phone: string | null; notes: string | null };
 
 function CondStaff() {
   const nav = useNavigate();
   const auth = useAuth();
   const [residents, setResidents] = useState<Resident[] | null>(null);
-  const [form, setForm] = useState({ full_name: "", unit: "", contact: "", notes: "" });
+  const [form, setForm] = useState({ full_name: "", unit: "", phone: "", notes: "" });
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => { if (!auth.loading && !auth.user) nav({ to: "/auth" }); }, [auth.loading, auth.user, nav]);
 
   const load = async () => {
-    const { data, error } = await supabase.from("residents").select("id, full_name, unit, contact, notes").order("unit");
+    const { data, error } = await supabase.from("residents").select("id, full_name, unit, phone, notes").order("unit");
     if (error) setErr(error.message); else setResidents((data ?? []) as Resident[]);
   };
   useEffect(() => { if (auth.user) load(); }, [auth.user]);
@@ -42,12 +42,12 @@ function CondStaff() {
     setSaving(true); setErr(null);
     const { error } = await supabase.from("residents").insert({
       full_name: form.full_name, unit: form.unit,
-      contact: form.contact || null, notes: form.notes || null,
+      phone: form.phone || null, notes: form.notes || null,
       created_by: auth.user!.id,
     });
     setSaving(false);
     if (error) { setErr(error.message); return; }
-    setForm({ full_name: "", unit: "", contact: "", notes: "" });
+    setForm({ full_name: "", unit: "", phone: "", notes: "" });
     load();
   };
 
@@ -80,7 +80,7 @@ function CondStaff() {
         <form onSubmit={add} className="glass-card grid gap-3 rounded-2xl p-5 sm:grid-cols-2">
           <input required placeholder="Nome completo" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} className={fld} />
           <input required placeholder="Unidade (ex: Bloco A · 101)" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className={fld} />
-          <input placeholder="Contato" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} className={fld} />
+          <input placeholder="Telefone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={fld} />
           <input placeholder="Observações" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={fld} />
           <button disabled={saving} className="sm:col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-70">
             <Plus className="h-4 w-4" /> {saving ? "Salvando..." : "Adicionar morador"}
@@ -99,7 +99,7 @@ function CondStaff() {
                   <div key={r.id} className="flex items-center justify-between gap-3 p-4">
                     <div>
                       <div className="font-medium">{r.full_name}</div>
-                      <div className="text-xs text-muted-foreground">{r.unit}{r.contact ? ` · ${r.contact}` : ""}</div>
+                      <div className="text-xs text-muted-foreground">{r.unit}{r.phone ? ` · ${r.phone}` : ""}</div>
                       {r.notes && <div className="mt-1 text-xs text-muted-foreground">{r.notes}</div>}
                     </div>
                     <button onClick={() => remove(r.id)} className="rounded-lg border border-border bg-card p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">

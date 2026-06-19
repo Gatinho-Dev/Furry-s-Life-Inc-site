@@ -41,7 +41,7 @@ function CollegeStaff() {
     setErr(null);
     const { error } = await supabase.from("students").insert({
       full_name: form.full_name, enrollment: form.enrollment,
-      course: form.course || null, created_by: auth.user!.id,
+      course: form.course || null,
     });
     if (error) { setErr(error.message); return; }
     setForm({ full_name: "", enrollment: "", course: "" });
