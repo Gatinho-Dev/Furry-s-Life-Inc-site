@@ -15,7 +15,13 @@ import { Route as LifeServerRouteImport } from './routes/life-server'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StaffIndexRouteImport } from './routes/staff.index'
+import { Route as CondIndexRouteImport } from './routes/cond.index'
+import { Route as CollegeIndexRouteImport } from './routes/college.index'
+import { Route as AgencyIndexRouteImport } from './routes/agency.index'
 import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
+import { Route as CondStaffRouteImport } from './routes/cond.staff'
+import { Route as CollegeStaffRouteImport } from './routes/college.staff'
+import { Route as AgencyStaffRouteImport } from './routes/agency.staff'
 
 const StaffRoute = StaffRouteImport.update({
   id: '/staff',
@@ -47,10 +53,40 @@ const StaffIndexRoute = StaffIndexRouteImport.update({
   path: '/',
   getParentRoute: () => StaffRoute,
 } as any)
+const CondIndexRoute = CondIndexRouteImport.update({
+  id: '/cond/',
+  path: '/cond/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollegeIndexRoute = CollegeIndexRouteImport.update({
+  id: '/college/',
+  path: '/college/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgencyIndexRoute = AgencyIndexRouteImport.update({
+  id: '/agency/',
+  path: '/agency/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StaffDashboardRoute = StaffDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => StaffRoute,
+} as any)
+const CondStaffRoute = CondStaffRouteImport.update({
+  id: '/cond/staff',
+  path: '/cond/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollegeStaffRoute = CollegeStaffRouteImport.update({
+  id: '/college/staff',
+  path: '/college/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgencyStaffRoute = AgencyStaffRouteImport.update({
+  id: '/agency/staff',
+  path: '/agency/staff',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -59,7 +95,13 @@ export interface FileRoutesByFullPath {
   '/life-server': typeof LifeServerRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRouteWithChildren
+  '/agency/staff': typeof AgencyStaffRoute
+  '/college/staff': typeof CollegeStaffRoute
+  '/cond/staff': typeof CondStaffRoute
   '/staff/dashboard': typeof StaffDashboardRoute
+  '/agency/': typeof AgencyIndexRoute
+  '/college/': typeof CollegeIndexRoute
+  '/cond/': typeof CondIndexRoute
   '/staff/': typeof StaffIndexRoute
 }
 export interface FileRoutesByTo {
@@ -67,7 +109,13 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/agency/staff': typeof AgencyStaffRoute
+  '/college/staff': typeof CollegeStaffRoute
+  '/cond/staff': typeof CondStaffRoute
   '/staff/dashboard': typeof StaffDashboardRoute
+  '/agency': typeof AgencyIndexRoute
+  '/college': typeof CollegeIndexRoute
+  '/cond': typeof CondIndexRoute
   '/staff': typeof StaffIndexRoute
 }
 export interface FileRoutesById {
@@ -77,7 +125,13 @@ export interface FileRoutesById {
   '/life-server': typeof LifeServerRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRouteWithChildren
+  '/agency/staff': typeof AgencyStaffRoute
+  '/college/staff': typeof CollegeStaffRoute
+  '/cond/staff': typeof CondStaffRoute
   '/staff/dashboard': typeof StaffDashboardRoute
+  '/agency/': typeof AgencyIndexRoute
+  '/college/': typeof CollegeIndexRoute
+  '/cond/': typeof CondIndexRoute
   '/staff/': typeof StaffIndexRoute
 }
 export interface FileRouteTypes {
@@ -88,7 +142,13 @@ export interface FileRouteTypes {
     | '/life-server'
     | '/sitemap.xml'
     | '/staff'
+    | '/agency/staff'
+    | '/college/staff'
+    | '/cond/staff'
     | '/staff/dashboard'
+    | '/agency/'
+    | '/college/'
+    | '/cond/'
     | '/staff/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -96,7 +156,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/life-server'
     | '/sitemap.xml'
+    | '/agency/staff'
+    | '/college/staff'
+    | '/cond/staff'
     | '/staff/dashboard'
+    | '/agency'
+    | '/college'
+    | '/cond'
     | '/staff'
   id:
     | '__root__'
@@ -105,7 +171,13 @@ export interface FileRouteTypes {
     | '/life-server'
     | '/sitemap.xml'
     | '/staff'
+    | '/agency/staff'
+    | '/college/staff'
+    | '/cond/staff'
     | '/staff/dashboard'
+    | '/agency/'
+    | '/college/'
+    | '/cond/'
     | '/staff/'
   fileRoutesById: FileRoutesById
 }
@@ -115,6 +187,12 @@ export interface RootRouteChildren {
   LifeServerRoute: typeof LifeServerRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffRoute: typeof StaffRouteWithChildren
+  AgencyStaffRoute: typeof AgencyStaffRoute
+  CollegeStaffRoute: typeof CollegeStaffRoute
+  CondStaffRoute: typeof CondStaffRoute
+  AgencyIndexRoute: typeof AgencyIndexRoute
+  CollegeIndexRoute: typeof CollegeIndexRoute
+  CondIndexRoute: typeof CondIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -161,12 +239,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaffIndexRouteImport
       parentRoute: typeof StaffRoute
     }
+    '/cond/': {
+      id: '/cond/'
+      path: '/cond'
+      fullPath: '/cond/'
+      preLoaderRoute: typeof CondIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/college/': {
+      id: '/college/'
+      path: '/college'
+      fullPath: '/college/'
+      preLoaderRoute: typeof CollegeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agency/': {
+      id: '/agency/'
+      path: '/agency'
+      fullPath: '/agency/'
+      preLoaderRoute: typeof AgencyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/staff/dashboard': {
       id: '/staff/dashboard'
       path: '/dashboard'
       fullPath: '/staff/dashboard'
       preLoaderRoute: typeof StaffDashboardRouteImport
       parentRoute: typeof StaffRoute
+    }
+    '/cond/staff': {
+      id: '/cond/staff'
+      path: '/cond/staff'
+      fullPath: '/cond/staff'
+      preLoaderRoute: typeof CondStaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/college/staff': {
+      id: '/college/staff'
+      path: '/college/staff'
+      fullPath: '/college/staff'
+      preLoaderRoute: typeof CollegeStaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agency/staff': {
+      id: '/agency/staff'
+      path: '/agency/staff'
+      fullPath: '/agency/staff'
+      preLoaderRoute: typeof AgencyStaffRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -189,6 +309,12 @@ const rootRouteChildren: RootRouteChildren = {
   LifeServerRoute: LifeServerRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffRoute: StaffRouteWithChildren,
+  AgencyStaffRoute: AgencyStaffRoute,
+  CollegeStaffRoute: CollegeStaffRoute,
+  CondStaffRoute: CondStaffRoute,
+  AgencyIndexRoute: AgencyIndexRoute,
+  CollegeIndexRoute: CollegeIndexRoute,
+  CondIndexRoute: CondIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
