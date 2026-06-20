@@ -93,9 +93,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "canonical", href: "https://furrys.life/" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Furry's Life Inc.",
+          url: "https://furrys.life",
+          logo: "https://furrys.life/favicon.ico",
+          description: "Holding corporativa multissetorial com 14 subsidiárias em tecnologia, jogos, turismo, educação, energia e saúde.",
+          sameAs: ["https://bio.site/lifeserver"],
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,
