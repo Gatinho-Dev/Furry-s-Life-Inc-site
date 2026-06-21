@@ -136,6 +136,99 @@ export type Database = {
         }
         Relationships: []
       }
+      osint_case_edges: {
+        Row: {
+          created_at: string
+          id: string
+          investigation_id: string
+          label: string | null
+          source_node: string
+          target_node: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          investigation_id: string
+          label?: string | null
+          source_node: string
+          target_node: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          investigation_id?: string
+          label?: string | null
+          source_node?: string
+          target_node?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "osint_case_edges_investigation_id_fkey"
+            columns: ["investigation_id"]
+            isOneToOne: false
+            referencedRelation: "osint_investigations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "osint_case_edges_source_node_fkey"
+            columns: ["source_node"]
+            isOneToOne: false
+            referencedRelation: "osint_case_nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "osint_case_edges_target_node_fkey"
+            columns: ["target_node"]
+            isOneToOne: false
+            referencedRelation: "osint_case_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      osint_case_nodes: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          investigation_id: string
+          label: string
+          node_type: string
+          pos_x: number
+          pos_y: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: string
+          investigation_id: string
+          label: string
+          node_type: string
+          pos_x?: number
+          pos_y?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          investigation_id?: string
+          label?: string
+          node_type?: string
+          pos_x?: number
+          pos_y?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "osint_case_nodes_investigation_id_fkey"
+            columns: ["investigation_id"]
+            isOneToOne: false
+            referencedRelation: "osint_investigations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       osint_findings: {
         Row: {
           created_at: string
