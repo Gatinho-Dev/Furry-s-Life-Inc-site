@@ -43,12 +43,19 @@ function AuthPage() {
         if (error) throw error;
         nav({ to: "/staff/dashboard" });
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email, password,
           options: { emailRedirectTo: `${window.location.origin}/staff/dashboard` },
         });
         if (error) throw error;
-        setInfo("Conta criada. Verifique seu email para confirmar (se exigido).");
+        if (data.session) {
+          nav({ to: "/staff/dashboard" });
+        } else {
+          const { error: signinErr } = await supabase.auth.signInWithPassword({ email, password });
+          if (!signinErr) { nav({ to: "/staff/dashboard" }); return; }
+          setInfo("Conta criada. Faça login para continuar.");
+          setMode("signin");
+        }
       }
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Falha ao autenticar");
