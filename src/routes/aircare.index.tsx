@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Wind, Factory, Sun, Leaf, ShieldCheck, ArrowRight } from "lucide-react";
 
-export const Route = createFileRoute("/aircare")({
+export const Route = createFileRoute("/aircare/")({
   head: () => ({
     meta: [
       { title: "Life AirCare — Ar limpo para fábricas" },

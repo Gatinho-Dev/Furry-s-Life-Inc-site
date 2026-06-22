@@ -36,7 +36,7 @@ export const subsidiaries: Subsidiary[] = [
   { key: "soccer",   name: "Life Soccer",                  category: "Esportes",          description: "Clube de futebol e organização de eventos esportivos.",         icon: Trophy },
   { key: "agency",   name: "Life Agency",                  category: "Inteligência",      description: "Agência de inteligência e operações especiais.",                icon: Shield,       href: "/agency" },
   { key: "lifeplus", name: "Life+",                        category: "Saúde",             description: "Serviços de saúde, bem-estar e medicina preventiva.",           icon: HeartPulse },
-  { key: "aircare",  name: "Life AirCare",                 category: "Sustentabilidade",  description: "Purificação do ar e tecnologias ambientais.",                   icon: Wind },
+  { key: "aircare",  name: "Life AirCare",                 category: "Sustentabilidade",  description: "Purificação do ar e tecnologias ambientais.",                   icon: Wind,         href: "/aircare" },
 ];
 
 export const newsItems: { date: string; tag: string; title: string; description: string }[] = [];
