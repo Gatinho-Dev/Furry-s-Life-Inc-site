@@ -17,10 +17,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as StaffIndexRouteImport } from './routes/staff.index'
 import { Route as CondIndexRouteImport } from './routes/cond.index'
 import { Route as CollegeIndexRouteImport } from './routes/college.index'
+import { Route as AircareIndexRouteImport } from './routes/aircare.index'
 import { Route as AgencyIndexRouteImport } from './routes/agency.index'
 import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
 import { Route as CondStaffRouteImport } from './routes/cond.staff'
 import { Route as CollegeStaffRouteImport } from './routes/college.staff'
+import { Route as AircareStaffRouteImport } from './routes/aircare.staff'
 import { Route as AgencyStaffRouteImport } from './routes/agency.staff'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -66,6 +68,11 @@ const CollegeIndexRoute = CollegeIndexRouteImport.update({
   path: '/college/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AircareIndexRoute = AircareIndexRouteImport.update({
+  id: '/aircare/',
+  path: '/aircare/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AgencyIndexRoute = AgencyIndexRouteImport.update({
   id: '/agency/',
   path: '/agency/',
@@ -84,6 +91,11 @@ const CondStaffRoute = CondStaffRouteImport.update({
 const CollegeStaffRoute = CollegeStaffRouteImport.update({
   id: '/college/staff',
   path: '/college/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AircareStaffRoute = AircareStaffRouteImport.update({
+  id: '/aircare/staff',
+  path: '/aircare/staff',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgencyStaffRoute = AgencyStaffRouteImport.update({
@@ -115,10 +127,12 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRouteWithChildren
   '/agency/staff': typeof AgencyStaffRoute
+  '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
   '/cond/staff': typeof CondStaffRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/agency/': typeof AgencyIndexRoute
+  '/aircare/': typeof AircareIndexRoute
   '/college/': typeof CollegeIndexRoute
   '/cond/': typeof CondIndexRoute
   '/staff/': typeof StaffIndexRoute
@@ -132,10 +146,12 @@ export interface FileRoutesByTo {
   '/life-server': typeof LifeServerRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/agency/staff': typeof AgencyStaffRoute
+  '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
   '/cond/staff': typeof CondStaffRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/agency': typeof AgencyIndexRoute
+  '/aircare': typeof AircareIndexRoute
   '/college': typeof CollegeIndexRoute
   '/cond': typeof CondIndexRoute
   '/staff': typeof StaffIndexRoute
@@ -151,10 +167,12 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRouteWithChildren
   '/agency/staff': typeof AgencyStaffRoute
+  '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
   '/cond/staff': typeof CondStaffRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/agency/': typeof AgencyIndexRoute
+  '/aircare/': typeof AircareIndexRoute
   '/college/': typeof CollegeIndexRoute
   '/cond/': typeof CondIndexRoute
   '/staff/': typeof StaffIndexRoute
@@ -171,10 +189,12 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/staff'
     | '/agency/staff'
+    | '/aircare/staff'
     | '/college/staff'
     | '/cond/staff'
     | '/staff/dashboard'
     | '/agency/'
+    | '/aircare/'
     | '/college/'
     | '/cond/'
     | '/staff/'
@@ -188,10 +208,12 @@ export interface FileRouteTypes {
     | '/life-server'
     | '/sitemap.xml'
     | '/agency/staff'
+    | '/aircare/staff'
     | '/college/staff'
     | '/cond/staff'
     | '/staff/dashboard'
     | '/agency'
+    | '/aircare'
     | '/college'
     | '/cond'
     | '/staff'
@@ -206,10 +228,12 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/staff'
     | '/agency/staff'
+    | '/aircare/staff'
     | '/college/staff'
     | '/cond/staff'
     | '/staff/dashboard'
     | '/agency/'
+    | '/aircare/'
     | '/college/'
     | '/cond/'
     | '/staff/'
@@ -225,9 +249,11 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffRoute: typeof StaffRouteWithChildren
   AgencyStaffRoute: typeof AgencyStaffRoute
+  AircareStaffRoute: typeof AircareStaffRoute
   CollegeStaffRoute: typeof CollegeStaffRoute
   CondStaffRoute: typeof CondStaffRoute
   AgencyIndexRoute: typeof AgencyIndexRoute
+  AircareIndexRoute: typeof AircareIndexRoute
   CollegeIndexRoute: typeof CollegeIndexRoute
   CondIndexRoute: typeof CondIndexRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -293,6 +319,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollegeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aircare/': {
+      id: '/aircare/'
+      path: '/aircare'
+      fullPath: '/aircare/'
+      preLoaderRoute: typeof AircareIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/agency/': {
       id: '/agency/'
       path: '/agency'
@@ -319,6 +352,13 @@ declare module '@tanstack/react-router' {
       path: '/college/staff'
       fullPath: '/college/staff'
       preLoaderRoute: typeof CollegeStaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aircare/staff': {
+      id: '/aircare/staff'
+      path: '/aircare/staff'
+      fullPath: '/aircare/staff'
+      preLoaderRoute: typeof AircareStaffRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/agency/staff': {
@@ -371,9 +411,11 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffRoute: StaffRouteWithChildren,
   AgencyStaffRoute: AgencyStaffRoute,
+  AircareStaffRoute: AircareStaffRoute,
   CollegeStaffRoute: CollegeStaffRoute,
   CondStaffRoute: CondStaffRoute,
   AgencyIndexRoute: AgencyIndexRoute,
+  AircareIndexRoute: AircareIndexRoute,
   CollegeIndexRoute: CollegeIndexRoute,
   CondIndexRoute: CondIndexRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
@@ -383,13 +425,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

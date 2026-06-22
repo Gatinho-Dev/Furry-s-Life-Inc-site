@@ -1,99 +1,91 @@
-# Plano — Mini-sites, Painel Staff com RBAC, OSINT Life Agency
+## Escopo
 
-## 1. Backend (Lovable Cloud)
-Ativar Lovable Cloud com Postgres + Auth (email/senha). Substitui o login fake atual.
+Várias frentes pedidas de uma vez — vou implementar tudo, mas em blocos claros pra você acompanhar.
 
-**Tabelas (com RLS):**
-- `profiles` (id ↔ auth.users, nome, email, avatar)
-- `app_role` enum: `ceo`, `admin`, `staff`
-- `subsidiary` enum: `fli`, `cond`, `college`, `agency`, ... (14)
-- `user_roles` (user_id, role) — usada por `has_role()` security-definer
-- `user_subsidiary_access` (user_id, subsidiary) — define a quais mini-sites o staff pode entrar
-- `residents` (cond.): nome, unidade, contato, foto, observações
-- `visitor_logs` (cond.): nome, documento, unidade visitada, entrada, saída, registrado_por
-- `students` (college): nome, matrícula, curso, turma, email
-- `teachers` (college): nome, departamento, email
-- `classes` (college): nome, professor_id, horário
-- `osint_investigations` (agency): titulo, alvo, status, criado_por
-- `osint_findings` (investigation_id, fonte, tipo, payload jsonb, snapshot_url)
+---
 
-CEO `gatinho@furrs.life` cadastrado via migração (auth.users + role=ceo + acesso a todas subsidiárias). Senha provisória gerada e mostrada uma vez na tela de login (toast) ou definida via reset de senha no primeiro acesso.
+### 1. Life Agency — Mapa Mental de Casos (substitui "Site Map")
 
-**Função `has_role()` security-definer** + helper `has_subsidiary_access(uid, sub)` para policies sem recursão.
+- Renomeia aba **Site Map → Mapa Mental**.
+- Nova aba "Casos": lista de investigações (criar, renomear, excluir).
+- Ao abrir um caso, editor de mapa mental com **bolhas (nós)** ligadas por linhas:
+  - Tipos de bolha: Email, Telefone, Nome, IP, URL, Usuário (Roblox/social), Localização, Nota livre.
+  - Arrastar para posicionar, clicar para editar, conectar duas bolhas com linha rotulada.
+  - Botão "Adicionar bolha do resultado" nas abas Web Search / Scrape / Roblox para jogar achados direto no caso ativo.
+- **Tudo salvo** no banco (posições, ligações, conteúdo) — novas tabelas `osint_case_nodes` e `osint_case_edges` com acesso só para staff da Agency. Biblioteca: `@xyflow/react`.
 
-## 2. Painel Staff central (`/staff`) — repaginado
-- Login real via Supabase Auth (substitui credenciais hardcoded).
-- Dashboard CEO/Admin: criar/editar staff, atribuir acesso por subsidiária (checkboxes das 14), revogar, resetar senha.
-- Staff comum só vê o link para os mini-sites a que tem acesso.
-- Tabela de admins online (presence via realtime) + avisos internos persistidos.
+### 2. Busca OSINT — simplificar
 
-## 3. Mini-sites (cada um = landing pública + `/staff` próprio)
+- Uma barra única "Buscar" no topo que detecta automaticamente o tipo (email, telefone, IP, URL, domínio, nome) e dispara a ferramenta certa, mostrando resultado consolidado.
+- Abas avançadas ficam disponíveis embaixo para uso manual.
 
-### `/cond` — Furry's Life Cond.
-Landing institucional + botão "Painel Staff" → `/cond/staff` (login).  
-Após login (precisa de `subsidiary_access=cond`):
-- Moradores: CRUD com foto, unidade, contato, observação.
-- Visitantes: registrar entrada/saída, motivo, morador visitado; histórico filtrável por data/unidade.
-- Métricas no topo: moradores ativos, visitas hoje, visitas na semana.
+### 3. Painel de Staff — Usuários e Cargos
 
-### `/college` — Life College
-Landing + `/college/staff`:
-- Alunos: CRUD (matrícula, curso, turma, contato).
-- Professores: CRUD.
-- Turmas: vincular professor + alunos.
-- Avisos do campus.
+- Aba **Usuários** (CEO/Admin): listar, **criar manualmente** (email+senha, via Auth Admin), excluir, resetar senha.
+- **Cargos por subsidiária**: ao invés do cargo global definir acesso, cada usuário recebe `{subsidiária → cargo}` (ex.: "Life College = Professor", "Cond. = Porteiro"). O acesso à subsidiária e o que ele pode fazer dentro dela vêm desse cargo.
+- Novos cargos por subsidiária (exemplos): Agency → Investigador/Analista/Coordenador; College → Professor/Coordenador/Secretaria; Cond. → Porteiro/Síndico; AirCare → Técnico/Engenheiro; etc. CEO/Admin continuam globais.
+- Migração: nova tabela `user_subsidiary_roles (user_id, subsidiary, role)` + função `has_sub_role()` usada nas policies; UI atualizada.
 
-### `/agency` — Life Agency (tema escuro/preto, vermelho-sangue)
-Landing misteriosa + `/agency/staff`:
-- **OSINT Toolkit:**
-  - **Roblox lookup**: dado username/ID, busca via API pública (`users.roblox.com`, `friends.roblox.com`, `games.roblox.com`, `badges.roblox.com`, `groups.roblox.com`, `inventory.roblox.com`) — perfil, criação, amigos, grupos, badges, jogos criados, avatar.
-  - **Username pivot**: testa o mesmo username em redes sociais (GitHub, Twitter/X, Instagram, TikTok, Twitch, Steam, Reddit, YouTube) via checagem HTTP + Firecrawl scrape para enriquecer.
-  - **Email/nome search**: Firecrawl `search` com operadores (`"email" site:linkedin.com`, etc.) + scrape dos top resultados.
-  - **Domain/URL recon**: Firecrawl `map` + `scrape` (branding, links, metadata).
-  - **Grafo OSINT**: visualização com `react-force-graph-2d` — nós (alvo, contas, emails, amigos) e arestas tipadas; clique no nó abre painel lateral com detalhes/snapshot.
-  - Cada busca cria/append em `osint_investigations` + `osint_findings` (auditoria).
-- Conectores necessários: **Firecrawl** (vou pedir conexão no momento certo).
+### 4. Life AirCare — novo mini site
 
-### `/life-server` — redirect 301
-Rota TanStack que faz `redirect()` server-side para `https://bio.site/lifeserver`.
+- Rota `/aircare` (site público) + `/aircare/staff` (painel).
+- Visual baseado nas suas 4 imagens: fundo verde-escuro, acentos verde-lima, cartões com cantos suaves, bolhas decorativas. Seções: Hero "Clean Air Factories", O Problema, A Solução (filtros + energia limpa), Tecnologia do Filtro (camadas mostradas na img 4), Contato.
+- Painel: cadastro de **Unidades/Fábricas monitoradas**, **Leituras de qualidade do ar** (PM2.5, CO₂, etc.), **Manutenções de filtros**. Tudo salvo no banco.
 
-## 4. Furry's Life Inc. (site principal)
-Mantém o Liquid Glass atual — **sem mudanças visuais**. Os 14 cards de subsidiária ganham link: os 4 implementados (`cond`, `college`, `agency`, `life-server`) abrem o mini-site; os outros mostram "Em breve".
+### 5. Mini sites existentes — polimento + mais opções no painel
 
-## 5. SEO / Indexação Google
-- `sitemap.xml` atualizado com todas as novas rotas públicas (`/`, `/cond`, `/college`, `/agency`, mini landings).
-- `head()` único por rota (title, description, og:title/description/image, canonical absoluto em `https://furrys.life`).
-- `robots.txt` permitindo tudo exceto `/staff` e `/*/staff`.
-- JSON-LD `Organization` no root + `LocalBusiness`/`EducationalOrganization` nos mini-sites relevantes.
-- Após deploy: re-submeter sitemap no GSC (já conectado).
-- Bug do "site não aparece no Google": a verificação já está OK, então o que falta é (a) sitemap completo, (b) conteúdo indexável SSR em cada rota, (c) tempo (24–72h após submissão). Vou garantir (a) e (b); (c) é Google.
+- Passe de design coerente em `/cond`, `/college`, `/agency`, `/life-server` (tipografia, espaçamento, cards, contraste) mantendo identidade de cada um.
+- Mais opções nos painéis:
+  - **Cond.**: registro de ocorrências, encomendas, comunicados aos moradores.
+  - **College**: notas/frequência por aluno, calendário de provas.
+  - **Agency**: já coberto pelos casos.
+- Todos os formulários gravam no banco com RLS por subsidiária+cargo.
 
-## 6. Bugs a corrigir no caminho
-- Painel staff atual (sessionStorage) → substituído por sessão Supabase real (resolve "página não carrega" de vez).
-- Garantir `<Outlet />` em todos os layouts dos mini-sites.
-- `errorComponent` + `notFoundComponent` em toda rota com loader.
+### 6. Notícias
+
+- Excluir todas as notícias que não foram criadas por você. Mantém só o que você publicou (e a UI de criar/editar já existente).
+
+### 7. Email + Inbox interna
+
+- Trocar remetente/destinatário visível para **furryslifeinc@gmail.com** nos textos/avisos da UI.
+- Formulário de contato do site **deixa de enviar email** — grava em nova tabela `contact_inbox` (nome, email, assunto, mensagem, lido, respondido).
+- Nova aba **Inbox** no painel de staff (CEO/Admin + cargo "Atendimento"): listar, marcar como lido, arquivar, responder por email (opcional, via fila já existente).
+- Mantém a infra de email para auth/notificações; só o contato público muda de canal.
+
+---
 
 ## Detalhes técnicos
-- **Stack**: TanStack Start + Supabase (via Lovable Cloud). Server functions com `requireSupabaseAuth` para dados protegidos; rotas `_authenticated` por mini-site.
-- **OSINT calls**: tudo em `createServerFn` (Roblox direto via fetch, Firecrawl via SDK `@mendable/firecrawl-js` lendo `FIRECRAWL_API_KEY`).
-- **Realtime presence** para "admins online" no dashboard central.
-- **Storage bucket** `osint-snapshots` (privado) para screenshots Firecrawl; `residents-photos` (privado) para fotos de moradores.
-- **Grafo**: `react-force-graph-2d` (leve, Canvas).
-- **RBAC nas rotas**: layout `_authenticated/_subsidiary-cond.tsx` etc. com `beforeLoad` checando `has_subsidiary_access`.
 
-## Fora de escopo (peço confirmação depois se quiser)
-- Mini-sites das outras 10 subsidiárias (faço sob demanda).
-- Pagamentos, emails transacionais, mobile app.
-- OSINT em fontes que exigem APIs pagas (HIBP, Hunter, Shodan).
+```text
+Novas tabelas
+  user_subsidiary_roles(user_id, subsidiary, role, granted_by, granted_at)
+  osint_case_nodes(investigation_id, node_type, label, data jsonb, pos_x, pos_y)
+  osint_case_edges(investigation_id, source_node, target_node, label)
+  aircare_units, aircare_readings, aircare_filter_maintenance
+  cond_incidents, cond_packages, cond_announcements
+  college_grades, college_attendance, college_exam_schedule
+  contact_inbox(name, email, subject, body, status, replied_at)
 
-## Ordem de execução
-1. Ativar Cloud + schema + seed CEO.
-2. Auth real no `/staff` central + RBAC + UI de gestão de staff.
-3. Mini-site Cond. (mais simples, valida o padrão).
-4. Mini-site College.
-5. Redirect Life Server.
-6. Mini-site Agency + OSINT (pedirei Firecrawl aqui).
-7. SEO: sitemap, robots, JSON-LD, heads.
-8. Smoke test via Playwright nas rotas-chave.
+Funções
+  has_sub_role(_user_id, _sub, _role)  -- SECURITY DEFINER
+  ajustar policies das tabelas existentes para usar has_sub_role quando relevante
 
-Posso seguir?
+Frontend
+  bun add @xyflow/react  (já instalado)
+  novo /aircare e /aircare/staff
+  novo /staff/users e /staff/inbox
+  refator agency.staff.tsx (Buscar simplificado + Casos + Mapa Mental)
+  data migration: DELETE FROM news WHERE created_by <> '<seu user_id>'
+```
+
+### Ordem de execução
+1. Migrações (cargos por subsidiária, mapa mental, AirCare, painéis extra, inbox).
+2. Backend: server functions para criar/excluir usuários, inbox, AirCare.
+3. UI: gestão de usuários, inbox, AirCare (site + painel), mapa mental, busca simplificada.
+4. Polimento visual dos mini sites existentes.
+5. Limpeza de notícias e ajustes de email.
+
+### Pontos que preciso confirmar
+- **Senha mínima** ao criar usuário manualmente: posso usar 8 caracteres + exigir troca no 1º login? (sim/não)
+- **Reply na inbox**: respondo pelo painel via fila de email existente (sai de `notify.furrys.life`) — ok?
+- **Notícias**: confirmo deletar tudo que não tem `created_by = seu user_id`. Se nunca houve coluna `created_by`, apago todas — confirma?

@@ -36,15 +36,10 @@ export const subsidiaries: Subsidiary[] = [
   { key: "soccer",   name: "Life Soccer",                  category: "Esportes",          description: "Clube de futebol e organização de eventos esportivos.",         icon: Trophy },
   { key: "agency",   name: "Life Agency",                  category: "Inteligência",      description: "Agência de inteligência e operações especiais.",                icon: Shield,       href: "/agency" },
   { key: "lifeplus", name: "Life+",                        category: "Saúde",             description: "Serviços de saúde, bem-estar e medicina preventiva.",           icon: HeartPulse },
-  { key: "aircare",  name: "Life AirCare",                 category: "Sustentabilidade",  description: "Purificação do ar e tecnologias ambientais.",                   icon: Wind },
+  { key: "aircare",  name: "Life AirCare",                 category: "Sustentabilidade",  description: "Purificação do ar e tecnologias ambientais.",                   icon: Wind,         href: "/aircare" },
 ];
 
-export const newsItems = [
-  { date: "08 Jun 2026", tag: "Institucional", title: "Furry's Life Inc. anuncia nova holding em expansão global", description: "A organização principal apresenta seu plano de expansão para os próximos cinco anos com foco em sustentabilidade e tecnologia." },
-  { date: "02 Jun 2026", tag: "Energia", title: "Energy Complex atinge 100% de operação", description: "O complexo nuclear conclui testes finais e entra em plena operação comercial, abastecendo todas as subsidiárias." },
-  { date: "27 Mai 2026", tag: "Educação", title: "Life College abre inscrições para o semestre 2026.2", description: "Mais de 40 cursos disponíveis, com bolsas integrais para alunos destaque das comunidades parceiras." },
-  { date: "19 Mai 2026", tag: "Tecnologia", title: "Life Server lança nova infraestrutura dedicada", description: "Servidores otimizados oferecem latência ultra baixa e novos recursos para comunidades criativas." },
-];
+export const newsItems: { date: string; tag: string; title: string; description: string }[] = [];
 
 export const SUBSIDIARY_LABELS: Record<string, string> = {
   fli: "Furry's Life Inc.",
