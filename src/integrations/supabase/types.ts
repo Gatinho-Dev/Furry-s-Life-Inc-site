@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      aircare_readings: {
+        Row: {
+          co2_ppm: number | null
+          created_at: string
+          humidity_pct: number | null
+          id: string
+          measured_at: string
+          notes: string | null
+          pm25: number | null
+          temperature_c: number | null
+          unit_id: string
+        }
+        Insert: {
+          co2_ppm?: number | null
+          created_at?: string
+          humidity_pct?: number | null
+          id?: string
+          measured_at?: string
+          notes?: string | null
+          pm25?: number | null
+          temperature_c?: number | null
+          unit_id: string
+        }
+        Update: {
+          co2_ppm?: number | null
+          created_at?: string
+          humidity_pct?: number | null
+          id?: string
+          measured_at?: string
+          notes?: string | null
+          pm25?: number | null
+          temperature_c?: number | null
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aircare_readings_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "aircare_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aircare_units: {
+        Row: {
+          created_at: string
+          filter_model: string | null
+          id: string
+          installed_at: string | null
+          location: string | null
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          filter_model?: string | null
+          id?: string
+          installed_at?: string | null
+          location?: string | null
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          filter_model?: string | null
+          id?: string
+          installed_at?: string | null
+          location?: string | null
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       classes: {
         Row: {
           created_at: string
@@ -48,6 +125,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      contact_inbox: {
+        Row: {
+          body: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          replied_at: string | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          replied_at?: string | null
+          status?: string
+          subject: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          replied_at?: string | null
+          status?: string
+          subject?: string
+        }
+        Relationships: []
       }
       email_send_log: {
         Row: {
@@ -537,6 +647,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subsidiary_roles: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          sub_role: string
+          subsidiary: Database["public"]["Enums"]["subsidiary"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          sub_role: string
+          subsidiary: Database["public"]["Enums"]["subsidiary"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          sub_role?: string
+          subsidiary?: Database["public"]["Enums"]["subsidiary"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       visitor_logs: {
         Row: {
           created_at: string
@@ -600,6 +737,14 @@ export type Database = {
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_sub_role: {
+        Args: {
+          _role: string
+          _sub: Database["public"]["Enums"]["subsidiary"]
           _user_id: string
         }
         Returns: boolean
