@@ -27,6 +27,8 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const nav = useNavigate();
+  const { redirect } = useSearch({ from: "/auth" });
+  const target = safeRedirect(redirect);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,10 +40,10 @@ function AuthPage() {
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled && data.session) nav({ to: "/staff/dashboard" });
+      if (!cancelled && data.session) nav({ to: target });
     });
     return () => { cancelled = true; };
-  }, [nav]);
+  }, [nav, target]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,18 +52,18 @@ function AuthPage() {
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        nav({ to: "/staff/dashboard" });
+        nav({ to: target });
       } else {
         const { data, error } = await supabase.auth.signUp({
           email, password,
-          options: { emailRedirectTo: `${window.location.origin}/staff/dashboard` },
+          options: { emailRedirectTo: `${window.location.origin}${target}` },
         });
         if (error) throw error;
         if (data.session) {
-          nav({ to: "/staff/dashboard" });
+          nav({ to: target });
         } else {
           const { error: signinErr } = await supabase.auth.signInWithPassword({ email, password });
-          if (!signinErr) { nav({ to: "/staff/dashboard" }); return; }
+          if (!signinErr) { nav({ to: target }); return; }
           setInfo("Conta criada. Faça login para continuar.");
           setMode("signin");
         }
@@ -75,9 +77,11 @@ function AuthPage() {
 
   const google = async () => {
     setErr(null);
-    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/staff/dashboard` });
+    try { sessionStorage.setItem("post_login_redirect", target); } catch { /* ignore */ }
+    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}${target}` });
     if (res.error) setErr(res.error.message);
   };
+
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4">
