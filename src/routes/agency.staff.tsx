@@ -20,7 +20,7 @@ function AgencyStaff() {
   const [tab, setTab] = useState<Tab>("search");
 
   if (auth.loading) return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="h-6 w-6 animate-spin text-white" /></div>;
-  if (!auth.user) { nav({ to: "/auth" }); return null; }
+  if (!auth.user) { nav({ to: "/auth", search: { redirect: "/agency/staff" } }); return null; }
   if (!auth.hasAccess("agency")) return (
     <div className="flex min-h-screen items-center justify-center bg-black px-4 text-center text-white">
       <div><div className="font-display text-xl font-semibold">Acesso negado</div><p className="mt-2 text-sm text-white/60">Sem permissão para Life Agency.</p>
