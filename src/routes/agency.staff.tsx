@@ -361,7 +361,7 @@ function MindMapEditor({ inv, onBack }: { inv: Investigation; onBack: ()=>void }
     const jitter = () => (Math.random() - 0.5) * 120;
     const pos = { x: center.x + jitter(), y: center.y + jitter() };
     const { data, error } = await supabase.from("osint_case_nodes").insert({
-      investigation_id: inv.id, node_type: kind, label, pos_x: pos.x, pos_y: pos.y, data: { meta: {}, notes: "", tags: [] },
+      investigation_id: inv.id, node_type: kind, label, pos_x: pos.x, pos_y: pos.y, data: { meta: {}, notes: "", tags: [] } as never,
     }).select().single();
     if (error) { alert(error.message); return null; }
     const newNode: Node<NodeData> = {
