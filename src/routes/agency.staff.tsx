@@ -389,8 +389,9 @@ function MindMapEditor({ inv, onBack }: { inv: Investigation; onBack: ()=>void }
     setNodes((nds) => nds.map((n) => n.id === selectedNode.id ? { ...n, data: next } : n));
     await supabase.from("osint_case_nodes").update({
       label: next.label,
-      data: { meta: next.meta ?? {}, notes: next.notes ?? "", tags: next.tags ?? [] },
+      data: { meta: next.meta ?? {}, notes: next.notes ?? "", tags: next.tags ?? [] } as never,
     }).eq("id", selectedNode.id);
+
   };
 
   const exportJson = () => {
