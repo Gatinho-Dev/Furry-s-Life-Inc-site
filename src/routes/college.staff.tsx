@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Loader2, Plus, Trash2, LogOut, ArrowLeft } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Loader2, Plus, Trash2, LayoutDashboard, GraduationCap, Users, BookOpen, CalendarDays, Bell } from "lucide-react";
 import { useAuth } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { StaffShell, KpiCard, type ShellTab } from "@/components/staff/StaffShell";
 
 export const Route = createFileRoute("/college/staff")({
   head: () => ({ meta: [{ title: "Painel Staff — Life College" }, { name: "robots", content: "noindex, nofollow" }] }),
@@ -12,56 +13,80 @@ export const Route = createFileRoute("/college/staff")({
 type Student = { id: string; full_name: string; enrollment: string; course: string | null };
 type Teacher = { id: string; full_name: string; email: string | null; department: string | null; bio: string | null };
 type Klass = { id: string; name: string; teacher_id: string | null; schedule: string | null; room: string | null };
+type TabKey = "dashboard" | "students" | "teachers" | "classes" | "calendar" | "notices";
 
 const fld = "rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
 
 function CollegeStaff() {
   const nav = useNavigate();
   const auth = useAuth();
-  const [tab, setTab] = useState<"students" | "teachers" | "classes">("students");
+  const [tab, setTab] = useState<TabKey>("dashboard");
 
-  useEffect(() => { if (!auth.loading && !auth.user) nav({ to: "/auth" }); }, [auth.loading, auth.user, nav]);
+  useEffect(() => { if (!auth.loading && !auth.user) nav({ to: "/auth", search: { redirect: "/college/staff" } }); }, [auth.loading, auth.user, nav]);
 
   if (auth.loading || !auth.user) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   if (!auth.hasAccess("college")) return (
     <div className="flex min-h-screen items-center justify-center px-4 text-center">
       <div>
-        <div className="font-display text-xl font-semibold">Sem acesso</div>
+        <div className="font-display text-xl font-semibold">Sem acesso a Life College</div>
         <Link to="/staff/dashboard" className="mt-4 inline-block text-sm text-primary hover:underline">Voltar ao painel</Link>
       </div>
     </div>
   );
 
+  const tabs: ShellTab<TabKey>[] = [
+    { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { key: "students", label: "Alunos", icon: GraduationCap },
+    { key: "teachers", label: "Professores", icon: Users },
+    { key: "classes", label: "Turmas", icon: BookOpen },
+    { key: "calendar", label: "Calendário", icon: CalendarDays },
+    { key: "notices", label: "Avisos", icon: Bell },
+  ];
+
   return (
-    <div className="min-h-screen">
-      <header className="flex items-center justify-between border-b border-border px-6 py-4">
-        <Link to="/staff/dashboard" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Painel central
-        </Link>
-        <button onClick={async () => { await auth.signOut(); nav({ to: "/auth" }); }}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm hover:bg-secondary">
-          <LogOut className="h-4 w-4" /> Sair
-        </button>
-      </header>
-      <main className="mx-auto max-w-5xl space-y-6 p-6">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Life College</h1>
-          <p className="text-sm text-muted-foreground">Gestão acadêmica.</p>
-        </div>
+    <StaffShell brand="Life College" subtitle="Gestão acadêmica" tabs={tabs} active={tab} onSelect={setTab}>
+      {tab === "dashboard" && <DashboardTab />}
+      {tab === "students" && <StudentsTab />}
+      {tab === "teachers" && <TeachersTab />}
+      {tab === "classes" && <ClassesTab />}
+      {tab === "calendar" && <Placeholder title="Calendário acadêmico" hint="Eventos, provas e feriados aparecerão aqui." />}
+      {tab === "notices" && <Placeholder title="Avisos" hint="Comunicados internos para professores e alunos." />}
+    </StaffShell>
+  );
+}
 
-        <div className="flex gap-2 border-b border-border">
-          {(["students","teachers","classes"] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition ${tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-              {t === "students" ? "Alunos" : t === "teachers" ? "Professores" : "Turmas"}
-            </button>
-          ))}
-        </div>
-
-        {tab === "students" && <StudentsTab />}
-        {tab === "teachers" && <TeachersTab />}
-        {tab === "classes" && <ClassesTab />}
-      </main>
+function DashboardTab() {
+  const [counts, setCounts] = useState({ students: 0, teachers: 0, classes: 0 });
+  useEffect(() => {
+    (async () => {
+      const [s, t, c] = await Promise.all([
+        supabase.from("students").select("id", { count: "exact", head: true }),
+        supabase.from("teachers").select("id", { count: "exact", head: true }),
+        supabase.from("classes").select("id", { count: "exact", head: true }),
+      ]);
+      setCounts({ students: s.count ?? 0, teachers: t.count ?? 0, classes: c.count ?? 0 });
+    })();
+  }, []);
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-display text-2xl font-bold">Bem-vindo ao Life College</h1>
+        <p className="text-sm text-muted-foreground">Visão geral da instituição.</p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard label="Alunos" value={counts.students} icon={GraduationCap} tone="primary" />
+        <KpiCard label="Professores" value={counts.teachers} icon={Users} tone="success" />
+        <KpiCard label="Turmas" value={counts.classes} icon={BookOpen} tone="warning" />
+        <KpiCard label="Eventos" value={0} hint="Em breve" icon={CalendarDays} tone="danger" />
+      </div>
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="font-display text-lg font-semibold">Próximos passos</div>
+        <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>• Cadastre seus alunos e professores nas abas correspondentes.</li>
+          <li>• Crie turmas associando professores.</li>
+          <li>• Em breve: notas, frequência, mensalidades e calendário acadêmico.</li>
+        </ul>
+      </div>
     </div>
   );
 }
@@ -70,6 +95,7 @@ function StudentsTab() {
   const [list, setList] = useState<Student[] | null>(null);
   const [form, setForm] = useState({ full_name: "", enrollment: "", course: "" });
   const [err, setErr] = useState<string | null>(null);
+  const [q, setQ] = useState("");
   const load = async () => {
     const { data, error } = await supabase.from("students").select("id, full_name, enrollment, course").order("full_name");
     if (error) setErr(error.message); else setList((data ?? []) as Student[]);
@@ -82,9 +108,11 @@ function StudentsTab() {
     setForm({ full_name: "", enrollment: "", course: "" }); load();
   };
   const remove = async (id: string) => { if (confirm("Remover aluno?")) { await supabase.from("students").delete().eq("id", id); load(); } };
+  const filtered = useMemo(() => (list ?? []).filter((s) => !q || s.full_name.toLowerCase().includes(q.toLowerCase()) || s.enrollment.includes(q)), [list, q]);
   return (
-    <>
-      <form onSubmit={add} className="glass-card grid gap-3 rounded-2xl p-5 sm:grid-cols-3">
+    <div className="space-y-5">
+      <SectionHeader title="Alunos" count={list?.length} search={q} onSearch={setQ} />
+      <form onSubmit={add} className="grid gap-3 rounded-2xl border border-border bg-card p-5 sm:grid-cols-3">
         <input required placeholder="Nome completo" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} className={fld} />
         <input required placeholder="Matrícula" value={form.enrollment} onChange={(e) => setForm({ ...form, enrollment: e.target.value })} className={fld} />
         <input placeholder="Curso" value={form.course} onChange={(e) => setForm({ ...form, course: e.target.value })} className={fld} />
@@ -93,12 +121,12 @@ function StudentsTab() {
         </button>
         {err && <div className="sm:col-span-3 text-sm text-destructive">{err}</div>}
       </form>
-      <ListCard title="Alunos" count={list?.length}>
-        {list?.map((s) => (
+      <ListCard count={filtered.length} empty="Nenhum aluno.">
+        {filtered.map((s) => (
           <Row key={s.id} title={s.full_name} subtitle={`Matrícula ${s.enrollment}${s.course ? ` · ${s.course}` : ""}`} onRemove={() => remove(s.id)} />
         ))}
       </ListCard>
-    </>
+    </div>
   );
 }
 
@@ -122,8 +150,9 @@ function TeachersTab() {
   };
   const remove = async (id: string) => { if (confirm("Remover professor?")) { await supabase.from("teachers").delete().eq("id", id); load(); } };
   return (
-    <>
-      <form onSubmit={add} className="glass-card grid gap-3 rounded-2xl p-5 sm:grid-cols-2">
+    <div className="space-y-5">
+      <SectionHeader title="Professores" count={list?.length} />
+      <form onSubmit={add} className="grid gap-3 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2">
         <input required placeholder="Nome completo" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} className={fld} />
         <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={fld} />
         <input placeholder="Departamento" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} className={fld} />
@@ -133,12 +162,12 @@ function TeachersTab() {
         </button>
         {err && <div className="sm:col-span-2 text-sm text-destructive">{err}</div>}
       </form>
-      <ListCard title="Professores" count={list?.length}>
+      <ListCard count={list?.length} empty="Nenhum professor.">
         {list?.map((t) => (
           <Row key={t.id} title={t.full_name} subtitle={[t.department, t.email].filter(Boolean).join(" · ") || "—"} onRemove={() => remove(t.id)} />
         ))}
       </ListCard>
-    </>
+    </div>
   );
 }
 
@@ -167,8 +196,9 @@ function ClassesTab() {
   };
   const remove = async (id: string) => { if (confirm("Remover turma?")) { await supabase.from("classes").delete().eq("id", id); load(); } };
   return (
-    <>
-      <form onSubmit={add} className="glass-card grid gap-3 rounded-2xl p-5 sm:grid-cols-2">
+    <div className="space-y-5">
+      <SectionHeader title="Turmas" count={list?.length} />
+      <form onSubmit={add} className="grid gap-3 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2">
         <input required placeholder="Nome da turma" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={fld} />
         <select value={form.teacher_id} onChange={(e) => setForm({ ...form, teacher_id: e.target.value })} className={fld}>
           <option value="">— Professor —</option>
@@ -181,38 +211,51 @@ function ClassesTab() {
         </button>
         {err && <div className="sm:col-span-2 text-sm text-destructive">{err}</div>}
       </form>
-      <ListCard title="Turmas" count={list?.length}>
+      <ListCard count={list?.length} empty="Nenhuma turma.">
         {list?.map((c) => (
           <Row key={c.id} title={c.name}
             subtitle={[c.teacher?.full_name, c.schedule, c.room && `Sala ${c.room}`].filter(Boolean).join(" · ") || "—"}
             onRemove={() => remove(c.id)} />
         ))}
       </ListCard>
-    </>
+    </div>
   );
 }
 
-function ListCard({ title, count, children }: { title: string; count?: number; children: React.ReactNode }) {
+function SectionHeader({ title, count, search, onSearch }: { title: string; count?: number; search?: string; onSearch?: (s: string) => void }) {
   return (
-    <div className="glass-card mt-6 rounded-2xl">
-      <div className="border-b border-border p-5 font-display font-semibold">{title} ({count ?? 0})</div>
-      {count === undefined ? <div className="p-5"><Loader2 className="h-5 w-5 animate-spin" /></div>
-        : count === 0 ? <div className="p-5 text-sm text-muted-foreground">Nada cadastrado ainda.</div>
-        : <div className="divide-y divide-border">{children}</div>}
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h2 className="font-display text-xl font-bold">{title} {count !== undefined && <span className="text-sm font-normal text-muted-foreground">({count})</span>}</h2>
+      {onSearch && <input value={search} onChange={(e) => onSearch(e.target.value)} placeholder="Buscar..." className="rounded-xl border border-border bg-card px-3 py-2 text-sm" />}
     </div>
   );
+}
+
+function ListCard({ count, children, empty }: { count?: number; children: React.ReactNode; empty: string }) {
+  if (count === undefined) return <div className="rounded-2xl border border-border bg-card p-5"><Loader2 className="h-5 w-5 animate-spin" /></div>;
+  if (count === 0) return <div className="rounded-2xl border border-dashed border-border bg-card/40 p-8 text-center text-sm text-muted-foreground">{empty}</div>;
+  return <div className="divide-y divide-border rounded-2xl border border-border bg-card">{children}</div>;
 }
 
 function Row({ title, subtitle, onRemove }: { title: string; subtitle: string; onRemove: () => void }) {
   return (
     <div className="flex items-center justify-between p-4">
-      <div>
-        <div className="font-medium">{title}</div>
-        <div className="text-xs text-muted-foreground">{subtitle}</div>
+      <div className="min-w-0">
+        <div className="truncate font-medium">{title}</div>
+        <div className="truncate text-xs text-muted-foreground">{subtitle}</div>
       </div>
       <button onClick={onRemove} className="rounded-lg border border-border bg-card p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
         <Trash2 className="h-4 w-4" />
       </button>
+    </div>
+  );
+}
+
+function Placeholder({ title, hint }: { title: string; hint: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-border bg-card/40 p-12 text-center">
+      <div className="font-display text-xl font-semibold">{title}</div>
+      <p className="mt-2 text-sm text-muted-foreground">{hint}</p>
     </div>
   );
 }
