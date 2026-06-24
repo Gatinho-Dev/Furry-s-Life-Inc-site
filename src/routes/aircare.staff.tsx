@@ -30,7 +30,7 @@ function AirCareStaff() {
   useEffect(() => { if (auth.user && auth.hasAccess("aircare")) load(); }, [auth.user, auth.ready]);
 
   if (auth.loading) return <div className="flex min-h-screen items-center justify-center bg-[#0b1f12]"><Loader2 className="h-6 w-6 animate-spin text-emerald-300" /></div>;
-  if (!auth.user) { nav({ to: "/auth" }); return null; }
+  if (!auth.user) { nav({ to: "/auth", search: { redirect: "/aircare/staff" } }); return null; }
   if (!auth.hasAccess("aircare")) return (
     <div className="flex min-h-screen items-center justify-center bg-[#0b1f12] px-4 text-center text-emerald-100">
       <div><div className="font-display text-xl font-semibold">Acesso negado</div><p className="mt-2 text-sm text-emerald-200/60">Peça acesso a Life AirCare.</p><Link to="/staff/dashboard" className="mt-4 inline-block text-sm text-emerald-300 hover:underline">Voltar</Link></div>
