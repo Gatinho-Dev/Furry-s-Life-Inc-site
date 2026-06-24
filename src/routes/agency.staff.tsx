@@ -1,12 +1,14 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Search, ArrowLeft, LogOut, FolderOpen, Plus, Trash2, Network, X } from "lucide-react";
+import { Loader2, Search, ArrowLeft, LogOut, FolderOpen, Plus, Trash2, Network, X, Download, FileJson, Image as ImageIcon, Clock, Mail, Phone, User as UserIcon, Globe, Building2, MapPin, AtSign, Server as ServerIcon, Share2, Hash } from "lucide-react";
 import { useAuth } from "@/lib/use-auth";
 import { osintSearch, osintScrape, osintMap } from "@/lib/osint.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { ReactFlow, Background, Controls, MiniMap, ReactFlowProvider, useReactFlow, addEdge, applyNodeChanges, applyEdgeChanges, type Node, type Edge, type Connection, type NodeChange, type EdgeChange } from "@xyflow/react";
+import { ReactFlow, Background, Controls, MiniMap, ReactFlowProvider, useReactFlow, addEdge, applyNodeChanges, applyEdgeChanges, Handle, Position, type Node, type Edge, type Connection, type NodeChange, type EdgeChange, type NodeProps } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { toPng } from "html-to-image";
+
 
 export const Route = createFileRoute("/agency/staff")({
   head: () => ({ meta: [{ title: "Life Agency · OSINT" }, { name: "robots", content: "noindex, nofollow" }] }),
