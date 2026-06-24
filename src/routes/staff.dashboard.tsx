@@ -168,18 +168,32 @@ function UsersPanel({ currentUserId }: { currentUserId: string }) {
   if (err) return <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">{err}</div>;
   if (!rows) return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground"/>;
 
+  const filtered = (rows ?? []).filter((u) => {
+    if (q && !((u.full_name ?? "") + " " + (u.email ?? "")).toLowerCase().includes(q.toLowerCase())) return false;
+    if (filterSub && !u.access.includes(filterSub as SubsidiaryKey)) return false;
+    return true;
+  });
+
   return (
     <section>
-      <div className="flex items-center justify-between">
-        <div><h2 className="font-display text-lg font-semibold">Usuários & cargos</h2><p className="text-sm text-muted-foreground">Crie usuários manualmente, defina cargo global e cargos específicos por mini-site.</p></div>
-        <button onClick={()=>setShowCreate(true)} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Plus className="h-4 w-4"/>Criar usuário</button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><h2 className="font-display text-lg font-semibold">Usuários & cargos</h2><p className="text-sm text-muted-foreground">Crie usuários, defina cargo global e cargos por subsidiária.</p></div>
+        <div className="flex flex-wrap items-center gap-2">
+          <input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Buscar nome/email..." className="rounded-xl border border-border bg-card px-3 py-2 text-sm" />
+          <select value={filterSub} onChange={(e)=>setFilterSub(e.target.value)} className="rounded-xl border border-border bg-card px-3 py-2 text-sm">
+            <option value="">Todas subsidiárias</option>
+            {ALL_SUBS.map((s) => <option key={s} value={s}>{SUBSIDIARY_LABELS[s] ?? s}</option>)}
+          </select>
+          <button onClick={()=>setShowCreate(true)} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Plus className="h-4 w-4"/>Criar usuário</button>
+        </div>
       </div>
 
       {showCreate && <CreateUserModal onClose={()=>setShowCreate(false)} onCreate={async (d) => { await createFn({ data: d }); setShowCreate(false); load(); }} />}
 
-      <div className="mt-5 space-y-4">
-        {rows.map((u) => (
-          <div key={u.id} className="glass-card rounded-2xl p-5">
+      <div className="mt-5 grid gap-3 lg:grid-cols-2">
+        {filtered.map((u) => (
+          <div key={u.id} className="rounded-2xl border border-border bg-card p-5">
+
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div><div className="font-medium">{u.full_name ?? u.email}</div><div className="text-xs text-muted-foreground">{u.email}</div></div>
               <div className="flex items-center gap-2">
