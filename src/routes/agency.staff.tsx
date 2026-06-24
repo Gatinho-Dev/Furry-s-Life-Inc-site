@@ -165,61 +165,8 @@ function SearchResult({ result }: { result: any }) {
   return null;
 }
 
-/* ---------------- CASES + MIND MAP ---------------- */
-type Investigation = { id: string; title: string; target: string; status: string; created_at: string };
 
-function CasesTab() {
-  const [list, setList] = useState<Investigation[] | null>(null);
-  const [active, setActive] = useState<Investigation | null>(null);
-  const [err, setErr] = useState<string|null>(null);
 
-  const load = useCallback(async () => {
-    const { data, error } = await supabase.from("osint_investigations").select("*").order("created_at", { ascending: false });
-    if (error) setErr(error.message); else setList(data as Investigation[]);
-  }, []);
-  useEffect(() => { load(); }, [load]);
-
-  const create = async () => {
-    const title = prompt("Nome do caso:"); if (!title) return;
-    const { data, error } = await supabase.from("osint_investigations").insert({ title, target: title, target_type: "case", status: "open" }).select().single();
-    if (error) { alert(error.message); return; }
-    setList((l) => [data as Investigation, ...(l ?? [])]);
-    setActive(data as Investigation);
-  };
-  const del = async (id: string) => {
-    if (!confirm("Excluir caso e todo o mapa?")) return;
-    await supabase.from("osint_investigations").delete().eq("id", id);
-    if (active?.id === id) setActive(null);
-    load();
-  };
-
-  if (err) return <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{err}</div>;
-  if (active) return <CaseMindMap inv={active} onBack={()=>setActive(null)} />;
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-lg font-semibold">Casos</h2>
-        <button onClick={create} className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-3 py-2 text-sm font-medium hover:bg-red-500"><Plus className="h-4 w-4"/>Novo caso</button>
-      </div>
-      {!list ? <Loader2 className="h-5 w-5 animate-spin text-white/60"/> : list.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/15 p-8 text-center text-sm text-white/50">Nenhum caso ainda. Clique em "Novo caso".</div>
-      ) : (
-        <div className="grid gap-2 sm:grid-cols-2">
-          {list.map((c) => (
-            <div key={c.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10">
-              <button onClick={()=>setActive(c)} className="flex-1 text-left">
-                <div className="font-display font-semibold">{c.title}</div>
-                <div className="text-xs text-white/50">{new Date(c.created_at).toLocaleString("pt-BR")}</div>
-              </button>
-              <button onClick={()=>del(c.id)} className="rounded-lg p-2 text-white/40 hover:bg-red-500/20 hover:text-red-300"><Trash2 className="h-4 w-4"/></button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 /* ============ MALTEGO-STYLE MIND MAP ============ */
 
