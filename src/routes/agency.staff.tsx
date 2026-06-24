@@ -334,7 +334,7 @@ function MindMapEditor({ inv, onBack }: { inv: Investigation; onBack: ()=>void }
   }, [inv.id]);
 
   const onNodesChange = useCallback(async (changes: NodeChange[]) => {
-    setNodes((nds) => applyNodeChanges(changes, nds));
+    setNodes((nds) => applyNodeChanges(changes, nds) as Node<NodeData>[]);
     for (const c of changes) {
       if (c.type === "position" && !c.dragging && c.position) {
         await supabase.from("osint_case_nodes").update({ pos_x: c.position.x, pos_y: c.position.y }).eq("id", c.id);
@@ -342,6 +342,7 @@ function MindMapEditor({ inv, onBack }: { inv: Investigation; onBack: ()=>void }
       if (c.type === "remove") await supabase.from("osint_case_nodes").delete().eq("id", c.id);
     }
   }, []);
+
 
   const onEdgesChange = useCallback(async (changes: EdgeChange[]) => {
     setEdges((eds) => applyEdgeChanges(changes, eds));
