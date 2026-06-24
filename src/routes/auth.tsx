@@ -1,11 +1,19 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import symbol from "@/assets/fli-symbol.png.asset.json";
 
+const ALLOWED_REDIRECTS = ["/staff/dashboard", "/agency/staff", "/college/staff", "/cond/staff", "/aircare/staff", "/life-server"];
+const safeRedirect = (r?: string) => {
+  if (!r || typeof r !== "string") return "/staff/dashboard";
+  if (!r.startsWith("/")) return "/staff/dashboard";
+  return ALLOWED_REDIRECTS.some((p) => r === p || r.startsWith(p + "/")) ? r : "/staff/dashboard";
+};
+
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>) => ({ redirect: typeof s.redirect === "string" ? s.redirect : undefined }),
   head: () => ({
     meta: [
       { title: "Acesso — Furry's Life Inc." },
@@ -15,6 +23,7 @@ export const Route = createFileRoute("/auth")({
   }),
   component: AuthPage,
 });
+
 
 function AuthPage() {
   const nav = useNavigate();
