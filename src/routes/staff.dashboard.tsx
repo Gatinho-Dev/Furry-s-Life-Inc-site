@@ -107,6 +107,9 @@ function UsersPanel({ currentUserId }: { currentUserId: string }) {
   const [rows, setRows] = useState<StaffRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [q, setQ] = useState("");
+  const [filterSub, setFilterSub] = useState<string>("");
+
 
   const createFn = useServerFn(adminCreateUser);
   const deleteFn = useServerFn(adminDeleteUser);
