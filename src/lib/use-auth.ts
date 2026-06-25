@@ -6,7 +6,7 @@ export type AppRole = "ceo" | "admin" | "staff";
 export type SubsidiaryKey =
   | "fli" | "studios" | "cruise" | "maldivas" | "college" | "cond" | "camping"
   | "labs" | "theater" | "energy" | "server" | "soccer" | "agency"
-  | "lifeplus" | "aircare";
+  | "lifeplus" | "aircare" | "lifepay";
 
 export type AuthState = {
   user: User | null;

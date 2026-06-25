@@ -4,7 +4,7 @@ import { Eye, EyeOff, Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import symbol from "@/assets/fli-symbol.png.asset.json";
 
-const ALLOWED_REDIRECTS = ["/staff/dashboard", "/agency/staff", "/college/staff", "/cond/staff", "/aircare/staff", "/life-server"];
+const ALLOWED_REDIRECTS = ["/staff/dashboard", "/agency/staff", "/college/staff", "/cond/staff", "/aircare/staff", "/lifepay/staff", "/life-server"];
 const safeRedirect = (r?: string) => {
   if (!r || typeof r !== "string") return "/staff/dashboard";
   if (!r.startsWith("/")) return "/staff/dashboard";
