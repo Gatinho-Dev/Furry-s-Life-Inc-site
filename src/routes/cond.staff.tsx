@@ -52,7 +52,7 @@ function CondStaff() {
       {tab === "incidents" && <IncidentsTab uid={auth.user.id} />}
       {tab === "maintenance" && <MaintenanceTab uid={auth.user.id} />}
       {tab === "reservations" && <ReservationsTab uid={auth.user.id} />}
-      {tab === "notices" && <NoticesTab uid={auth.user.id} />
+      {tab === "notices" && <NoticesTab uid={auth.user.id} />}
     </StaffShell>
   );
 }
@@ -219,12 +219,197 @@ function VisitorsTab({ uid }: { uid: string }) {
   );
 }
 
-function Placeholder({ title, hint }: { title: string; hint: string }) {
+const fldSm = "rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
+
+function CrudList<T extends { id: string }>({ rows, loading, empty, render, onDelete }: { rows: T[] | null; loading?: boolean; empty: string; render: (r: T) => React.ReactNode; onDelete?: (id: string) => void }) {
+  if (rows === null || loading) return <Loader2 className="h-5 w-5 animate-spin" />;
+  if (rows.length === 0) return <div className="rounded-2xl border border-dashed border-border bg-card/40 p-8 text-center text-sm text-muted-foreground">{empty}</div>;
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-card/40 p-12 text-center">
-      <div className="font-display text-xl font-semibold">{title}</div>
-      <p className="mt-2 text-sm text-muted-foreground">{hint}</p>
-      <p className="mt-1 text-xs text-muted-foreground">Esta seção será ativada em breve.</p>
+    <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+      {rows.map((r) => (
+        <div key={r.id} className="flex items-start justify-between gap-3 p-4">
+          <div className="min-w-0 flex-1">{render(r)}</div>
+          {onDelete && (
+            <button onClick={() => { if (confirm("Remover este item?")) onDelete(r.id); }} className="rounded-lg border border-border bg-card p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type Pkg = { id: string; recipient: string; unit: string; carrier: string | null; tracking_code: string | null; received_at: string; picked_up_at: string | null; notes: string | null };
+function PackagesTab({ uid }: { uid: string }) {
+  const [rows, setRows] = useState<Pkg[] | null>(null);
+  const [f, setF] = useState({ recipient: "", unit: "", carrier: "", tracking_code: "", notes: "" });
+  const [err, setErr] = useState<string | null>(null);
+  const load = async () => { const { data, error } = await supabase.from("cond_packages").select("*").order("received_at", { ascending: false }).limit(200); if (error) setErr(error.message); else setRows((data ?? []) as Pkg[]); };
+  useEffect(() => { load(); }, []);
+  const add = async (e: React.FormEvent) => { e.preventDefault(); if (!f.recipient || !f.unit) return; const { error } = await supabase.from("cond_packages").insert({ ...f, carrier: f.carrier || null, tracking_code: f.tracking_code || null, notes: f.notes || null, created_by: uid }); if (error) { setErr(error.message); return; } setF({ recipient: "", unit: "", carrier: "", tracking_code: "", notes: "" }); load(); };
+  const pickup = async (id: string) => { await supabase.from("cond_packages").update({ picked_up_at: new Date().toISOString() }).eq("id", id); load(); };
+  const del = async (id: string) => { await supabase.from("cond_packages").delete().eq("id", id); load(); };
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-display text-xl font-bold">Encomendas <span className="text-sm font-normal text-muted-foreground">({rows?.length ?? 0})</span></h2>
+      </div>
+      <form onSubmit={add} className="grid gap-3 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2">
+        <input required placeholder="Destinatário" value={f.recipient} onChange={(e) => setF({ ...f, recipient: e.target.value })} className={fld} />
+        <input required placeholder="Unidade (ex: Bl A · 101)" value={f.unit} onChange={(e) => setF({ ...f, unit: e.target.value })} className={fld} />
+        <input placeholder="Transportadora" value={f.carrier} onChange={(e) => setF({ ...f, carrier: e.target.value })} className={fld} />
+        <input placeholder="Código de rastreio" value={f.tracking_code} onChange={(e) => setF({ ...f, tracking_code: e.target.value })} className={fld} />
+        <input placeholder="Observações" value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} className={`${fld} sm:col-span-2`} />
+        <button className="sm:col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Plus className="h-4 w-4" /> Registrar encomenda</button>
+        {err && <div className="sm:col-span-2 text-sm text-destructive">{err}</div>}
+      </form>
+      <CrudList rows={rows} empty="Nenhuma encomenda registrada." onDelete={del} render={(r) => (
+        <div>
+          <div className="font-medium">{r.recipient} <span className="text-xs text-muted-foreground">→ {r.unit}</span></div>
+          <div className="text-xs text-muted-foreground">Recebido: {new Date(r.received_at).toLocaleString("pt-BR")}{r.carrier ? ` · ${r.carrier}` : ""}{r.tracking_code ? ` · ${r.tracking_code}` : ""}</div>
+          {r.notes && <div className="mt-1 text-xs text-muted-foreground">{r.notes}</div>}
+          <div className="mt-2">
+            {r.picked_up_at ? <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-400">Retirado · {new Date(r.picked_up_at).toLocaleDateString("pt-BR")}</span>
+              : <button onClick={() => pickup(r.id)} className="rounded-lg border border-border bg-card px-3 py-1 text-xs hover:bg-secondary">Marcar como retirado</button>}
+          </div>
+        </div>
+      )} />
+    </div>
+  );
+}
+
+type Inc = { id: string; title: string; description: string | null; unit: string | null; severity: string; status: string; occurred_at: string; resolved_at: string | null };
+function IncidentsTab({ uid }: { uid: string }) {
+  const [rows, setRows] = useState<Inc[] | null>(null);
+  const [f, setF] = useState({ title: "", description: "", unit: "", severity: "medium" });
+  const load = async () => { const { data } = await supabase.from("cond_incidents").select("*").order("occurred_at", { ascending: false }).limit(200); setRows((data ?? []) as Inc[]); };
+  useEffect(() => { load(); }, []);
+  const add = async (e: React.FormEvent) => { e.preventDefault(); if (!f.title) return; await supabase.from("cond_incidents").insert({ ...f, description: f.description || null, unit: f.unit || null, created_by: uid }); setF({ title: "", description: "", unit: "", severity: "medium" }); load(); };
+  const resolve = async (id: string) => { await supabase.from("cond_incidents").update({ status: "resolved", resolved_at: new Date().toISOString() }).eq("id", id); load(); };
+  const del = async (id: string) => { await supabase.from("cond_incidents").delete().eq("id", id); load(); };
+  return (
+    <div className="space-y-5">
+      <h2 className="font-display text-xl font-bold">Incidentes <span className="text-sm font-normal text-muted-foreground">({rows?.length ?? 0})</span></h2>
+      <form onSubmit={add} className="grid gap-3 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2">
+        <input required placeholder="Título" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} className={fld} />
+        <input placeholder="Unidade" value={f.unit} onChange={(e) => setF({ ...f, unit: e.target.value })} className={fld} />
+        <select value={f.severity} onChange={(e) => setF({ ...f, severity: e.target.value })} className={fld}>
+          <option value="low">Baixa</option><option value="medium">Média</option><option value="high">Alta</option><option value="critical">Crítica</option>
+        </select>
+        <textarea placeholder="Descrição" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} className={`${fld} sm:col-span-2`} rows={3} />
+        <button className="sm:col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Plus className="h-4 w-4" /> Registrar incidente</button>
+      </form>
+      <CrudList rows={rows} empty="Nenhum incidente registrado." onDelete={del} render={(r) => {
+        const tone = r.severity === "critical" ? "text-rose-400 bg-rose-500/10" : r.severity === "high" ? "text-orange-400 bg-orange-500/10" : r.severity === "medium" ? "text-amber-400 bg-amber-500/10" : "text-muted-foreground bg-secondary";
+        return (
+          <div>
+            <div className="flex items-center gap-2"><span className="font-medium">{r.title}</span><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${tone}`}>{r.severity}</span>{r.unit && <span className="text-xs text-muted-foreground">· {r.unit}</span>}</div>
+            <div className="text-xs text-muted-foreground">{new Date(r.occurred_at).toLocaleString("pt-BR")}</div>
+            {r.description && <p className="mt-1 text-sm text-muted-foreground">{r.description}</p>}
+            <div className="mt-2">{r.status === "resolved" ? <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-400">Resolvido</span> : <button onClick={() => resolve(r.id)} className="rounded-lg border border-border bg-card px-3 py-1 text-xs hover:bg-secondary">Marcar como resolvido</button>}</div>
+          </div>
+        );
+      }} />
+    </div>
+  );
+}
+
+type Mnt = { id: string; title: string; description: string | null; unit: string | null; assignee: string | null; status: string; priority: string; scheduled_for: string | null; completed_at: string | null };
+function MaintenanceTab({ uid }: { uid: string }) {
+  const [rows, setRows] = useState<Mnt[] | null>(null);
+  const [f, setF] = useState({ title: "", description: "", unit: "", assignee: "", priority: "normal", scheduled_for: "" });
+  const load = async () => { const { data } = await supabase.from("cond_maintenance").select("*").order("created_at", { ascending: false }).limit(200); setRows((data ?? []) as Mnt[]); };
+  useEffect(() => { load(); }, []);
+  const add = async (e: React.FormEvent) => { e.preventDefault(); if (!f.title) return; await supabase.from("cond_maintenance").insert({ title: f.title, description: f.description || null, unit: f.unit || null, assignee: f.assignee || null, priority: f.priority, scheduled_for: f.scheduled_for || null, created_by: uid }); setF({ title: "", description: "", unit: "", assignee: "", priority: "normal", scheduled_for: "" }); load(); };
+  const done = async (id: string) => { await supabase.from("cond_maintenance").update({ status: "done", completed_at: new Date().toISOString() }).eq("id", id); load(); };
+  const del = async (id: string) => { await supabase.from("cond_maintenance").delete().eq("id", id); load(); };
+  return (
+    <div className="space-y-5">
+      <h2 className="font-display text-xl font-bold">Manutenção <span className="text-sm font-normal text-muted-foreground">({rows?.length ?? 0})</span></h2>
+      <form onSubmit={add} className="grid gap-3 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2">
+        <input required placeholder="Título do chamado" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} className={fld} />
+        <input placeholder="Unidade" value={f.unit} onChange={(e) => setF({ ...f, unit: e.target.value })} className={fld} />
+        <input placeholder="Responsável" value={f.assignee} onChange={(e) => setF({ ...f, assignee: e.target.value })} className={fld} />
+        <select value={f.priority} onChange={(e) => setF({ ...f, priority: e.target.value })} className={fld}>
+          <option value="low">Baixa</option><option value="normal">Normal</option><option value="high">Alta</option><option value="urgent">Urgente</option>
+        </select>
+        <input type="datetime-local" value={f.scheduled_for} onChange={(e) => setF({ ...f, scheduled_for: e.target.value })} className={fld} />
+        <textarea placeholder="Descrição" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} className={`${fld} sm:col-span-2`} rows={3} />
+        <button className="sm:col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Plus className="h-4 w-4" /> Abrir chamado</button>
+      </form>
+      <CrudList rows={rows} empty="Nenhum chamado aberto." onDelete={del} render={(r) => (
+        <div>
+          <div className="flex items-center gap-2"><span className="font-medium">{r.title}</span><span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">{r.priority}</span>{r.unit && <span className="text-xs text-muted-foreground">· {r.unit}</span>}</div>
+          {r.assignee && <div className="text-xs text-muted-foreground">Responsável: {r.assignee}</div>}
+          {r.scheduled_for && <div className="text-xs text-muted-foreground">Agendado: {new Date(r.scheduled_for).toLocaleString("pt-BR")}</div>}
+          {r.description && <p className="mt-1 text-sm text-muted-foreground">{r.description}</p>}
+          <div className="mt-2">{r.status === "done" ? <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-400">Concluído</span> : <button onClick={() => done(r.id)} className="rounded-lg border border-border bg-card px-3 py-1 text-xs hover:bg-secondary">Concluir</button>}</div>
+        </div>
+      )} />
+    </div>
+  );
+}
+
+type Rsv = { id: string; area: string; unit: string; resident_name: string; starts_at: string; ends_at: string; status: string; notes: string | null };
+function ReservationsTab({ uid }: { uid: string }) {
+  const [rows, setRows] = useState<Rsv[] | null>(null);
+  const [f, setF] = useState({ area: "Salão de festas", unit: "", resident_name: "", starts_at: "", ends_at: "", notes: "" });
+  const load = async () => { const { data } = await supabase.from("cond_reservations").select("*").order("starts_at", { ascending: false }).limit(200); setRows((data ?? []) as Rsv[]); };
+  useEffect(() => { load(); }, []);
+  const add = async (e: React.FormEvent) => { e.preventDefault(); if (!f.unit || !f.resident_name || !f.starts_at || !f.ends_at) return; await supabase.from("cond_reservations").insert({ area: f.area, unit: f.unit, resident_name: f.resident_name, starts_at: f.starts_at, ends_at: f.ends_at, notes: f.notes || null, created_by: uid }); setF({ area: "Salão de festas", unit: "", resident_name: "", starts_at: "", ends_at: "", notes: "" }); load(); };
+  const cancel = async (id: string) => { await supabase.from("cond_reservations").update({ status: "cancelled" }).eq("id", id); load(); };
+  const del = async (id: string) => { await supabase.from("cond_reservations").delete().eq("id", id); load(); };
+  return (
+    <div className="space-y-5">
+      <h2 className="font-display text-xl font-bold">Reservas de áreas comuns <span className="text-sm font-normal text-muted-foreground">({rows?.length ?? 0})</span></h2>
+      <form onSubmit={add} className="grid gap-3 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2">
+        <select value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })} className={fld}>
+          {["Salão de festas", "Churrasqueira", "Piscina", "Quadra", "Espaço gourmet"].map((a) => <option key={a} value={a}>{a}</option>)}
+        </select>
+        <input required placeholder="Unidade" value={f.unit} onChange={(e) => setF({ ...f, unit: e.target.value })} className={fld} />
+        <input required placeholder="Nome do morador" value={f.resident_name} onChange={(e) => setF({ ...f, resident_name: e.target.value })} className={`${fld} sm:col-span-2`} />
+        <input required type="datetime-local" value={f.starts_at} onChange={(e) => setF({ ...f, starts_at: e.target.value })} className={fld} />
+        <input required type="datetime-local" value={f.ends_at} onChange={(e) => setF({ ...f, ends_at: e.target.value })} className={fld} />
+        <input placeholder="Observações" value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} className={`${fld} sm:col-span-2`} />
+        <button className="sm:col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Plus className="h-4 w-4" /> Criar reserva</button>
+      </form>
+      <CrudList rows={rows} empty="Nenhuma reserva." onDelete={del} render={(r) => (
+        <div>
+          <div className="flex items-center gap-2"><span className="font-medium">{r.area}</span><span className="text-xs text-muted-foreground">· {r.unit} · {r.resident_name}</span></div>
+          <div className="text-xs text-muted-foreground">{new Date(r.starts_at).toLocaleString("pt-BR")} → {new Date(r.ends_at).toLocaleString("pt-BR")}</div>
+          {r.notes && <div className="mt-1 text-xs text-muted-foreground">{r.notes}</div>}
+          <div className="mt-2">{r.status === "cancelled" ? <span className="inline-flex items-center rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-rose-400">Cancelada</span> : <button onClick={() => cancel(r.id)} className="rounded-lg border border-border bg-card px-3 py-1 text-xs hover:bg-secondary">Cancelar</button>}</div>
+        </div>
+      )} />
+    </div>
+  );
+}
+
+type Ntc = { id: string; title: string; body: string; pinned: boolean; created_at: string };
+function NoticesTab({ uid }: { uid: string }) {
+  const [rows, setRows] = useState<Ntc[] | null>(null);
+  const [f, setF] = useState({ title: "", body: "", pinned: false });
+  const load = async () => { const { data } = await supabase.from("cond_notices").select("*").order("pinned", { ascending: false }).order("created_at", { ascending: false }).limit(200); setRows((data ?? []) as Ntc[]); };
+  useEffect(() => { load(); }, []);
+  const add = async (e: React.FormEvent) => { e.preventDefault(); if (!f.title) return; await supabase.from("cond_notices").insert({ ...f, created_by: uid }); setF({ title: "", body: "", pinned: false }); load(); };
+  const del = async (id: string) => { await supabase.from("cond_notices").delete().eq("id", id); load(); };
+  return (
+    <div className="space-y-5">
+      <h2 className="font-display text-xl font-bold">Avisos do condomínio <span className="text-sm font-normal text-muted-foreground">({rows?.length ?? 0})</span></h2>
+      <form onSubmit={add} className="grid gap-3 rounded-2xl border border-border bg-card p-5">
+        <input required placeholder="Título" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} className={fld} />
+        <textarea placeholder="Mensagem" value={f.body} onChange={(e) => setF({ ...f, body: e.target.value })} className={fld} rows={4} />
+        <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" checked={f.pinned} onChange={(e) => setF({ ...f, pinned: e.target.checked })} className="h-4 w-4" /> Fixar no topo</label>
+        <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Plus className="h-4 w-4" /> Publicar aviso</button>
+      </form>
+      <CrudList rows={rows} empty="Nenhum aviso publicado." onDelete={del} render={(r) => (
+        <div>
+          <div className="flex items-center gap-2"><span className="font-medium">{r.title}</span>{r.pinned && <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase text-primary">Fixado</span>}</div>
+          <div className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString("pt-BR")}</div>
+          {r.body && <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{r.body}</p>}
+        </div>
+      )} />
     </div>
   );
 }
