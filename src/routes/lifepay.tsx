@@ -13,7 +13,6 @@ import {
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis } from "recharts";
 
 export const Route = createFileRoute("/lifepay")({
-  ssr: false,
   head: () => ({
     meta: [
       { title: "LifePay — Banco digital | Furry's Life Inc." },
