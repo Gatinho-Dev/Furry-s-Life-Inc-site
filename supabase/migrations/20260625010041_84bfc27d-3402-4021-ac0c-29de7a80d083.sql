@@ -1,0 +1,1 @@
+ALTER TYPE public.subsidiary ADD VALUE IF NOT EXISTS 'lifepay';
