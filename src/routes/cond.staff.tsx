@@ -48,11 +48,11 @@ function CondStaff() {
       {tab === "dashboard" && <DashboardTab />}
       {tab === "residents" && <ResidentsTab uid={auth.user.id} />}
       {tab === "visitors" && <VisitorsTab uid={auth.user.id} />}
-      {tab === "packages" && <Placeholder title="Encomendas" hint="Controle de pacotes recebidos e retirados." />}
-      {tab === "incidents" && <Placeholder title="Incidentes" hint="Registro e acompanhamento de ocorrências." />}
-      {tab === "maintenance" && <Placeholder title="Manutenção" hint="Chamados e ordens de serviço." />}
-      {tab === "reservations" && <Placeholder title="Reservas de áreas comuns" hint="Salão de festas, churrasqueira, piscina." />}
-      {tab === "notices" && <Placeholder title="Avisos do condomínio" hint="Comunicados para moradores." />}
+      {tab === "packages" && <PackagesTab uid={auth.user.id} />}
+      {tab === "incidents" && <IncidentsTab uid={auth.user.id} />}
+      {tab === "maintenance" && <MaintenanceTab uid={auth.user.id} />}
+      {tab === "reservations" && <ReservationsTab uid={auth.user.id} />}
+      {tab === "notices" && <NoticesTab uid={auth.user.id} />
     </StaffShell>
   );
 }
