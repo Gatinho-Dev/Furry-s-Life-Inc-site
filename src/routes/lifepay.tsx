@@ -12,8 +12,7 @@ import {
 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis } from "recharts";
 
-export const Route = createFileRoute("/lifepay/")({
-  ssr: false,
+export const Route = createFileRoute("/lifepay")({
   head: () => ({
     meta: [
       { title: "LifePay — Banco digital | Furry's Life Inc." },

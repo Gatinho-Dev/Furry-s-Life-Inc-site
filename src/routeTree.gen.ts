@@ -12,11 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StaffRouteImport } from './routes/staff'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as NewsRouteImport } from './routes/news'
+import { Route as LifepayRouteImport } from './routes/lifepay'
 import { Route as LifeServerRouteImport } from './routes/life-server'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StaffIndexRouteImport } from './routes/staff.index'
-import { Route as LifepayIndexRouteImport } from './routes/lifepay.index'
 import { Route as CondIndexRouteImport } from './routes/cond.index'
 import { Route as CollegeIndexRouteImport } from './routes/college.index'
 import { Route as AircareIndexRouteImport } from './routes/aircare.index'
@@ -46,6 +46,11 @@ const NewsRoute = NewsRouteImport.update({
   path: '/news',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LifepayRoute = LifepayRouteImport.update({
+  id: '/lifepay',
+  path: '/lifepay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LifeServerRoute = LifeServerRouteImport.update({
   id: '/life-server',
   path: '/life-server',
@@ -65,11 +70,6 @@ const StaffIndexRoute = StaffIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => StaffRoute,
-} as any)
-const LifepayIndexRoute = LifepayIndexRouteImport.update({
-  id: '/lifepay/',
-  path: '/lifepay/',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const CondIndexRoute = CondIndexRouteImport.update({
   id: '/cond/',
@@ -97,9 +97,9 @@ const StaffDashboardRoute = StaffDashboardRouteImport.update({
   getParentRoute: () => StaffRoute,
 } as any)
 const LifepayStaffRoute = LifepayStaffRouteImport.update({
-  id: '/lifepay/staff',
-  path: '/lifepay/staff',
-  getParentRoute: () => rootRouteImport,
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => LifepayRoute,
 } as any)
 const CondStaffRoute = CondStaffRouteImport.update({
   id: '/cond/staff',
@@ -142,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
+  '/lifepay': typeof LifepayRouteWithChildren
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRouteWithChildren
@@ -155,7 +156,6 @@ export interface FileRoutesByFullPath {
   '/aircare/': typeof AircareIndexRoute
   '/college/': typeof CollegeIndexRoute
   '/cond/': typeof CondIndexRoute
-  '/lifepay/': typeof LifepayIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -165,6 +165,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
+  '/lifepay': typeof LifepayRouteWithChildren
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/agency/staff': typeof AgencyStaffRoute
@@ -177,7 +178,6 @@ export interface FileRoutesByTo {
   '/aircare': typeof AircareIndexRoute
   '/college': typeof CollegeIndexRoute
   '/cond': typeof CondIndexRoute
-  '/lifepay': typeof LifepayIndexRoute
   '/staff': typeof StaffIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -188,6 +188,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
+  '/lifepay': typeof LifepayRouteWithChildren
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRouteWithChildren
@@ -201,7 +202,6 @@ export interface FileRoutesById {
   '/aircare/': typeof AircareIndexRoute
   '/college/': typeof CollegeIndexRoute
   '/cond/': typeof CondIndexRoute
-  '/lifepay/': typeof LifepayIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -213,6 +213,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/life-server'
+    | '/lifepay'
     | '/news'
     | '/sitemap.xml'
     | '/staff'
@@ -226,7 +227,6 @@ export interface FileRouteTypes {
     | '/aircare/'
     | '/college/'
     | '/cond/'
-    | '/lifepay/'
     | '/staff/'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -236,6 +236,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/life-server'
+    | '/lifepay'
     | '/news'
     | '/sitemap.xml'
     | '/agency/staff'
@@ -248,7 +249,6 @@ export interface FileRouteTypes {
     | '/aircare'
     | '/college'
     | '/cond'
-    | '/lifepay'
     | '/staff'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -258,6 +258,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/life-server'
+    | '/lifepay'
     | '/news'
     | '/sitemap.xml'
     | '/staff'
@@ -271,7 +272,6 @@ export interface FileRouteTypes {
     | '/aircare/'
     | '/college/'
     | '/cond/'
-    | '/lifepay/'
     | '/staff/'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -282,6 +282,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   LifeServerRoute: typeof LifeServerRoute
+  LifepayRoute: typeof LifepayRouteWithChildren
   NewsRoute: typeof NewsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffRoute: typeof StaffRouteWithChildren
@@ -289,12 +290,10 @@ export interface RootRouteChildren {
   AircareStaffRoute: typeof AircareStaffRoute
   CollegeStaffRoute: typeof CollegeStaffRoute
   CondStaffRoute: typeof CondStaffRoute
-  LifepayStaffRoute: typeof LifepayStaffRoute
   AgencyIndexRoute: typeof AgencyIndexRoute
   AircareIndexRoute: typeof AircareIndexRoute
   CollegeIndexRoute: typeof CollegeIndexRoute
   CondIndexRoute: typeof CondIndexRoute
-  LifepayIndexRoute: typeof LifepayIndexRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -321,6 +320,13 @@ declare module '@tanstack/react-router' {
       path: '/news'
       fullPath: '/news'
       preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lifepay': {
+      id: '/lifepay'
+      path: '/lifepay'
+      fullPath: '/lifepay'
+      preLoaderRoute: typeof LifepayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/life-server': {
@@ -350,13 +356,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/staff/'
       preLoaderRoute: typeof StaffIndexRouteImport
       parentRoute: typeof StaffRoute
-    }
-    '/lifepay/': {
-      id: '/lifepay/'
-      path: '/lifepay'
-      fullPath: '/lifepay/'
-      preLoaderRoute: typeof LifepayIndexRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/cond/': {
       id: '/cond/'
@@ -395,10 +394,10 @@ declare module '@tanstack/react-router' {
     }
     '/lifepay/staff': {
       id: '/lifepay/staff'
-      path: '/lifepay/staff'
+      path: '/staff'
       fullPath: '/lifepay/staff'
       preLoaderRoute: typeof LifepayStaffRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof LifepayRoute
     }
     '/cond/staff': {
       id: '/cond/staff'
@@ -452,6 +451,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface LifepayRouteChildren {
+  LifepayStaffRoute: typeof LifepayStaffRoute
+}
+
+const LifepayRouteChildren: LifepayRouteChildren = {
+  LifepayStaffRoute: LifepayStaffRoute,
+}
+
+const LifepayRouteWithChildren =
+  LifepayRoute._addFileChildren(LifepayRouteChildren)
+
 interface StaffRouteChildren {
   StaffDashboardRoute: typeof StaffDashboardRoute
   StaffIndexRoute: typeof StaffIndexRoute
@@ -468,6 +478,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   LifeServerRoute: LifeServerRoute,
+  LifepayRoute: LifepayRouteWithChildren,
   NewsRoute: NewsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffRoute: StaffRouteWithChildren,
@@ -475,12 +486,10 @@ const rootRouteChildren: RootRouteChildren = {
   AircareStaffRoute: AircareStaffRoute,
   CollegeStaffRoute: CollegeStaffRoute,
   CondStaffRoute: CondStaffRoute,
-  LifepayStaffRoute: LifepayStaffRoute,
   AgencyIndexRoute: AgencyIndexRoute,
   AircareIndexRoute: AircareIndexRoute,
   CollegeIndexRoute: CollegeIndexRoute,
   CondIndexRoute: CondIndexRoute,
-  LifepayIndexRoute: LifepayIndexRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
