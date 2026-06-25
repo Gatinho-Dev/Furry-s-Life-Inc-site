@@ -53,7 +53,7 @@ function Index() {
         <Hero />
         <About />
         <Subsidiaries />
-        
+        <News />
         <Contact />
       </main>
       <Footer />
