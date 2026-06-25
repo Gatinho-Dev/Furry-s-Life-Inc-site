@@ -3,7 +3,7 @@ import { Navbar } from "@/components/site/Navbar";
 import { Hero } from "@/components/site/Hero";
 import { About } from "@/components/site/About";
 import { Subsidiaries } from "@/components/site/Subsidiaries";
-
+import { News } from "@/components/site/News";
 import { Contact } from "@/components/site/Contact";
 import { Footer } from "@/components/site/Footer";
 

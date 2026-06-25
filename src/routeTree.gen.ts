@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StaffRouteImport } from './routes/staff'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as NewsRouteImport } from './routes/news'
 import { Route as LifeServerRouteImport } from './routes/life-server'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
@@ -36,6 +37,11 @@ const StaffRoute = StaffRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LifeServerRoute = LifeServerRouteImport.update({
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
+  '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRouteWithChildren
   '/agency/staff': typeof AgencyStaffRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
+  '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/agency/staff': typeof AgencyStaffRoute
   '/aircare/staff': typeof AircareStaffRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
+  '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRouteWithChildren
   '/agency/staff': typeof AgencyStaffRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/life-server'
+    | '/news'
     | '/sitemap.xml'
     | '/staff'
     | '/agency/staff'
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/life-server'
+    | '/news'
     | '/sitemap.xml'
     | '/agency/staff'
     | '/aircare/staff'
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/life-server'
+    | '/news'
     | '/sitemap.xml'
     | '/staff'
     | '/agency/staff'
@@ -246,6 +258,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   LifeServerRoute: typeof LifeServerRoute
+  NewsRoute: typeof NewsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffRoute: typeof StaffRouteWithChildren
   AgencyStaffRoute: typeof AgencyStaffRoute
@@ -275,6 +288,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/life-server': {
@@ -408,6 +428,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   LifeServerRoute: LifeServerRoute,
+  NewsRoute: NewsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffRoute: StaffRouteWithChildren,
   AgencyStaffRoute: AgencyStaffRoute,
