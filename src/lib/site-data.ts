@@ -1,6 +1,6 @@
 import {
   Gamepad2, Ship, Palmtree, GraduationCap, Building2, Tent, FlaskConical,
-  Drama, Atom, Server, Trophy, Shield, HeartPulse, Wind,
+  Drama, Atom, Server, Trophy, Shield, HeartPulse, Wind, Landmark,
   type LucideIcon,
 } from "lucide-react";
 
@@ -8,7 +8,7 @@ export const DISCORD_URL = "https://discord.gg/bSNw4nQnwV";
 
 export type SubsidiaryKey =
   | "studios" | "cruise" | "maldivas" | "college" | "cond" | "camping" | "labs"
-  | "theater" | "energy" | "server" | "soccer" | "agency" | "lifeplus" | "aircare";
+  | "theater" | "energy" | "server" | "soccer" | "agency" | "lifeplus" | "aircare" | "lifepay";
 
 export type Subsidiary = {
   key: SubsidiaryKey;
@@ -37,6 +37,7 @@ export const subsidiaries: Subsidiary[] = [
   { key: "agency",   name: "Life Agency",                  category: "Inteligência",      description: "Agência de inteligência e operações especiais.",                icon: Shield,       href: "/agency" },
   { key: "lifeplus", name: "Life+",                        category: "Saúde",             description: "Serviços de saúde, bem-estar e medicina preventiva.",           icon: HeartPulse },
   { key: "aircare",  name: "Life AirCare",                 category: "Sustentabilidade",  description: "Purificação do ar e tecnologias ambientais.",                   icon: Wind,         href: "/aircare" },
+  { key: "lifepay",  name: "LifePay",                      category: "Finanças",          description: "Banco digital fictício com Pix, cartões, investimentos e PJ.",  icon: Landmark,     href: "/lifepay" },
 ];
 
 export const newsItems: { date: string; tag: string; title: string; description: string }[] = [];
@@ -57,4 +58,5 @@ export const SUBSIDIARY_LABELS: Record<string, string> = {
   agency: "Life Agency",
   lifeplus: "Life+",
   aircare: "Life AirCare",
+  lifepay: "LifePay",
 };
