@@ -117,7 +117,7 @@ const NAV = [
   { id: "cartoes", label: "Cartões" },
   { id: "pix", label: "Pix" },
   { id: "investimentos", label: "Investimentos" },
-  { id: "empresas", label: "Empresas" },
+  
   { id: "seguranca", label: "Segurança" },
   { id: "sobre", label: "Sobre" },
 ];
