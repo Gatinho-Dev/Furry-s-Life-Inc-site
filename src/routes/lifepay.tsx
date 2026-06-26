@@ -205,7 +205,7 @@ function LifePayLanding() {
         <PixSection />
         <CardsSection />
         <InvestSection />
-        <PjSection />
+        {/* PJ section removed */}
         <SecuritySection />
         <StatementSection />
         <CtaFooter />
