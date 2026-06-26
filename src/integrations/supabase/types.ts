@@ -447,6 +447,66 @@ export type Database = {
         }
         Relationships: []
       }
+      lifepay_accounts: {
+        Row: {
+          balance: number
+          created_at: string
+          display_name: string
+          is_admin: boolean
+          pix_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          display_name: string
+          is_admin?: boolean
+          pix_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          display_name?: string
+          is_admin?: boolean
+          pix_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lifepay_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          from_user: string | null
+          id: string
+          kind: string
+          note: string | null
+          to_user: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          from_user?: string | null
+          id?: string
+          kind?: string
+          note?: string | null
+          to_user?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          from_user?: string | null
+          id?: string
+          kind?: string
+          note?: string | null
+          to_user?: string | null
+        }
+        Relationships: []
+      }
       news_posts: {
         Row: {
           author_id: string | null
@@ -971,6 +1031,24 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      ensure_lifepay_account: {
+        Args: { _user_id: string }
+        Returns: {
+          balance: number
+          created_at: string
+          display_name: string
+          is_admin: boolean
+          pix_key: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lifepay_accounts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -994,6 +1072,42 @@ export type Database = {
         Returns: boolean
       }
       is_ceo_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      lifepay_admin_adjust: {
+        Args: { _amount: number; _note?: string; _target_pix: string }
+        Returns: {
+          amount: number
+          created_at: string
+          from_user: string | null
+          id: string
+          kind: string
+          note: string | null
+          to_user: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lifepay_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      lifepay_transfer: {
+        Args: { _amount: number; _note?: string; _to_pix: string }
+        Returns: {
+          amount: number
+          created_at: string
+          from_user: string | null
+          id: string
+          kind: string
+          note: string | null
+          to_user: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lifepay_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
