@@ -1003,7 +1003,7 @@ function CtaFooter() {
         <p className="relative mx-auto mt-3 max-w-xl lp-text-2">Abra sua conta LifePay em menos de 3 minutos. Sem tarifas escondidas.</p>
         <div className="relative mt-7 flex flex-wrap items-center justify-center gap-3">
           <a href="#dashboard" className="lp-btn-primary">Abrir conta agora <ArrowUpRight className="h-4 w-4" /></a>
-          <Link to="/auth" search={{ redirect: "/lifepay/app" }} className="lp-btn-ghost">Acesso staff</Link>
+          <Link to="/auth" search={{ redirect: "/lifepay/app" }} className="lp-btn-ghost">Entrar na conta</Link>
         </div>
         <div className="relative mt-4"><Disclaimer inline /></div>
       </div>
