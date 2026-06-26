@@ -23,6 +23,7 @@ import { Route as AircareIndexRouteImport } from './routes/aircare.index'
 import { Route as AgencyIndexRouteImport } from './routes/agency.index'
 import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
 import { Route as LifepayStaffRouteImport } from './routes/lifepay.staff'
+import { Route as LifepayAppRouteImport } from './routes/lifepay.app'
 import { Route as CondStaffRouteImport } from './routes/cond.staff'
 import { Route as CollegeStaffRouteImport } from './routes/college.staff'
 import { Route as AircareStaffRouteImport } from './routes/aircare.staff'
@@ -101,6 +102,11 @@ const LifepayStaffRoute = LifepayStaffRouteImport.update({
   path: '/staff',
   getParentRoute: () => LifepayRoute,
 } as any)
+const LifepayAppRoute = LifepayAppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => LifepayRoute,
+} as any)
 const CondStaffRoute = CondStaffRouteImport.update({
   id: '/cond/staff',
   path: '/cond/staff',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
   '/cond/staff': typeof CondStaffRoute
+  '/lifepay/app': typeof LifepayAppRoute
   '/lifepay/staff': typeof LifepayStaffRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/agency/': typeof AgencyIndexRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
   '/cond/staff': typeof CondStaffRoute
+  '/lifepay/app': typeof LifepayAppRoute
   '/lifepay/staff': typeof LifepayStaffRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/agency': typeof AgencyIndexRoute
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
   '/cond/staff': typeof CondStaffRoute
+  '/lifepay/app': typeof LifepayAppRoute
   '/lifepay/staff': typeof LifepayStaffRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/agency/': typeof AgencyIndexRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/aircare/staff'
     | '/college/staff'
     | '/cond/staff'
+    | '/lifepay/app'
     | '/lifepay/staff'
     | '/staff/dashboard'
     | '/agency/'
@@ -243,6 +253,7 @@ export interface FileRouteTypes {
     | '/aircare/staff'
     | '/college/staff'
     | '/cond/staff'
+    | '/lifepay/app'
     | '/lifepay/staff'
     | '/staff/dashboard'
     | '/agency'
@@ -266,6 +277,7 @@ export interface FileRouteTypes {
     | '/aircare/staff'
     | '/college/staff'
     | '/cond/staff'
+    | '/lifepay/app'
     | '/lifepay/staff'
     | '/staff/dashboard'
     | '/agency/'
@@ -399,6 +411,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LifepayStaffRouteImport
       parentRoute: typeof LifepayRoute
     }
+    '/lifepay/app': {
+      id: '/lifepay/app'
+      path: '/app'
+      fullPath: '/lifepay/app'
+      preLoaderRoute: typeof LifepayAppRouteImport
+      parentRoute: typeof LifepayRoute
+    }
     '/cond/staff': {
       id: '/cond/staff'
       path: '/cond/staff'
@@ -452,10 +471,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface LifepayRouteChildren {
+  LifepayAppRoute: typeof LifepayAppRoute
   LifepayStaffRoute: typeof LifepayStaffRoute
 }
 
 const LifepayRouteChildren: LifepayRouteChildren = {
+  LifepayAppRoute: LifepayAppRoute,
   LifepayStaffRoute: LifepayStaffRoute,
 }
 
