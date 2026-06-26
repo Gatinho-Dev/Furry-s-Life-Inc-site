@@ -271,7 +271,7 @@ function LpNavbar() {
             ))}
           </div>
           <div className="hidden items-center gap-2 md:flex">
-            <Link to="/auth" search={{ redirect: "/lifepay/staff" }} className="lp-btn-ghost">Entrar</Link>
+            <Link to="/auth" search={{ redirect: "/lifepay/app" }} className="lp-btn-ghost">Entrar</Link>
             <a href="#dashboard" className="lp-btn-primary">Criar conta <ArrowUpRight className="h-4 w-4" /></a>
           </div>
           <button className="md:hidden rounded-full border border-white/10 p-2 text-white/80" onClick={() => setOpen(true)} aria-label="Abrir menu">
@@ -305,7 +305,7 @@ function LpNavbar() {
                     {n.label}
                   </a>
                 ))}
-                <Link to="/auth" search={{ redirect: "/lifepay/staff" }} className="mt-3 lp-btn-ghost justify-center">Entrar</Link>
+                <Link to="/auth" search={{ redirect: "/lifepay/app" }} className="mt-3 lp-btn-ghost justify-center">Entrar</Link>
                 <a href="#dashboard" onClick={() => setOpen(false)} className="mt-2 lp-btn-primary justify-center">Criar conta</a>
               </div>
             </motion.aside>
@@ -1003,7 +1003,7 @@ function CtaFooter() {
         <p className="relative mx-auto mt-3 max-w-xl lp-text-2">Abra sua conta LifePay em menos de 3 minutos. Sem tarifas escondidas.</p>
         <div className="relative mt-7 flex flex-wrap items-center justify-center gap-3">
           <a href="#dashboard" className="lp-btn-primary">Abrir conta agora <ArrowUpRight className="h-4 w-4" /></a>
-          <Link to="/auth" search={{ redirect: "/lifepay/staff" }} className="lp-btn-ghost">Acesso staff</Link>
+          <Link to="/auth" search={{ redirect: "/lifepay/app" }} className="lp-btn-ghost">Acesso staff</Link>
         </div>
         <div className="relative mt-4"><Disclaimer inline /></div>
       </div>
