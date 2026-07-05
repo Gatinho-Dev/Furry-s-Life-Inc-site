@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StaffRouteImport } from './routes/staff'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as NewsRouteImport } from './routes/news'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LifepayRouteImport } from './routes/lifepay'
 import { Route as LifeServerRouteImport } from './routes/life-server'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -28,6 +29,9 @@ import { Route as CondStaffRouteImport } from './routes/cond.staff'
 import { Route as CollegeStaffRouteImport } from './routes/college.staff'
 import { Route as AircareStaffRouteImport } from './routes/aircare.staff'
 import { Route as AgencyStaffRouteImport } from './routes/agency.staff'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -45,6 +49,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const NewsRoute = NewsRouteImport.update({
   id: '/news',
   path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LifepayRoute = LifepayRouteImport.update({
@@ -127,6 +136,24 @@ const AgencyStaffRoute = AgencyStaffRouteImport.update({
   path: '/agency/staff',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -149,9 +176,12 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
   '/lifepay': typeof LifepayRouteWithChildren
+  '/mcp': typeof McpRoute
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRouteWithChildren
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/agency/staff': typeof AgencyStaffRoute
   '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
@@ -164,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/college/': typeof CollegeIndexRoute
   '/cond/': typeof CondIndexRoute
   '/staff/': typeof StaffIndexRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -173,8 +204,11 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
   '/lifepay': typeof LifepayRouteWithChildren
+  '/mcp': typeof McpRoute
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/agency/staff': typeof AgencyStaffRoute
   '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
@@ -187,6 +221,7 @@ export interface FileRoutesByTo {
   '/college': typeof CollegeIndexRoute
   '/cond': typeof CondIndexRoute
   '/staff': typeof StaffIndexRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -197,9 +232,12 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
   '/lifepay': typeof LifepayRouteWithChildren
+  '/mcp': typeof McpRoute
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRouteWithChildren
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/agency/staff': typeof AgencyStaffRoute
   '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
@@ -212,6 +250,7 @@ export interface FileRoutesById {
   '/college/': typeof CollegeIndexRoute
   '/cond/': typeof CondIndexRoute
   '/staff/': typeof StaffIndexRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -223,9 +262,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/life-server'
     | '/lifepay'
+    | '/mcp'
     | '/news'
     | '/sitemap.xml'
     | '/staff'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/agency/staff'
     | '/aircare/staff'
     | '/college/staff'
@@ -238,6 +280,7 @@ export interface FileRouteTypes {
     | '/college/'
     | '/cond/'
     | '/staff/'
+    | '/.mcp/invoke-tool/$tool'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -247,8 +290,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/life-server'
     | '/lifepay'
+    | '/mcp'
     | '/news'
     | '/sitemap.xml'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/agency/staff'
     | '/aircare/staff'
     | '/college/staff'
@@ -261,6 +307,7 @@ export interface FileRouteTypes {
     | '/college'
     | '/cond'
     | '/staff'
+    | '/.mcp/invoke-tool/$tool'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -270,9 +317,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/life-server'
     | '/lifepay'
+    | '/mcp'
     | '/news'
     | '/sitemap.xml'
     | '/staff'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/agency/staff'
     | '/aircare/staff'
     | '/college/staff'
@@ -285,6 +335,7 @@ export interface FileRouteTypes {
     | '/college/'
     | '/cond/'
     | '/staff/'
+    | '/.mcp/invoke-tool/$tool'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -295,9 +346,12 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   LifeServerRoute: typeof LifeServerRoute
   LifepayRoute: typeof LifepayRouteWithChildren
+  McpRoute: typeof McpRoute
   NewsRoute: typeof NewsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffRoute: typeof StaffRouteWithChildren
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AgencyStaffRoute: typeof AgencyStaffRoute
   AircareStaffRoute: typeof AircareStaffRoute
   CollegeStaffRoute: typeof CollegeStaffRoute
@@ -306,6 +360,7 @@ export interface RootRouteChildren {
   AircareIndexRoute: typeof AircareIndexRoute
   CollegeIndexRoute: typeof CollegeIndexRoute
   CondIndexRoute: typeof CondIndexRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -332,6 +387,13 @@ declare module '@tanstack/react-router' {
       path: '/news'
       fullPath: '/news'
       preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lifepay': {
@@ -446,6 +508,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgencyStaffRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
       path: '/lovable/email/queue/process'
@@ -500,9 +583,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   LifeServerRoute: LifeServerRoute,
   LifepayRoute: LifepayRouteWithChildren,
+  McpRoute: McpRoute,
   NewsRoute: NewsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffRoute: StaffRouteWithChildren,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   AgencyStaffRoute: AgencyStaffRoute,
   AircareStaffRoute: AircareStaffRoute,
   CollegeStaffRoute: CollegeStaffRoute,
@@ -511,6 +598,7 @@ const rootRouteChildren: RootRouteChildren = {
   AircareIndexRoute: AircareIndexRoute,
   CollegeIndexRoute: CollegeIndexRoute,
   CondIndexRoute: CondIndexRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
