@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "furrys-life-mcp",
+      "version": "0.1.0",
+      "title": "Furry's Life Inc. MCP"
+    },
+    "tools": [
+      {
+        "name": "list_subsidiaries",
+        "title": "List subsidiaries",
+        "description": "List every Furry's Life Inc. subsidiary (name, category, description, and internal path when published).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_company_info",
+        "title": "Get company info",
+        "description": "Return top-level info about Furry's Life Inc.: site URL, Discord invite, and subsidiary count.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "latest_news",
+        "title": "Latest news",
+        "description": "Fetch the most recent published news posts from Furry's Life Inc. Optionally filter by subsidiary key.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "default": 10,
+              "description": "How many posts to return (1-50).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "subsidiary": {
+              "description": "Optional subsidiary key filter, e.g. 'lifepay', 'aircare'.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
