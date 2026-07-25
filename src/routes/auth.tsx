@@ -1,15 +1,17 @@
-import { createFileRoute, useNavigate, Link, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import symbol from "@/assets/fli-symbol.png.asset.json";
 
-const ALLOWED_REDIRECTS = ["/staff/dashboard", "/agency/staff", "/college/staff", "/cond/staff", "/aircare/staff", "/lifepay/staff", "/lifepay/app", "/life-server"];
+const ALLOWED_REDIRECTS = ["/staff/dashboard", "/agency/staff", "/college/staff", "/cond/staff", "/aircare/staff", "/lifepay/staff", "/lifepay/app", "/life-server", "/.lovable/oauth/consent"];
 const safeRedirect = (r?: string) => {
   if (!r || typeof r !== "string") return "/staff/dashboard";
-  if (!r.startsWith("/")) return "/staff/dashboard";
-  return ALLOWED_REDIRECTS.some((p) => r === p || r.startsWith(p + "/")) ? r : "/staff/dashboard";
+  if (!r.startsWith("/") || r.startsWith("//")) return "/staff/dashboard";
+  const path = r.split("?")[0].split("#")[0];
+  return ALLOWED_REDIRECTS.some((p) => path === p || path.startsWith(p + "/")) ? r : "/staff/dashboard";
 };
+
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({ redirect: typeof s.redirect === "string" ? s.redirect : undefined }),
@@ -23,8 +25,9 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+const goTo = (target: string) => window.location.assign(target);
+
 function AuthPage() {
-  const nav = useNavigate();
   const { redirect } = useSearch({ from: "/auth" });
   const target = safeRedirect(redirect);
   const [email, setEmail] = useState("");
@@ -36,10 +39,10 @@ function AuthPage() {
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled && data.session) nav({ to: target });
+      if (!cancelled && data.session) goTo(target);
     });
     return () => { cancelled = true; };
-  }, [nav, target]);
+  }, [target]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +50,7 @@ function AuthPage() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      nav({ to: target });
+      goTo(target);
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Falha ao autenticar");
     } finally {
