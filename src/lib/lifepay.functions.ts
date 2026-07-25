@@ -106,7 +106,7 @@ export const lifepayFirstAccess = createServerFn({ method: "POST" })
       const { hashPin } = await import("@/lib/lifepay-crypto.server");
       patch.pin_hash = hashPin(data.pin);
     }
-    const { error } = await supabaseAdmin.from("lifepay_accounts").update(patch).eq("user_id", context.userId);
+    const { error } = await supabaseAdmin.from("lifepay_accounts").update(patch as any).eq("user_id", context.userId);
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("lifepay_audit_logs").insert({
       actor_id: context.userId, actor_kind: "user", action: "first_access_completed", target_user: context.userId,
@@ -241,13 +241,13 @@ export const lifepayAdminUpdateAccount = createServerFn({ method: "POST" })
       if (authErr) throw new Error(authErr.message);
     }
 
-    const { error } = await supabaseAdmin.from("lifepay_accounts").update(patch).eq("user_id", data.user_id);
+    const { error } = await supabaseAdmin.from("lifepay_accounts").update(patch as any).eq("user_id", data.user_id);
     if (error) throw new Error(error.message);
 
     await supabaseAdmin.from("lifepay_audit_logs").insert({
       actor_id: context.userId, action: "account_updated", target_user: data.user_id,
       before_data: Object.fromEntries(Object.keys(patch).map((k) => [k, (before as any)[k]])),
-      after_data: patch, reason: data.reason ?? null,
+      after_data: patch as any, reason: data.reason ?? null,
     });
     return { ok: true };
   });
