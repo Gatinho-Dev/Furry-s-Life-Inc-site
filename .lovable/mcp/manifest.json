@@ -3,12 +3,16 @@
   "sdk_version": "0.20.0",
   "path": "/mcp",
   "auth": {
-    "type": "none"
+    "type": "oauth",
+    "issuer": "https://qcstrivvxaopqstxpsoa.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
   },
   "mcp": {
     "server": {
       "name": "furrys-life-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "Furry's Life Inc. MCP"
     },
     "tools": [
@@ -47,7 +51,7 @@
       {
         "name": "latest_news",
         "title": "Latest news",
-        "description": "Fetch the most recent published news posts from Furry's Life Inc. Optionally filter by subsidiary key.",
+        "description": "Fetch the most recent published news posts from Furry's Life Inc.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -63,12 +67,175 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 50
-            },
-            "subsidiary": {
-              "description": "Optional subsidiary key filter, e.g. 'lifepay', 'aircare'.",
-              "type": "string"
             }
           }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_messages",
+        "title": "List inbox messages",
+        "description": "Read the most recent messages from the internal Furry's Life Inc. inbox.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "default": 10,
+              "description": "How many messages to return (1-50).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_news_post",
+        "title": "Create news post",
+        "description": "Publish a news post on the Furry's Life Inc. site (title, optional subtitle, markdown content, tag).",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 2,
+              "description": "Post headline."
+            },
+            "content": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Post body in Markdown."
+            },
+            "subtitle": {
+              "description": "Optional short subtitle.",
+              "type": "string"
+            },
+            "tag": {
+              "description": "Category tag, e.g. 'Geral', 'LifePay'.",
+              "type": "string"
+            },
+            "published": {
+              "description": "Publish immediately (default true).",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "title",
+            "content"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "update_news_post",
+        "title": "Update news post",
+        "description": "Edit an existing news post on the Furry's Life Inc. site by its id.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "News post id (uuid)."
+            },
+            "title": {
+              "type": "string"
+            },
+            "subtitle": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            },
+            "tag": {
+              "type": "string"
+            },
+            "published": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "delete_news_post",
+        "title": "Delete news post",
+        "description": "Permanently delete a news post from the Furry's Life Inc. site by its id.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "News post id (uuid)."
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "send_message",
+        "title": "Send message to inbox",
+        "description": "Send a message to the internal Furry's Life Inc. inbox (visible in the staff dashboard).",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "subject": {
+              "type": "string",
+              "minLength": 2,
+              "description": "Message subject."
+            },
+            "body": {
+              "type": "string",
+              "minLength": 2,
+              "description": "Message body."
+            },
+            "name": {
+              "description": "Sender name shown in the inbox.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "subject",
+            "body"
+          ]
         },
         "outputSchema": null
       }
