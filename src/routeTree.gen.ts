@@ -30,8 +30,10 @@ import { Route as CondStaffRouteImport } from './routes/cond.staff'
 import { Route as LifepayIndexRouteImport } from './routes/lifepay.index'
 import { Route as LifepayAppRouteImport } from './routes/lifepay.app'
 import { Route as LifepayEntrarRouteImport } from './routes/lifepay.entrar'
+import { Route as LifepayPrivacidadeRouteImport } from './routes/lifepay.privacidade'
 import { Route as LifepaySobreRouteImport } from './routes/lifepay.sobre'
 import { Route as LifepayStaffRouteImport } from './routes/lifepay.staff'
+import { Route as LifepayTermosRouteImport } from './routes/lifepay.termos'
 import { Route as StaffIndexRouteImport } from './routes/staff.index'
 import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -147,6 +149,11 @@ const LifepayEntrarRoute = LifepayEntrarRouteImport.update({
   path: '/entrar',
   getParentRoute: () => LifepayRoute,
 } as any)
+const LifepayPrivacidadeRoute = LifepayPrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => LifepayRoute,
+} as any)
 const LifepaySobreRoute = LifepaySobreRouteImport.update({
   id: '/sobre',
   path: '/sobre',
@@ -155,6 +162,11 @@ const LifepaySobreRoute = LifepaySobreRouteImport.update({
 const LifepayStaffRoute = LifepayStaffRouteImport.update({
   id: '/staff',
   path: '/staff',
+  getParentRoute: () => LifepayRoute,
+} as any)
+const LifepayTermosRoute = LifepayTermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
   getParentRoute: () => LifepayRoute,
 } as any)
 const StaffIndexRoute = StaffIndexRouteImport.update({
@@ -212,8 +224,10 @@ export interface FileRoutesByFullPath {
   '/cond/staff': typeof CondStaffRoute
   '/lifepay/app': typeof LifepayAppRoute
   '/lifepay/entrar': typeof LifepayEntrarRoute
+  '/lifepay/privacidade': typeof LifepayPrivacidadeRoute
   '/lifepay/sobre': typeof LifepaySobreRoute
   '/lifepay/staff': typeof LifepayStaffRoute
+  '/lifepay/termos': typeof LifepayTermosRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/agency/': typeof AgencyIndexRoute
   '/aircare/': typeof AircareIndexRoute
@@ -242,8 +256,10 @@ export interface FileRoutesByTo {
   '/cond/staff': typeof CondStaffRoute
   '/lifepay/app': typeof LifepayAppRoute
   '/lifepay/entrar': typeof LifepayEntrarRoute
+  '/lifepay/privacidade': typeof LifepayPrivacidadeRoute
   '/lifepay/sobre': typeof LifepaySobreRoute
   '/lifepay/staff': typeof LifepayStaffRoute
+  '/lifepay/termos': typeof LifepayTermosRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/agency': typeof AgencyIndexRoute
   '/aircare': typeof AircareIndexRoute
@@ -275,8 +291,10 @@ export interface FileRoutesById {
   '/cond/staff': typeof CondStaffRoute
   '/lifepay/app': typeof LifepayAppRoute
   '/lifepay/entrar': typeof LifepayEntrarRoute
+  '/lifepay/privacidade': typeof LifepayPrivacidadeRoute
   '/lifepay/sobre': typeof LifepaySobreRoute
   '/lifepay/staff': typeof LifepayStaffRoute
+  '/lifepay/termos': typeof LifepayTermosRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/agency/': typeof AgencyIndexRoute
   '/aircare/': typeof AircareIndexRoute
@@ -309,8 +327,10 @@ export interface FileRouteTypes {
     | '/cond/staff'
     | '/lifepay/app'
     | '/lifepay/entrar'
+    | '/lifepay/privacidade'
     | '/lifepay/sobre'
     | '/lifepay/staff'
+    | '/lifepay/termos'
     | '/staff/dashboard'
     | '/agency/'
     | '/aircare/'
@@ -339,8 +359,10 @@ export interface FileRouteTypes {
     | '/cond/staff'
     | '/lifepay/app'
     | '/lifepay/entrar'
+    | '/lifepay/privacidade'
     | '/lifepay/sobre'
     | '/lifepay/staff'
+    | '/lifepay/termos'
     | '/staff/dashboard'
     | '/agency'
     | '/aircare'
@@ -371,8 +393,10 @@ export interface FileRouteTypes {
     | '/cond/staff'
     | '/lifepay/app'
     | '/lifepay/entrar'
+    | '/lifepay/privacidade'
     | '/lifepay/sobre'
     | '/lifepay/staff'
+    | '/lifepay/termos'
     | '/staff/dashboard'
     | '/agency/'
     | '/aircare/'
@@ -562,6 +586,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LifepayEntrarRouteImport
       parentRoute: typeof LifepayRoute
     }
+    '/lifepay/privacidade': {
+      id: '/lifepay/privacidade'
+      path: '/privacidade'
+      fullPath: '/lifepay/privacidade'
+      preLoaderRoute: typeof LifepayPrivacidadeRouteImport
+      parentRoute: typeof LifepayRoute
+    }
     '/lifepay/sobre': {
       id: '/lifepay/sobre'
       path: '/sobre'
@@ -574,6 +605,13 @@ declare module '@tanstack/react-router' {
       path: '/staff'
       fullPath: '/lifepay/staff'
       preLoaderRoute: typeof LifepayStaffRouteImport
+      parentRoute: typeof LifepayRoute
+    }
+    '/lifepay/termos': {
+      id: '/lifepay/termos'
+      path: '/termos'
+      fullPath: '/lifepay/termos'
+      preLoaderRoute: typeof LifepayTermosRouteImport
       parentRoute: typeof LifepayRoute
     }
     '/staff/': {
@@ -631,16 +669,20 @@ declare module '@tanstack/react-router' {
 interface LifepayRouteChildren {
   LifepayAppRoute: typeof LifepayAppRoute
   LifepayEntrarRoute: typeof LifepayEntrarRoute
+  LifepayPrivacidadeRoute: typeof LifepayPrivacidadeRoute
   LifepaySobreRoute: typeof LifepaySobreRoute
   LifepayStaffRoute: typeof LifepayStaffRoute
+  LifepayTermosRoute: typeof LifepayTermosRoute
   LifepayIndexRoute: typeof LifepayIndexRoute
 }
 
 const LifepayRouteChildren: LifepayRouteChildren = {
   LifepayAppRoute: LifepayAppRoute,
   LifepayEntrarRoute: LifepayEntrarRoute,
+  LifepayPrivacidadeRoute: LifepayPrivacidadeRoute,
   LifepaySobreRoute: LifepaySobreRoute,
   LifepayStaffRoute: LifepayStaffRoute,
+  LifepayTermosRoute: LifepayTermosRoute,
   LifepayIndexRoute: LifepayIndexRoute,
 }
 
