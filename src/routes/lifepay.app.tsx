@@ -972,7 +972,7 @@ function SupportTab() {
         <p>Precisa de ajuda com sua conta LifePay? Fale com um administrador autorizado da Furry's Life Inc.</p>
         <p>Para questões de acesso, bloqueio de conta ou ajustes, o atendimento é feito pelos canais internos da empresa.</p>
         <div className="flex flex-wrap gap-2 pt-2">
-          <Link to="/#contato" className="lp-btn lp-btn-soft">Falar com a empresa</Link>
+          <Link to="/" hash="contato" className="lp-btn lp-btn-soft">Falar com a empresa</Link>
           <Link to="/lifepay/sobre" className="lp-btn lp-btn-ghost">Sobre o LifePay</Link>
         </div>
       </div>
