@@ -449,30 +449,174 @@ export type Database = {
       }
       lifepay_accounts: {
         Row: {
+          account_type: string
+          admin_notes: string | null
           balance: number
+          closing_day: number
           created_at: string
+          credit_limit: number
           display_name: string
+          due_day: number
+          email: string | null
+          first_access_done: boolean
+          full_name: string | null
           is_admin: boolean
+          last_access_at: string | null
+          must_change_password: boolean
+          pin_hash: string | null
           pix_key: string
+          status: string
+          terms_accepted_at: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          account_type?: string
+          admin_notes?: string | null
           balance?: number
+          closing_day?: number
           created_at?: string
+          credit_limit?: number
           display_name: string
+          due_day?: number
+          email?: string | null
+          first_access_done?: boolean
+          full_name?: string | null
           is_admin?: boolean
+          last_access_at?: string | null
+          must_change_password?: boolean
+          pin_hash?: string | null
           pix_key: string
+          status?: string
+          terms_accepted_at?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          account_type?: string
+          admin_notes?: string | null
           balance?: number
+          closing_day?: number
           created_at?: string
+          credit_limit?: number
           display_name?: string
+          due_day?: number
+          email?: string | null
+          first_access_done?: boolean
+          full_name?: string | null
           is_admin?: boolean
+          last_access_at?: string | null
+          must_change_password?: boolean
+          pin_hash?: string | null
           pix_key?: string
+          status?: string
+          terms_accepted_at?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lifepay_admin_permissions: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          permission: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          permission: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          permission?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lifepay_audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_kind: string
+          after_data: Json | null
+          auth_method: string | null
+          before_data: Json | null
+          created_at: string
+          device: string | null
+          id: string
+          ip: string | null
+          reason: string | null
+          status: string
+          target_ref: string | null
+          target_user: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_kind?: string
+          after_data?: Json | null
+          auth_method?: string | null
+          before_data?: Json | null
+          created_at?: string
+          device?: string | null
+          id?: string
+          ip?: string | null
+          reason?: string | null
+          status?: string
+          target_ref?: string | null
+          target_user?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_kind?: string
+          after_data?: Json | null
+          auth_method?: string | null
+          before_data?: Json | null
+          created_at?: string
+          device?: string | null
+          id?: string
+          ip?: string | null
+          reason?: string | null
+          status?: string
+          target_ref?: string | null
+          target_user?: string | null
+        }
+        Relationships: []
+      }
+      lifepay_keys: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          key_type: string
+          key_value: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          key_type: string
+          key_value: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          key_type?: string
+          key_value?: string
+          status?: string
           user_id?: string
         }
         Relationships: []
@@ -480,29 +624,56 @@ export type Database = {
       lifepay_transactions: {
         Row: {
           amount: number
+          auth_method: string | null
           created_at: string
+          from_balance_after: number | null
+          from_balance_before: number | null
           from_user: string | null
           id: string
+          idempotency_key: string | null
+          key_used: string | null
           kind: string
           note: string | null
+          receipt_code: string | null
+          status: string
+          to_balance_after: number | null
+          to_balance_before: number | null
           to_user: string | null
         }
         Insert: {
           amount: number
+          auth_method?: string | null
           created_at?: string
+          from_balance_after?: number | null
+          from_balance_before?: number | null
           from_user?: string | null
           id?: string
+          idempotency_key?: string | null
+          key_used?: string | null
           kind?: string
           note?: string | null
+          receipt_code?: string | null
+          status?: string
+          to_balance_after?: number | null
+          to_balance_before?: number | null
           to_user?: string | null
         }
         Update: {
           amount?: number
+          auth_method?: string | null
           created_at?: string
+          from_balance_after?: number | null
+          from_balance_before?: number | null
           from_user?: string | null
           id?: string
+          idempotency_key?: string | null
+          key_used?: string | null
           kind?: string
           note?: string | null
+          receipt_code?: string | null
+          status?: string
+          to_balance_after?: number | null
+          to_balance_before?: number | null
           to_user?: string | null
         }
         Relationships: []
@@ -1035,11 +1206,24 @@ export type Database = {
       ensure_lifepay_account: {
         Args: { _user_id: string }
         Returns: {
+          account_type: string
+          admin_notes: string | null
           balance: number
+          closing_day: number
           created_at: string
+          credit_limit: number
           display_name: string
+          due_day: number
+          email: string | null
+          first_access_done: boolean
+          full_name: string | null
           is_admin: boolean
+          last_access_at: string | null
+          must_change_password: boolean
+          pin_hash: string | null
           pix_key: string
+          status: string
+          terms_accepted_at: string | null
           updated_at: string
           user_id: string
         }
@@ -1049,6 +1233,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      has_lifepay_perm: {
+        Args: { _perm: string; _user_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {
@@ -1077,11 +1265,20 @@ export type Database = {
         Args: { _amount: number; _note?: string; _target_pix: string }
         Returns: {
           amount: number
+          auth_method: string | null
           created_at: string
+          from_balance_after: number | null
+          from_balance_before: number | null
           from_user: string | null
           id: string
+          idempotency_key: string | null
+          key_used: string | null
           kind: string
           note: string | null
+          receipt_code: string | null
+          status: string
+          to_balance_after: number | null
+          to_balance_before: number | null
           to_user: string | null
         }
         SetofOptions: {
@@ -1099,6 +1296,24 @@ export type Database = {
           user_id: string
         }[]
       }
+      lifepay_create_random_key: {
+        Args: never
+        Returns: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          key_type: string
+          key_value: string
+          status: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lifepay_keys"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       lifepay_lookup_pix: {
         Args: { _pix: string }
         Returns: {
@@ -1106,15 +1321,34 @@ export type Database = {
           pix_key: string
         }[]
       }
+      lifepay_resolve_key: {
+        Args: { _key: string }
+        Returns: {
+          display_name: string
+          key_type: string
+          key_value: string
+          status: string
+          user_id: string
+        }[]
+      }
       lifepay_transfer: {
         Args: { _amount: number; _note?: string; _to_pix: string }
         Returns: {
           amount: number
+          auth_method: string | null
           created_at: string
+          from_balance_after: number | null
+          from_balance_before: number | null
           from_user: string | null
           id: string
+          idempotency_key: string | null
+          key_used: string | null
           kind: string
           note: string | null
+          receipt_code: string | null
+          status: string
+          to_balance_after: number | null
+          to_balance_before: number | null
           to_user: string | null
         }
         SetofOptions: {
@@ -1123,6 +1357,43 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      lifepay_transfer_v2: {
+        Args: {
+          _amount: number
+          _auth_method: string
+          _idem: string
+          _key: string
+          _note: string
+        }
+        Returns: {
+          amount: number
+          auth_method: string | null
+          created_at: string
+          from_balance_after: number | null
+          from_balance_before: number | null
+          from_user: string | null
+          id: string
+          idempotency_key: string | null
+          key_used: string | null
+          kind: string
+          note: string | null
+          receipt_code: string | null
+          status: string
+          to_balance_after: number | null
+          to_balance_before: number | null
+          to_user: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lifepay_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      lifepay_update_key: {
+        Args: { _action: string; _id: string }
+        Returns: boolean
       }
       move_to_dlq: {
         Args: {

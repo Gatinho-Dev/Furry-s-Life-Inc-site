@@ -1,61 +1,63 @@
+## Decisões já tomadas
 
-## Goal
+- **Contas LifePay** usam o sistema de contas da Furry's Life Inc. (e-mail + senha reais, sessão segura já existente). O admin cria a conta pelo painel staff; nenhuma senha fica guardada em texto.
+- **Biometria**: prioridade para a biometria do dispositivo (WebAuthn / Face ID / Windows Hello / Android). Quando o aparelho não tiver suporte, cai para o cadastro facial por câmera com prova de vida (piscar, virar o rosto, checagem de iluminação). Nenhuma foto ou vídeo é guardado.
+- **Entrega por etapas**, cada uma testada antes da próxima.
+- Nada de banco real, cartão real ou Pix oficial. Aviso discreto só no rodapé público, termos, privacidade, "Sobre o LifePay" e área administrativa.
 
-Ao entrar no LifePay, o usuário cai direto no **app do banco** (não no painel staff), com visual mobile-first muito parecido com o C6 Bank (fundo preto, amarelo âmbar, cartões arredondados, bottom nav) e um Pix bem mais fácil de usar.
+---
 
-O login já redireciona para `/lifepay/app` quando o botão "Entrar" do LifePay é usado — vou apenas garantir isso e reforçar o fluxo. O trabalho principal é **redesenhar `src/routes/lifepay.app.tsx`** por completo.
+## Etapa 1 — Base financeira, página pública e conta do usuário
 
-## O que muda
+**Banco de dados** (mantendo o que já existe e migrando os saldos atuais):
+- `lifepay_users` (perfil financeiro ligado à conta do ecossistema): nome, status, saldo, tipo de conta, primeiro acesso concluído, troca de senha obrigatória, PIN protegido, último acesso.
+- `lifepay_keys`: chave por e-mail e chaves aleatórias, com status, criação e remoção.
+- `lifepay_transactions` (evoluída): tipo, remetente, destinatário, valor, descrição, status, chave usada, saldo anterior/posterior, método de autenticação, identificador único e chave de idempotência.
+- Regras de acesso: cada pessoa só enxerga a própria conta e os próprios lançamentos; nomes de destinatário só aparecem via consulta controlada.
 
-### 1. Layout mobile-first estilo C6
+**Operações no servidor** (tudo validado no backend, transação atômica):
+- Transferência por e-mail ou chave aleatória, com bloqueio de: valor ≤ 0, saldo insuficiente, conta bloqueada, chave inexistente/inativa, transferência para si mesmo e cliques repetidos (idempotência).
+- Consulta de destinatário, criação/remoção/desativação de chave, extrato com filtros, comprovante.
 
-- Container central `max-w-[440px]` (responsivo em desktop mostra ao centro, como um "device"), fundo `#0a0a0a`.
-- **Header:** "Bom dia, {nome}" + avatar circular com inicial, ícone de sino (com dot vermelho se houver movimentação recente) e ícone de configurações.
-- **Cartão de saldo horizontal (swipe):** primeiro card com "Saldo" em Robux (R$ formatado + toggle olho), segundo card "Robux investidos" (mock), terceiro card "Cashback" — carrossel horizontal com dots, igual C6.
-- **Grade de atalhos rápidos (4 col x 2 rows):** ícones circulares cinza escuro com labels curtas — Meus Limites, Empréstimos, Cartões, Investir, Cobrar, Recarga, Doações, Mais.
-- **Seção "Para você":** carrossel de banners promocionais fake (LifePay Black, Convide amigos, LifePay Yellow).
-- **Bloco Pix destacado** com 4 botões amarelos redondos grandes: **QR Code**, **Transferir**, **Cobrar**, **Chave**.
-- **Bottom nav fixo** (5 itens): Início · Extrato · **LifePay** (botão central destacado, preto/branco redondo) · Cartões · Menu.
+**Páginas**:
+- `/lifepay` vira a página pública institucional: banner, benefícios, demonstração visual do app, cartão, segurança, FAQ, rodapé, botões "Entrar na sua conta" e "Conheça o LifePay". Sem nenhum dado de conta.
+- `/lifepay/entrar`: login com e-mail e senha, mostrar/ocultar senha, manter conectado, recuperar senha, mensagens de erro claras, limite de tentativas com bloqueio temporário.
+- Primeiro acesso: trocar senha, aceitar termos, configurar PIN, opção de ativar biometria depois.
+- `/lifepay/app`: painel com saudação, saldo (com ocultar), atalhos, últimas movimentações, navegação (Início, Transferências, Receber, Chaves, Extrato, Perfil, Segurança, Suporte) e o fluxo completo de transferência com revisão, confirmação por senha/PIN e comprovante.
+- Páginas `/lifepay/termos`, `/lifepay/privacidade` e `/lifepay/sobre`.
+- Identidade visual própria do LifePay: fundo escuro grafite, cor de destaque própria, cartões arredondados, sombras suaves, responsivo do celular ao desktop, sem copiar identidade de outro banco.
 
-### 2. Pix muito mais fácil
+**Painel staff** — nova aba "Usuários LifePay", separada do cadastro de trabalhadores: listar, criar usuário (nome, e-mail, senha inicial, status, saldo inicial, limite, dia de fechamento/vencimento, tipo de conta, observações), bloquear/desbloquear, ajustar saldo, redefinir senha, ver transações. Permissões específicas do LifePay por administrador; quem não tem a permissão não vê a aba nem executa a ação.
 
-Ao tocar em qualquer botão do bloco Pix abre uma **sheet/modal** (bottom sheet) com tabs:
+---
 
-- **Transferir:** 
-  - Linha horizontal de **contatos recentes** (avatares dos últimos destinatários — extraído das últimas transações) para envio em 1 toque.
-  - Campo único "Chave Pix ou email" com auto-detect.
-  - Chips de valor rápido: **R$ 10 · 50 · 100 · 500 · 1.000 · Outro**.
-  - Confirmação em passo único mostrando destinatário resolvido antes de enviar.
-- **Cobrar:** gera link `lifepay.app/pay/{pix_key}?amount=` copiável + QR (SVG inline com a chave).
-- **Minha chave:** exibe chave Pix grande, botão copiar/compartilhar, QR grande.
-- **QR Code:** leitor mock (input para colar código) + a própria chave em QR.
+## Etapa 2 — Cartão, compras, parcelamento e faturas
 
-### 3. Menu / Admin
+- Tabelas `lifepay_cards`, `lifepay_purchases`, `lifepay_installments`, `lifepay_invoices`.
+- Área de cartão: cartão virtual com número mascarado, validade, código protegido, limite total/disponível/utilizado, melhor dia de compra, fechamento, vencimento, status. Mostrar dados completos só depois de senha, PIN ou biometria — nunca embutidos na página nem em endereço.
+- Ações: bloquear/desbloquear, ajustar limite dentro do permitido, criar e excluir cartão virtual temporário.
+- Compras internas (à vista e em 2, 3, 4, 5, 6, 8, 10 e 12 vezes) criadas por fluxos internos autorizados e pela área administrativa, com resumo antes de confirmar e reserva do limite total.
+- Faturas: atual, futuras e anteriores; status aberta, fechada, paga, parcialmente paga, atrasada, cancelada; pagamento com saldo, liberando o limite, gerando lançamento no extrato, comprovante e registro.
+- Valores no formato brasileiro (R$ 1.234,56).
 
-- O item "Menu" do bottom nav abre uma tela cheia com busca, grade de opções (Configurações, Ajustes de acessibilidade, Sair, Voltar ao site) e, se `is_admin`, seção **Admin** com o painel de conceder/debitar saldo já existente.
-- O painel staff **não é mais aberto** ao logar via LifePay — o usuário staff que quiser acessar `staff/dashboard` faz por URL direta ou pelo site principal.
+---
 
-### 4. Ajustes finos
+## Etapa 3 — Biometria, sessões, privacidade e auditoria
 
-- Fonte: SF Pro / Inter (já herdada), tracking apertado como no C6.
-- Ícones amarelos (`#FFD84D`) sobre círculos escuros nos atalhos Pix.
-- Estados de loading em skeleton amarelo suave.
-- Todos os saldos formatados como `R$ 1.000,00` + tag "Robux" pequenina abaixo.
-- Confirmação de envio Pix mostra tela de sucesso animada (check verde + valor + destinatário + "Ver comprovante"), depois volta pra Início.
+- Tabelas `lifepay_biometrics` (tipo de autenticação, credencial protegida, consentimento, ativação, último uso, revogação), `lifepay_sessions` e `lifepay_audit_logs`.
+- Tela de consentimento antes de qualquer uso de câmera, com caixa de autorização explícita.
+- Cadastro biométrico: passkey do dispositivo quando houver suporte; senão, câmera com moldura, detecção de rosto único, checagem de iluminação e prova de vida guiada por instruções em tempo real. Nunca conclui com foto estática. Confirma com a senha atual no final.
+- Uso da biometria para entrar, transferir, pagar fatura, ver dados do cartão e alterar segurança — sempre com "usar senha" como alternativa imediata, sem perder dados preenchidos nem duplicar a operação.
+- Área "Segurança e acesso": alterar senha, criar/alterar PIN, biometria, dispositivos, sessões abertas, histórico de acessos, encerrar outras sessões.
+- Área de privacidade: consultar consentimento, desativar e excluir dados biométricos (com senha e confirmação), baixar informações da conta, ver histórico de segurança.
+- Auditoria completa de ações administrativas e financeiras, com responsável, ação, alvo, data/hora, IP e dispositivo quando disponível, dados anteriores e novos. No painel admin, a biometria aparece só como status, método, datas e opção de revogar — nunca imagem ou dado biométrico.
+- Estados de interface completos (carregando, vazio, sem cartão, sem chave, saldo/limite insuficiente, conta bloqueada, sessão expirada, câmera negada, biometria indisponível, operação concluída/cancelada).
 
-### 5. Garantias de fluxo
+---
 
-- `src/routes/auth.tsx` já tem `/lifepay/app` no whitelist — manter.
-- Landing `/lifepay` já aponta "Entrar" com `?redirect=/lifepay/app` — manter.
-- Nenhuma mudança de schema/DB: reutiliza `lifepay_accounts`, `lifepay_transactions`, RPC `lifepay_transfer` e `lifepay_admin_adjust`.
+## Detalhes técnicos
 
-## Arquivos tocados
-
-- **Reescrito:** `src/routes/lifepay.app.tsx` (única grande mudança).
-- **Verificação apenas** (sem edit necessário): `src/routes/auth.tsx`, `src/routes/lifepay.tsx`.
-
-## Escopo explicitamente fora
-
-- Não mexo em outros mini-sites, staff dashboard, OSINT, AirCare, News etc.
-- Não crio novas tabelas/migrations.
-- Não adiciono modo claro — segue tema escuro C6.
+- Stack atual mantida: TanStack Start com funções de servidor, Lovable Cloud (Postgres + Auth) e RLS por usuário. Nada de endpoint público sem autenticação para dados de conta.
+- Transferências, compras e pagamentos rodam em função de banco transacional com verificação de saldo, limite, status e chave de idempotência — impossível ficar pela metade ou duplicar.
+- Nenhum arquivo de outras subsidiárias é alterado além da adição da aba "Usuários LifePay" no painel staff e das permissões correspondentes.
+- Ao final de cada etapa, executo os testes da lista (criação pelo admin, primeiro acesso, chave, transferência, falta de saldo, isolamento entre usuários, compra parcelada, pagamento de fatura, biometria e queda para senha) usando navegador automatizado no ambiente de desenvolvimento.
