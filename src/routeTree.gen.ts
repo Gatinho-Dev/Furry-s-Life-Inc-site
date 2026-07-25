@@ -27,6 +27,7 @@ import { Route as CollegeIndexRouteImport } from './routes/college.index'
 import { Route as CollegeStaffRouteImport } from './routes/college.staff'
 import { Route as CondIndexRouteImport } from './routes/cond.index'
 import { Route as CondStaffRouteImport } from './routes/cond.staff'
+import { Route as LifepayIndexRouteImport } from './routes/lifepay.index'
 import { Route as LifepayAppRouteImport } from './routes/lifepay.app'
 import { Route as LifepayStaffRouteImport } from './routes/lifepay.staff'
 import { Route as StaffIndexRouteImport } from './routes/staff.index'
@@ -129,6 +130,11 @@ const CondStaffRoute = CondStaffRouteImport.update({
   path: '/cond/staff',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LifepayIndexRoute = LifepayIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LifepayRoute,
+} as any)
 const LifepayAppRoute = LifepayAppRouteImport.update({
   id: '/app',
   path: '/app',
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/aircare/': typeof AircareIndexRoute
   '/college/': typeof CollegeIndexRoute
   '/cond/': typeof CondIndexRoute
+  '/lifepay/': typeof LifepayIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -210,7 +217,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
-  '/lifepay': typeof LifepayRouteWithChildren
   '/mcp': typeof McpRoute
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -227,6 +233,7 @@ export interface FileRoutesByTo {
   '/aircare': typeof AircareIndexRoute
   '/college': typeof CollegeIndexRoute
   '/cond': typeof CondIndexRoute
+  '/lifepay': typeof LifepayIndexRoute
   '/staff': typeof StaffIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -257,6 +264,7 @@ export interface FileRoutesById {
   '/aircare/': typeof AircareIndexRoute
   '/college/': typeof CollegeIndexRoute
   '/cond/': typeof CondIndexRoute
+  '/lifepay/': typeof LifepayIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -288,6 +296,7 @@ export interface FileRouteTypes {
     | '/aircare/'
     | '/college/'
     | '/cond/'
+    | '/lifepay/'
     | '/staff/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -299,7 +308,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/life-server'
-    | '/lifepay'
     | '/mcp'
     | '/news'
     | '/sitemap.xml'
@@ -316,6 +324,7 @@ export interface FileRouteTypes {
     | '/aircare'
     | '/college'
     | '/cond'
+    | '/lifepay'
     | '/staff'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -345,6 +354,7 @@ export interface FileRouteTypes {
     | '/aircare/'
     | '/college/'
     | '/cond/'
+    | '/lifepay/'
     | '/staff/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -507,6 +517,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CondStaffRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lifepay/': {
+      id: '/lifepay/'
+      path: '/'
+      fullPath: '/lifepay/'
+      preLoaderRoute: typeof LifepayIndexRouteImport
+      parentRoute: typeof LifepayRoute
+    }
     '/lifepay/app': {
       id: '/lifepay/app'
       path: '/app'
@@ -576,11 +593,13 @@ declare module '@tanstack/react-router' {
 interface LifepayRouteChildren {
   LifepayAppRoute: typeof LifepayAppRoute
   LifepayStaffRoute: typeof LifepayStaffRoute
+  LifepayIndexRoute: typeof LifepayIndexRoute
 }
 
 const LifepayRouteChildren: LifepayRouteChildren = {
   LifepayAppRoute: LifepayAppRoute,
   LifepayStaffRoute: LifepayStaffRoute,
+  LifepayIndexRoute: LifepayIndexRoute,
 }
 
 const LifepayRouteWithChildren =
