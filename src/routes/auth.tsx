@@ -25,6 +25,11 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+const goTo = (target: string) => {
+  if (target.includes("?")) { window.location.assign(target); return; }
+  window.location.assign(target);
+};
+
 function AuthPage() {
   const nav = useNavigate();
   const { redirect } = useSearch({ from: "/auth" });
@@ -38,7 +43,7 @@ function AuthPage() {
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled && data.session) nav({ to: target });
+      if (!cancelled && data.session) goTo(target);
     });
     return () => { cancelled = true; };
   }, [nav, target]);
@@ -49,7 +54,7 @@ function AuthPage() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      nav({ to: target });
+      goTo(target);
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Falha ao autenticar");
     } finally {
