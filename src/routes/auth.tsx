@@ -25,10 +25,7 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-const goTo = (target: string) => {
-  if (target.includes("?")) { window.location.assign(target); return; }
-  window.location.assign(target);
-};
+const goTo = (target: string) => window.location.assign(target);
 
 function AuthPage() {
   const nav = useNavigate();
