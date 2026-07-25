@@ -71,11 +71,12 @@ function LifePayApp() {
     setTxs((tx ?? []) as Tx[]);
     const ids = Array.from(new Set((tx ?? []).flatMap((t) => [t.from_user, t.to_user]).filter(Boolean) as string[]));
     if (ids.length) {
-      const { data: people } = await supabase.from("lifepay_accounts").select("user_id, display_name, pix_key").in("user_id", ids);
+      const { data: people } = await supabase.rpc("lifepay_counterparty_names");
       const m: Record<string, { name: string; pix: string }> = {};
       (people ?? []).forEach((p) => { m[p.user_id] = { name: p.display_name || p.pix_key, pix: p.pix_key }; });
       setNames(m);
     }
+
     setLoading(false);
   }, [nav]);
 
