@@ -9,62 +9,37 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as StaffRouteImport } from './routes/staff'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as NewsRouteImport } from './routes/news'
-import { Route as McpRouteImport } from './routes/mcp'
-import { Route as LifepayRouteImport } from './routes/lifepay'
-import { Route as LifeServerRouteImport } from './routes/life-server'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as StaffIndexRouteImport } from './routes/staff.index'
-import { Route as CondIndexRouteImport } from './routes/cond.index'
-import { Route as CollegeIndexRouteImport } from './routes/college.index'
-import { Route as AircareIndexRouteImport } from './routes/aircare.index'
-import { Route as AgencyIndexRouteImport } from './routes/agency.index'
-import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
-import { Route as LifepayStaffRouteImport } from './routes/lifepay.staff'
-import { Route as LifepayAppRouteImport } from './routes/lifepay.app'
-import { Route as CondStaffRouteImport } from './routes/cond.staff'
-import { Route as CollegeStaffRouteImport } from './routes/college.staff'
-import { Route as AircareStaffRouteImport } from './routes/aircare.staff'
-import { Route as AgencyStaffRouteImport } from './routes/agency.staff'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as LifeServerRouteImport } from './routes/life-server'
+import { Route as LifepayRouteImport } from './routes/lifepay'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as NewsRouteImport } from './routes/news'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as StaffRouteImport } from './routes/staff'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
-import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AgencyIndexRouteImport } from './routes/agency.index'
+import { Route as AgencyStaffRouteImport } from './routes/agency.staff'
+import { Route as AircareIndexRouteImport } from './routes/aircare.index'
+import { Route as AircareStaffRouteImport } from './routes/aircare.staff'
+import { Route as CollegeIndexRouteImport } from './routes/college.index'
+import { Route as CollegeStaffRouteImport } from './routes/college.staff'
+import { Route as CondIndexRouteImport } from './routes/cond.index'
+import { Route as CondStaffRouteImport } from './routes/cond.staff'
+import { Route as LifepayAppRouteImport } from './routes/lifepay.app'
+import { Route as LifepayStaffRouteImport } from './routes/lifepay.staff'
+import { Route as StaffIndexRouteImport } from './routes/staff.index'
+import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
-import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 
-const StaffRoute = StaffRouteImport.update({
-  id: '/staff',
-  path: '/staff',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NewsRoute = NewsRouteImport.update({
-  id: '/news',
-  path: '/news',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LifepayRoute = LifepayRouteImport.update({
-  id: '/lifepay',
-  path: '/lifepay',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LifeServerRoute = LifeServerRouteImport.update({
-  id: '/life-server',
-  path: '/life-server',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -72,64 +47,51 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const LifeServerRoute = LifeServerRouteImport.update({
+  id: '/life-server',
+  path: '/life-server',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StaffIndexRoute = StaffIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => StaffRoute,
-} as any)
-const CondIndexRoute = CondIndexRouteImport.update({
-  id: '/cond/',
-  path: '/cond/',
+const LifepayRoute = LifepayRouteImport.update({
+  id: '/lifepay',
+  path: '/lifepay',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CollegeIndexRoute = CollegeIndexRouteImport.update({
-  id: '/college/',
-  path: '/college/',
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AircareIndexRoute = AircareIndexRouteImport.update({
-  id: '/aircare/',
-  path: '/aircare/',
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffRoute = StaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AgencyIndexRoute = AgencyIndexRouteImport.update({
   id: '/agency/',
   path: '/agency/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StaffDashboardRoute = StaffDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => StaffRoute,
-} as any)
-const LifepayStaffRoute = LifepayStaffRouteImport.update({
-  id: '/staff',
-  path: '/staff',
-  getParentRoute: () => LifepayRoute,
-} as any)
-const LifepayAppRoute = LifepayAppRouteImport.update({
-  id: '/app',
-  path: '/app',
-  getParentRoute: () => LifepayRoute,
-} as any)
-const CondStaffRoute = CondStaffRouteImport.update({
-  id: '/cond/staff',
-  path: '/cond/staff',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CollegeStaffRoute = CollegeStaffRouteImport.update({
-  id: '/college/staff',
-  path: '/college/staff',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AircareStaffRoute = AircareStaffRouteImport.update({
-  id: '/aircare/staff',
-  path: '/aircare/staff',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgencyStaffRoute = AgencyStaffRouteImport.update({
@@ -137,27 +99,75 @@ const AgencyStaffRoute = AgencyStaffRouteImport.update({
   path: '/agency/staff',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const Char91DotmcpChar93ListToolsRoute =
-  Char91DotmcpChar93ListToolsRouteImport.update({
-    id: '/.mcp/list-tools',
-    path: '/.mcp/list-tools',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const AircareIndexRoute = AircareIndexRouteImport.update({
+  id: '/aircare/',
+  path: '/aircare/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AircareStaffRoute = AircareStaffRouteImport.update({
+  id: '/aircare/staff',
+  path: '/aircare/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollegeIndexRoute = CollegeIndexRouteImport.update({
+  id: '/college/',
+  path: '/college/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollegeStaffRoute = CollegeStaffRouteImport.update({
+  id: '/college/staff',
+  path: '/college/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CondIndexRoute = CondIndexRouteImport.update({
+  id: '/cond/',
+  path: '/cond/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CondStaffRoute = CondStaffRouteImport.update({
+  id: '/cond/staff',
+  path: '/cond/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LifepayAppRoute = LifepayAppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => LifepayRoute,
+} as any)
+const LifepayStaffRoute = LifepayStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => LifepayRoute,
+} as any)
+const StaffIndexRoute = StaffIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StaffRoute,
+} as any)
+const StaffDashboardRoute = StaffDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => StaffRoute,
+} as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
     id: '/.mcp/invoke-tool/$tool',
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
-const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
-  id: '/.lovable/oauth/consent',
-  path: '/.lovable/oauth/consent',
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LovableEmailQueueProcessRoute =
@@ -166,16 +176,6 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -381,46 +381,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/staff': {
-      id: '/staff'
-      path: '/staff'
-      fullPath: '/staff'
-      preLoaderRoute: typeof StaffRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/news': {
-      id: '/news'
-      path: '/news'
-      fullPath: '/news'
-      preLoaderRoute: typeof NewsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lifepay': {
-      id: '/lifepay'
-      path: '/lifepay'
-      fullPath: '/lifepay'
-      preLoaderRoute: typeof LifepayRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/life-server': {
-      id: '/life-server'
-      path: '/life-server'
-      fullPath: '/life-server'
-      preLoaderRoute: typeof LifeServerRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -430,102 +395,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/life-server': {
+      id: '/life-server'
+      path: '/life-server'
+      fullPath: '/life-server'
+      preLoaderRoute: typeof LifeServerRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/staff/': {
-      id: '/staff/'
-      path: '/'
-      fullPath: '/staff/'
-      preLoaderRoute: typeof StaffIndexRouteImport
-      parentRoute: typeof StaffRoute
-    }
-    '/cond/': {
-      id: '/cond/'
-      path: '/cond'
-      fullPath: '/cond/'
-      preLoaderRoute: typeof CondIndexRouteImport
+    '/lifepay': {
+      id: '/lifepay'
+      path: '/lifepay'
+      fullPath: '/lifepay'
+      preLoaderRoute: typeof LifepayRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/college/': {
-      id: '/college/'
-      path: '/college'
-      fullPath: '/college/'
-      preLoaderRoute: typeof CollegeIndexRouteImport
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/aircare/': {
-      id: '/aircare/'
-      path: '/aircare'
-      fullPath: '/aircare/'
-      preLoaderRoute: typeof AircareIndexRouteImport
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/agency/': {
-      id: '/agency/'
-      path: '/agency'
-      fullPath: '/agency/'
-      preLoaderRoute: typeof AgencyIndexRouteImport
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/staff/dashboard': {
-      id: '/staff/dashboard'
-      path: '/dashboard'
-      fullPath: '/staff/dashboard'
-      preLoaderRoute: typeof StaffDashboardRouteImport
-      parentRoute: typeof StaffRoute
-    }
-    '/lifepay/staff': {
-      id: '/lifepay/staff'
+    '/staff': {
+      id: '/staff'
       path: '/staff'
-      fullPath: '/lifepay/staff'
-      preLoaderRoute: typeof LifepayStaffRouteImport
-      parentRoute: typeof LifepayRoute
-    }
-    '/lifepay/app': {
-      id: '/lifepay/app'
-      path: '/app'
-      fullPath: '/lifepay/app'
-      preLoaderRoute: typeof LifepayAppRouteImport
-      parentRoute: typeof LifepayRoute
-    }
-    '/cond/staff': {
-      id: '/cond/staff'
-      path: '/cond/staff'
-      fullPath: '/cond/staff'
-      preLoaderRoute: typeof CondStaffRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/college/staff': {
-      id: '/college/staff'
-      path: '/college/staff'
-      fullPath: '/college/staff'
-      preLoaderRoute: typeof CollegeStaffRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/aircare/staff': {
-      id: '/aircare/staff'
-      path: '/aircare/staff'
-      fullPath: '/aircare/staff'
-      preLoaderRoute: typeof AircareStaffRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/agency/staff': {
-      id: '/agency/staff'
-      path: '/agency/staff'
-      fullPath: '/agency/staff'
-      preLoaderRoute: typeof AgencyStaffRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      fullPath: '/staff'
+      preLoaderRoute: typeof StaffRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -535,12 +444,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.mcp/invoke-tool/$tool': {
-      id: '/.mcp/invoke-tool/$tool'
-      path: '/.mcp/invoke-tool/$tool'
-      fullPath: '/.mcp/invoke-tool/$tool'
-      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/agency/': {
+      id: '/agency/'
+      path: '/agency'
+      fullPath: '/agency/'
+      preLoaderRoute: typeof AgencyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agency/staff': {
+      id: '/agency/staff'
+      path: '/agency/staff'
+      fullPath: '/agency/staff'
+      preLoaderRoute: typeof AgencyStaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aircare/': {
+      id: '/aircare/'
+      path: '/aircare'
+      fullPath: '/aircare/'
+      preLoaderRoute: typeof AircareIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aircare/staff': {
+      id: '/aircare/staff'
+      path: '/aircare/staff'
+      fullPath: '/aircare/staff'
+      preLoaderRoute: typeof AircareStaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/college/': {
+      id: '/college/'
+      path: '/college'
+      fullPath: '/college/'
+      preLoaderRoute: typeof CollegeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/college/staff': {
+      id: '/college/staff'
+      path: '/college/staff'
+      fullPath: '/college/staff'
+      preLoaderRoute: typeof CollegeStaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cond/': {
+      id: '/cond/'
+      path: '/cond'
+      fullPath: '/cond/'
+      preLoaderRoute: typeof CondIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cond/staff': {
+      id: '/cond/staff'
+      path: '/cond/staff'
+      fullPath: '/cond/staff'
+      preLoaderRoute: typeof CondStaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lifepay/app': {
+      id: '/lifepay/app'
+      path: '/app'
+      fullPath: '/lifepay/app'
+      preLoaderRoute: typeof LifepayAppRouteImport
+      parentRoute: typeof LifepayRoute
+    }
+    '/lifepay/staff': {
+      id: '/lifepay/staff'
+      path: '/staff'
+      fullPath: '/lifepay/staff'
+      preLoaderRoute: typeof LifepayStaffRouteImport
+      parentRoute: typeof LifepayRoute
+    }
+    '/staff/': {
+      id: '/staff/'
+      path: '/'
+      fullPath: '/staff/'
+      preLoaderRoute: typeof StaffIndexRouteImport
+      parentRoute: typeof StaffRoute
+    }
+    '/staff/dashboard': {
+      id: '/staff/dashboard'
+      path: '/dashboard'
+      fullPath: '/staff/dashboard'
+      preLoaderRoute: typeof StaffDashboardRouteImport
+      parentRoute: typeof StaffRoute
     }
     '/.lovable/oauth/consent': {
       id: '/.lovable/oauth/consent'
@@ -549,11 +542,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/queue/process': {
-      id: '/lovable/email/queue/process'
-      path: '/lovable/email/queue/process'
-      fullPath: '/lovable/email/queue/process'
-      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/auth/webhook': {
@@ -563,11 +563,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
