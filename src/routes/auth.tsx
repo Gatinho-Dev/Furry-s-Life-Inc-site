@@ -4,12 +4,14 @@ import { Eye, EyeOff, Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import symbol from "@/assets/fli-symbol.png.asset.json";
 
-const ALLOWED_REDIRECTS = ["/staff/dashboard", "/agency/staff", "/college/staff", "/cond/staff", "/aircare/staff", "/lifepay/staff", "/lifepay/app", "/life-server"];
+const ALLOWED_REDIRECTS = ["/staff/dashboard", "/agency/staff", "/college/staff", "/cond/staff", "/aircare/staff", "/lifepay/staff", "/lifepay/app", "/life-server", "/.lovable/oauth/consent"];
 const safeRedirect = (r?: string) => {
   if (!r || typeof r !== "string") return "/staff/dashboard";
-  if (!r.startsWith("/")) return "/staff/dashboard";
-  return ALLOWED_REDIRECTS.some((p) => r === p || r.startsWith(p + "/")) ? r : "/staff/dashboard";
+  if (!r.startsWith("/") || r.startsWith("//")) return "/staff/dashboard";
+  const path = r.split("?")[0].split("#")[0];
+  return ALLOWED_REDIRECTS.some((p) => path === p || path.startsWith(p + "/")) ? r : "/staff/dashboard";
 };
+
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({ redirect: typeof s.redirect === "string" ? s.redirect : undefined }),
