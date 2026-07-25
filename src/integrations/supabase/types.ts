@@ -1091,6 +1091,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      lifepay_counterparty_names: {
+        Args: never
+        Returns: {
+          display_name: string
+          pix_key: string
+          user_id: string
+        }[]
+      }
       lifepay_lookup_pix: {
         Args: { _pix: string }
         Returns: {
