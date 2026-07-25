@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +28,6 @@ export const Route = createFileRoute("/auth")({
 const goTo = (target: string) => window.location.assign(target);
 
 function AuthPage() {
-  const nav = useNavigate();
   const { redirect } = useSearch({ from: "/auth" });
   const target = safeRedirect(redirect);
   const [email, setEmail] = useState("");
@@ -43,7 +42,7 @@ function AuthPage() {
       if (!cancelled && data.session) goTo(target);
     });
     return () => { cancelled = true; };
-  }, [nav, target]);
+  }, [target]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
