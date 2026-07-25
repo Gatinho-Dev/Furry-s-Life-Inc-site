@@ -1091,6 +1091,13 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      lifepay_lookup_pix: {
+        Args: { _pix: string }
+        Returns: {
+          display_name: string
+          pix_key: string
+        }[]
+      }
       lifepay_transfer: {
         Args: { _amount: number; _note?: string; _to_pix: string }
         Returns: {
