@@ -1,871 +1,984 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import {
-  ArrowDownLeft, ArrowUpRight, Copy, Eye, EyeOff, LogOut, Send, ShieldCheck,
-  Wallet, Loader2, Check, CreditCard, Home as HomeIcon, Receipt, Menu as MenuIcon,
-  Bell, Search, QrCode, KeyRound, HandCoins, X, ChevronRight, Plus,
-  Gift, PiggyBank, Users, Zap, Settings, ArrowLeftRight, ChevronLeft,
+  Home, Send, ArrowDownLeft, KeyRound, Receipt, User, ShieldCheck, LifeBuoy,
+  Eye, EyeOff, Copy, Check, Loader2, LogOut, Plus, Trash2, Power, RefreshCw,
+  ArrowUpRight, Share2, Printer, CreditCard, AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  LifePayTheme, LifePayMark, LpAlert, LpEmpty, LpSheet, LpSpinner, DISCLOSURE,
+} from "@/components/lifepay/ui";
+import { formatBRL, parseBRLToCents, passwordIssues, ACCOUNT_STATUS_LABEL } from "@/lib/lifepay-perms";
+import {
+  ensureAccount, loadAccount, loadKeys, loadTransactions, resolveKey, transfer,
+  createRandomKey, updateKey, counterpartyNames, newIdempotencyKey,
+  type LifePayAccount, type LifePayKey, type LifePayTx, type ResolvedKey,
+} from "@/lib/lifepay-client";
+import { lifepayFirstAccess, lifepaySetPin, lifepayTouchAccess, lifepayVerifySecret } from "@/lib/lifepay.functions";
 
 export const Route = createFileRoute("/lifepay/app")({
-  head: () => ({ meta: [
-    { title: "LifePay — sua conta" },
-    { name: "robots", content: "noindex, nofollow" },
-  ]}),
+  head: () => ({
+    meta: [
+      { title: "Minha conta — LifePay" },
+      { name: "description", content: "Painel da sua conta LifePay: saldo, transferências, chaves, extrato e segurança." },
+      { property: "og:title", content: "Minha conta LifePay" },
+      { property: "og:description", content: "Painel financeiro interno da Furry's Life Inc." },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
+  ssr: false,
   component: LifePayApp,
 });
 
-// ────────────────────────────────────────────────────────────────────────────
-type Account = {
-  user_id: string;
-  pix_key: string;
-  display_name: string;
-  balance: number;
-  is_admin: boolean;
-};
-type Tx = {
-  id: string;
-  from_user: string | null;
-  to_user: string | null;
-  amount: number;
-  note: string | null;
-  kind: "transfer" | "admin_grant" | "admin_debit" | "signup_bonus";
-  created_at: string;
-};
-type PixSheet = null | "send" | "receive" | "key" | "qr";
-type Tab = "home" | "extrato" | "cartoes" | "menu";
+type TabKey = "home" | "send" | "receive" | "keys" | "statement" | "profile" | "security" | "support";
 
-const fmt = (v: number) =>
-  "R$ " + v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmtInt = (v: number) => v.toLocaleString("pt-BR");
-const greeting = () => {
-  const h = new Date().getHours();
-  return h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+const TABS: { key: TabKey; label: string; icon: typeof Home }[] = [
+  { key: "home", label: "Início", icon: Home },
+  { key: "send", label: "Transferências", icon: Send },
+  { key: "receive", label: "Receber", icon: ArrowDownLeft },
+  { key: "keys", label: "Chaves LifePay", icon: KeyRound },
+  { key: "statement", label: "Extrato", icon: Receipt },
+  { key: "profile", label: "Perfil", icon: User },
+  { key: "security", label: "Segurança", icon: ShieldCheck },
+  { key: "support", label: "Suporte", icon: LifeBuoy },
+];
+
+const KIND_LABEL: Record<string, string> = {
+  transfer: "Transferência",
+  admin_grant: "Ajuste administrativo",
+  admin_debit: "Ajuste administrativo",
+  signup_bonus: "Abertura de conta",
+  purchase: "Compra",
+  invoice_payment: "Pagamento de fatura",
+  refund: "Estorno",
 };
 
-// ────────────────────────────────────────────────────────────────────────────
+const fmtDate = (iso: string) => new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+
+/* ================================================================== */
+
 function LifePayApp() {
   const nav = useNavigate();
-  const [account, setAccount] = useState<Account | null>(null);
-  const [txs, setTxs] = useState<Tx[]>([]);
-  const [names, setNames] = useState<Record<string, { name: string; pix: string }>>({});
-  const [tab, setTab] = useState<Tab>("home");
-  const [hide, setHide] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [account, setAccount] = useState<LifePayAccount | null>(null);
+  const [keys, setKeys] = useState<LifePayKey[]>([]);
+  const [txs, setTxs] = useState<LifePayTx[]>([]);
+  const [names, setNames] = useState<Map<string, string>>(new Map());
+  const [tab, setTab] = useState<TabKey>("home");
   const [loading, setLoading] = useState(true);
-  const [sheet, setSheet] = useState<PixSheet>(null);
+  const [fatal, setFatal] = useState<string | null>(null);
+  const touch = useServerFn(lifepayTouchAccess);
 
-  const load = useCallback(async () => {
-    const { data: sess } = await supabase.auth.getSession();
-    if (!sess.session) { nav({ to: "/auth", search: { redirect: "/lifepay/app" } }); return; }
-    const uid = sess.session.user.id;
-    await supabase.rpc("ensure_lifepay_account", { _user_id: uid });
-    const { data: acc } = await supabase
-      .from("lifepay_accounts").select("*").eq("user_id", uid).maybeSingle();
-    setAccount(acc as Account | null);
-    const { data: tx } = await supabase
-      .from("lifepay_transactions")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(80);
-    setTxs((tx ?? []) as Tx[]);
-    const ids = Array.from(new Set((tx ?? []).flatMap((t) => [t.from_user, t.to_user]).filter(Boolean) as string[]));
-    if (ids.length) {
-      const { data: people } = await supabase.rpc("lifepay_counterparty_names");
-      const m: Record<string, { name: string; pix: string }> = {};
-      (people ?? []).forEach((p) => { m[p.user_id] = { name: p.display_name || p.pix_key, pix: p.pix_key }; });
-      setNames(m);
-    }
+  const refresh = useCallback(async (uid: string) => {
+    const [acc, k, t, n] = await Promise.all([
+      loadAccount(uid), loadKeys(uid), loadTransactions(uid, { limit: 100 }), counterpartyNames(),
+    ]);
+    setAccount(acc); setKeys(k); setTxs(t); setNames(n);
+  }, []);
 
-    setLoading(false);
-  }, [nav]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
+      if (!session) { nav({ to: "/lifepay/entrar" }); return; }
 
-  useEffect(() => { void load(); }, [load]);
+      // "Manter conectado" desmarcado: encerra a sessão em uma nova aba/janela.
+      if (localStorage.getItem("lp_session_only") === "1" && sessionStorage.getItem("lp_session_alive") !== "1") {
+        localStorage.removeItem("lp_session_only");
+        await supabase.auth.signOut();
+        nav({ to: "/lifepay/entrar" });
+        return;
+      }
 
-  if (loading) return (
-    <div className="lp min-h-screen bg-[#0a0a0a] text-white grid place-items-center">
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <Loader2 className="h-6 w-6 animate-spin text-[#ffd84d]" />
-    </div>
-  );
-  if (!account) return null;
+      const uid = session.user.id;
+      if (cancelled) return;
+      setUserId(uid);
+      try {
+        await ensureAccount(uid);
+        await refresh(uid);
+        touch({}).catch(() => {});
+      } catch (e) {
+        setFatal(e instanceof Error ? e.message : "Não foi possível carregar sua conta.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [nav, refresh, touch]);
 
-  return (
-    <div className="lp min-h-screen bg-black text-white">
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      {/* Phone-sized centered container */}
-      <div className="mx-auto min-h-screen w-full max-w-[440px] bg-[#0a0a0a] pb-28 sm:my-6 sm:min-h-0 sm:rounded-[36px] sm:shadow-2xl sm:ring-1 sm:ring-white/5">
-        {tab === "home" && <HomeScreen account={account} txs={txs} names={names} hide={hide} setHide={setHide} openSheet={setSheet} />}
-        {tab === "extrato" && <StatementScreen txs={txs} names={names} uid={account.user_id} />}
-        {tab === "cartoes" && <CardsScreen account={account} />}
-        {tab === "menu" && <MenuScreen account={account} reload={load} />}
-      </div>
-
-      <BottomNav tab={tab} setTab={setTab} onCenter={() => setSheet("send")} />
-
-      {sheet && (
-        <PixSheetView
-          kind={sheet}
-          onClose={() => setSheet(null)}
-          account={account}
-          txs={txs}
-          names={names}
-          reload={load}
-        />
-      )}
-    </div>
-  );
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// HOME
-function HomeScreen({ account, txs, names, hide, setHide, openSheet }: {
-  account: Account; txs: Tx[]; names: Record<string, { name: string; pix: string }>;
-  hide: boolean; setHide: (v: boolean) => void; openSheet: (s: PixSheet) => void;
-}) {
-  return (
-    <div className="flex flex-col">
-      {/* Header */}
-      <header className="flex items-center justify-between px-5 pt-6 pb-3">
-        <div>
-          <div className="text-sm text-white/60">{greeting()},</div>
-          <div className="text-xl font-bold tracking-tight">{account.display_name}</div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="lp-icon-btn relative" aria-label="Notificações">
-            <Bell className="h-4 w-4" />
-            <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-red-500" />
-          </button>
-          <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-black text-sm font-bold">
-            {account.display_name.charAt(0).toUpperCase()}
-          </div>
-        </div>
-      </header>
-
-      {/* Balance cards carousel */}
-      <div className="px-5">
-        <div className="lp-scroll flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 snap-x snap-mandatory">
-          <BalanceCard
-            tone="green"
-            label="Saldo"
-            balance={account.balance}
-            hide={hide}
-            onToggleHide={() => setHide(!hide)}
-          />
-          <SecondaryCard label="Robux investidos" value={Math.floor(account.balance * 0.05)} hide={hide} tone="blue" />
-          <SecondaryCard label="Cashback do mês" value={Math.floor(account.balance * 0.001)} hide={hide} tone="yellow" />
-        </div>
-      </div>
-
-      {/* Quick actions grid */}
-      <section className="mt-2 rounded-t-[28px] bg-white px-5 pt-5 pb-6 text-black">
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-black/10" />
-        <div className="grid grid-cols-4 gap-y-4 gap-x-1">
-          {[
-            { label: "Meus Limites", icon: Wallet },
-            { label: "Investir", icon: PiggyBank },
-            { label: "Empréstimos", icon: HandCoins },
-            { label: "Recarga", icon: Zap },
-            { label: "Cobrar", icon: Receipt, onClick: () => openSheet("receive") },
-            { label: "Convidar", icon: Users },
-            { label: "Doações", icon: Gift },
-            { label: "Mais", icon: Plus },
-          ].map((q, i) => (
-            <button key={i} onClick={q.onClick} className="flex flex-col items-center gap-1.5">
-              <div className="grid h-12 w-12 place-items-center rounded-full bg-neutral-100">
-                <q.icon className="h-5 w-5 text-neutral-700" />
-              </div>
-              <span className="text-[11px] leading-tight text-center text-neutral-700 max-w-[70px]">{q.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Para você banner */}
-        <div className="mt-6">
-          <div className="mb-2 flex items-center justify-between">
-            <div className="text-sm font-semibold">Para você</div>
-            <button className="text-xs text-neutral-500">Ver menos</button>
-          </div>
-          <div className="lp-scroll flex gap-3 overflow-x-auto -mx-5 px-5 pb-1 snap-x snap-mandatory">
-            <PromoCard tone="red" title="Benefícios exclusivos" subtitle="para clientes LifePay" />
-            <PromoCard tone="dark" title="Convide amigos" subtitle="ganhe 100 Robux por indicação" />
-            <PromoCard tone="yellow" title="LifePay Black" subtitle="cashback dobrado" />
-          </div>
-        </div>
-
-        {/* Pix block */}
-        <div className="mt-6">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="grid h-5 w-5 place-items-center rounded-md bg-black text-[#ffd84d]">
-              <ArrowLeftRight className="h-3 w-3" />
-            </div>
-            <div className="text-sm font-semibold">Pix</div>
-          </div>
-          <div className="grid grid-cols-4 gap-2">
-            <PixQuick label="Ler QR" icon={QrCode} onClick={() => openSheet("qr")} />
-            <PixQuick label="Transferir" icon={Send} onClick={() => openSheet("send")} />
-            <PixQuick label="Cobrar" icon={ArrowDownLeft} onClick={() => openSheet("receive")} />
-            <PixQuick label="Minha chave" icon={KeyRound} onClick={() => openSheet("key")} />
-          </div>
-        </div>
-
-        {/* Recent */}
-        <div className="mt-6">
-          <div className="mb-2 flex items-center justify-between">
-            <div className="text-sm font-semibold">Últimas movimentações</div>
-          </div>
-          <ul className="divide-y divide-black/5">
-            {txs.length === 0 && <li className="py-6 text-center text-sm text-neutral-500">Sem movimentações ainda.</li>}
-            {txs.slice(0, 5).map((t) => <TxRowLight key={t.id} t={t} names={names} uid={account.user_id} />)}
-          </ul>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function BalanceCard({ tone, label, balance, hide, onToggleHide }: any) {
-  return (
-    <div className="lp-bcard snap-start min-w-[86%] p-5 relative overflow-hidden">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className={`grid h-6 w-6 place-items-center rounded-full ${tone === "green" ? "bg-emerald-500/20 text-emerald-400" : "bg-white/10 text-white"}`}>
-            <span className="text-[10px] font-bold">R$</span>
-          </div>
-          <div className="text-sm text-white/70">{label}</div>
-        </div>
-        <button onClick={onToggleHide} className="text-white/60 hover:text-white">
-          {hide ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-        </button>
-      </div>
-      <div className="mt-3 text-3xl font-bold tracking-tight">
-        {hide ? "R$ ••••••" : fmt(balance)}
-      </div>
-      <div className="mt-1 text-[11px] text-white/40">Robux · atualizado agora</div>
-      <button className="mt-4 flex items-center gap-1 text-xs font-medium text-white/80 hover:text-white">
-        VER DETALHES <ChevronRight className="h-3 w-3" />
-      </button>
-    </div>
-  );
-}
-
-function SecondaryCard({ label, value, hide, tone }: any) {
-  const tones: Record<string, string> = {
-    blue: "from-sky-500/20 to-sky-500/5 text-sky-400",
-    yellow: "from-amber-400/20 to-amber-500/5 text-amber-400",
-  };
-  return (
-    <div className={`lp-bcard snap-start min-w-[70%] p-5 bg-gradient-to-br ${tones[tone] ?? ""}`}>
-      <div className="text-sm text-white/70">{label}</div>
-      <div className="mt-3 text-2xl font-bold tracking-tight text-white">
-        {hide ? "R$ ••••••" : fmt(value)}
-      </div>
-      <div className="mt-1 text-[11px] text-white/40">Robux</div>
-    </div>
-  );
-}
-
-function PromoCard({ tone, title, subtitle }: any) {
-  const bg: Record<string, string> = {
-    red: "bg-gradient-to-br from-red-900 to-red-950 text-white",
-    dark: "bg-gradient-to-br from-neutral-900 to-black text-white",
-    yellow: "bg-gradient-to-br from-amber-300 to-amber-500 text-black",
-  };
-  return (
-    <div className={`snap-start min-w-[85%] rounded-2xl p-5 relative ${bg[tone]}`}>
-      <div className="text-sm font-semibold leading-tight max-w-[70%]">{title}</div>
-      <div className="text-xs opacity-80 mt-1">{subtitle}</div>
-      <div className="absolute right-4 bottom-4 grid h-8 w-8 place-items-center rounded-full bg-[#ffd84d] text-black">
-        <ArrowUpRight className="h-4 w-4" />
-      </div>
-    </div>
-  );
-}
-
-function PixQuick({ label, icon: Icon, onClick }: any) {
-  return (
-    <button onClick={onClick} className="flex flex-col items-center gap-1.5">
-      <div className="grid h-12 w-12 place-items-center rounded-full bg-[#ffd84d] text-black shadow-sm active:scale-95 transition">
-        <Icon className="h-5 w-5" />
-      </div>
-      <span className="text-[11px] leading-tight text-neutral-700 text-center max-w-[70px]">{label}</span>
-    </button>
-  );
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-function TxRowLight({ t, names, uid }: { t: Tx; names: Record<string, { name: string; pix: string }>; uid: string }) {
-  const incoming = t.to_user === uid;
-  const counter = incoming ? t.from_user : t.to_user;
-  const who = names[counter ?? ""]?.name;
-  const label = t.kind === "signup_bonus" ? "Bônus de cadastro"
-    : t.kind === "admin_grant" ? (incoming ? "Crédito admin" : "Concessão admin")
-    : t.kind === "admin_debit" ? "Débito admin"
-    : incoming ? `Recebido${who ? ` de ${who}` : ""}` : `Enviado${who ? ` para ${who}` : ""}`;
-  return (
-    <li className="flex items-center justify-between py-3">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${incoming ? "bg-emerald-100 text-emerald-600" : "bg-red-50 text-red-500"}`}>
-          {incoming ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
-        </div>
-        <div className="min-w-0">
-          <div className="text-sm font-medium truncate">{label}</div>
-          <div className="text-[11px] text-neutral-500 truncate">
-            {new Date(t.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
-            {t.note ? ` · ${t.note}` : ""}
-          </div>
-        </div>
-      </div>
-      <div className={`text-sm font-semibold shrink-0 ml-3 ${incoming ? "text-emerald-600" : "text-neutral-900"}`}>
-        {incoming ? "+" : "−"} {fmt(t.amount)}
-      </div>
-    </li>
-  );
-}
-
-function TxRowDark({ t, names, uid }: { t: Tx; names: Record<string, { name: string; pix: string }>; uid: string }) {
-  const incoming = t.to_user === uid;
-  const counter = incoming ? t.from_user : t.to_user;
-  const who = names[counter ?? ""]?.name;
-  const label = t.kind === "signup_bonus" ? "Bônus de cadastro"
-    : t.kind === "admin_grant" ? (incoming ? "Crédito admin" : "Concessão admin")
-    : t.kind === "admin_debit" ? "Débito admin"
-    : incoming ? `Recebido${who ? ` de ${who}` : ""}` : `Enviado${who ? ` para ${who}` : ""}`;
-  return (
-    <li className="flex items-center justify-between py-3">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${incoming ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"}`}>
-          {incoming ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
-        </div>
-        <div className="min-w-0">
-          <div className="text-sm font-medium truncate">{label}</div>
-          <div className="text-[11px] text-white/40 truncate">
-            {new Date(t.created_at).toLocaleString("pt-BR")}
-            {t.note ? ` · ${t.note}` : ""}
-          </div>
-        </div>
-      </div>
-      <div className={`text-sm font-semibold shrink-0 ml-3 ${incoming ? "text-emerald-400" : "text-red-400"}`}>
-        {incoming ? "+" : "−"} {fmt(t.amount)}
-      </div>
-    </li>
-  );
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// STATEMENT
-function StatementScreen({ txs, names, uid }: { txs: Tx[]; names: Record<string, { name: string; pix: string }>; uid: string }) {
-  const grouped = useMemo(() => {
-    const map = new Map<string, Tx[]>();
-    txs.forEach((t) => {
-      const d = new Date(t.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long" });
-      if (!map.has(d)) map.set(d, []);
-      map.get(d)!.push(t);
-    });
-    return Array.from(map.entries());
-  }, [txs]);
-  return (
-    <div className="px-5 pt-6">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="text-xl font-bold">Extrato</div>
-      </div>
-      {grouped.length === 0 && <div className="py-10 text-center text-sm text-white/40">Sem movimentações.</div>}
-      {grouped.map(([day, items]) => (
-        <div key={day} className="mb-5">
-          <div className="text-[11px] font-semibold uppercase tracking-widest text-white/40 mb-1">{day}</div>
-          <ul className="divide-y divide-white/5">
-            {items.map((t) => <TxRowDark key={t.id} t={t} names={names} uid={uid} />)}
-          </ul>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// CARDS
-function CardsScreen({ account }: { account: Account }) {
-  return (
-    <div className="px-5 pt-6 space-y-5">
-      <div className="text-xl font-bold">Cartões</div>
-      <div className="relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black ring-1 ring-white/10">
-        <div className="text-[11px] uppercase tracking-widest text-[#ffd84d]">LifePay Black</div>
-        <div className="mt-10 font-mono text-lg tracking-widest">•••• •••• •••• {account.user_id.slice(0, 4).toUpperCase()}</div>
-        <div className="mt-3 flex items-end justify-between text-xs text-white/60">
-          <div>
-            <div className="text-[10px] uppercase tracking-widest text-white/40">Titular</div>
-            <div className="text-sm font-semibold text-white">{account.display_name}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] uppercase tracking-widest text-white/40">Limite</div>
-            <div className="text-sm font-semibold text-white">{fmt(Math.min(account.balance, 999999999))}</div>
-          </div>
-        </div>
-      </div>
-      <div className="rounded-2xl bg-white/[0.03] p-5 text-sm text-white/60 ring-1 ring-white/5">
-        Cartão fictício do universo LifePay — não gera cobranças reais.
-      </div>
-    </div>
-  );
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// MENU
-function MenuScreen({ account, reload }: { account: Account; reload: () => Promise<void> }) {
-  const [openAdmin, setOpenAdmin] = useState(false);
-  return (
-    <div className="px-5 pt-6 space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="grid h-12 w-12 place-items-center rounded-full bg-white text-black font-bold">
-          {account.display_name.charAt(0).toUpperCase()}
-        </div>
-        <div>
-          <div className="text-base font-semibold">{account.display_name}</div>
-          <div className="text-xs text-white/50 font-mono">{account.pix_key}</div>
-        </div>
-      </div>
-
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
-        <input placeholder="Buscar no app" className="w-full rounded-full bg-white/[0.04] border border-white/10 py-3 pl-10 pr-4 text-sm outline-none focus:border-[#ffd84d]" />
-      </div>
-
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          { label: "Meus dados", icon: Users },
-          { label: "Segurança", icon: ShieldCheck },
-          { label: "Configurações", icon: Settings },
-          { label: "Ajuda", icon: Bell },
-          { label: "Voltar ao site", icon: HomeIcon, href: "/" },
-          { label: "Sair", icon: LogOut, onClick: async () => { await supabase.auth.signOut(); window.location.href = "/"; } },
-        ].map((m, i) => {
-          const Inner = (
-            <>
-              <div className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.05]">
-                <m.icon className="h-4 w-4 text-white/80" />
-              </div>
-              <span className="text-[11px] text-center text-white/70 leading-tight">{m.label}</span>
-            </>
-          );
-          if (m.href) return <Link key={i} to={m.href} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/[0.02] p-3 hover:bg-white/[0.05]">{Inner}</Link>;
-          return <button key={i} onClick={m.onClick} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/[0.02] p-3 hover:bg-white/[0.05]">{Inner}</button>;
-        })}
-      </div>
-
-      {account.is_admin && (
-        <div className="mt-4">
-          <button onClick={() => setOpenAdmin(!openAdmin)} className="flex w-full items-center justify-between rounded-2xl bg-[#ffd84d]/10 border border-[#ffd84d]/30 p-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-[#ffd84d]">
-              <ShieldCheck className="h-4 w-4" /> Painel Admin
-            </div>
-            <ChevronRight className={`h-4 w-4 text-[#ffd84d] transition ${openAdmin ? "rotate-90" : ""}`} />
-          </button>
-          {openAdmin && <AdminPanel reload={reload} />}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// BOTTOM NAV
-function BottomNav({ tab, setTab, onCenter }: { tab: Tab; setTab: (t: Tab) => void; onCenter: () => void }) {
-  const items: { id: Tab; label: string; icon: any }[] = [
-    { id: "home", label: "Início", icon: HomeIcon },
-    { id: "extrato", label: "Extrato", icon: Receipt },
-  ];
-  const items2: { id: Tab; label: string; icon: any }[] = [
-    { id: "cartoes", label: "Cartões", icon: CreditCard },
-    { id: "menu", label: "Menu", icon: MenuIcon },
-  ];
-  return (
-    <nav className="fixed bottom-0 left-1/2 z-40 -translate-x-1/2 w-full max-w-[440px] px-3 pb-3">
-      <div className="relative flex items-center justify-between rounded-3xl bg-[#111]/95 backdrop-blur border border-white/10 px-4 py-2.5">
-        {items.map((it) => (
-          <NavBtn key={it.id} it={it} active={tab === it.id} onClick={() => setTab(it.id)} />
-        ))}
-        {/* Center Pix button */}
-        <button onClick={onCenter} className="grid h-14 w-14 -mt-8 shrink-0 place-items-center rounded-full bg-black text-white ring-4 ring-[#0a0a0a] shadow-lg active:scale-95 transition">
-          <span className="text-[10px] font-bold tracking-widest">PIX</span>
-        </button>
-        {items2.map((it) => (
-          <NavBtn key={it.id} it={it} active={tab === it.id} onClick={() => setTab(it.id)} />
-        ))}
-      </div>
-    </nav>
-  );
-}
-
-function NavBtn({ it, active, onClick }: any) {
-  return (
-    <button onClick={onClick} className="flex flex-col items-center gap-0.5 px-2 py-1">
-      <it.icon className={`h-5 w-5 ${active ? "text-[#ffd84d]" : "text-white/60"}`} />
-      <span className={`text-[10px] ${active ? "text-[#ffd84d] font-semibold" : "text-white/60"}`}>{it.label}</span>
-      {active && <span className="mt-0.5 h-0.5 w-4 rounded-full bg-[#ffd84d]" />}
-    </button>
-  );
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// PIX SHEETS
-function PixSheetView({ kind, onClose, account, txs, names, reload }: {
-  kind: Exclude<PixSheet, null>;
-  onClose: () => void;
-  account: Account;
-  txs: Tx[];
-  names: Record<string, { name: string; pix: string }>;
-  reload: () => Promise<void>;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[440px] max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-[#0f0f0f] border border-white/10 text-white animate-in slide-in-from-bottom"
-      >
-        <div className="sticky top-0 z-10 bg-[#0f0f0f]/95 backdrop-blur px-5 py-4 border-b border-white/5 flex items-center justify-between">
-          <button onClick={onClose} className="lp-icon-btn"><ChevronLeft className="h-4 w-4" /></button>
-          <div className="text-sm font-semibold">
-            {kind === "send" ? "Transferir Pix" : kind === "receive" ? "Cobrar via Pix" : kind === "key" ? "Minha chave Pix" : "Ler QR Code"}
-          </div>
-          <button onClick={onClose} className="lp-icon-btn"><X className="h-4 w-4" /></button>
-        </div>
-        <div className="p-5">
-          {kind === "send" && <SendPix account={account} txs={txs} names={names} reload={reload} onDone={onClose} />}
-          {kind === "receive" && <ReceivePix account={account} />}
-          {kind === "key" && <MyKey account={account} />}
-          {kind === "qr" && <ReadQR account={account} txs={txs} names={names} reload={reload} onDone={onClose} />}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ────── Send flow (contacts + quick amounts + confirm) ──────
-function SendPix({ account, txs, names, reload, onDone }: {
-  account: Account; txs: Tx[]; names: Record<string, { name: string; pix: string }>;
-  reload: () => Promise<void>; onDone: () => void;
-}) {
-  const [pix, setPix] = useState("");
-  const [amount, setAmount] = useState<number>(0);
-  const [note, setNote] = useState("");
-  const [step, setStep] = useState<"form" | "confirm" | "success" | "error">("form");
-  const [busy, setBusy] = useState(false);
-  const [errMsg, setErrMsg] = useState("");
-
-  // recent unique contacts
-  const contacts = useMemo(() => {
-    const seen = new Set<string>();
-    const out: { uid: string; name: string; pix: string }[] = [];
-    for (const t of txs) {
-      const other = t.from_user === account.user_id ? t.to_user : t.to_user === account.user_id ? t.from_user : null;
-      if (!other || seen.has(other) || other === account.user_id) continue;
-      const info = names[other];
-      if (!info) continue;
-      seen.add(other);
-      out.push({ uid: other, name: info.name, pix: info.pix });
-      if (out.length >= 6) break;
-    }
-    return out;
-  }, [txs, names, account.user_id]);
-
-  const chips = [10, 50, 100, 500, 1000];
-
-  const submit = async () => {
-    if (!pix.trim() || !amount) return;
-    setStep("confirm");
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    nav({ to: "/lifepay/entrar", replace: true });
   };
 
-  const confirm = async () => {
-    setBusy(true); setErrMsg("");
-    const { error } = await supabase.rpc("lifepay_transfer", { _to_pix: pix.trim(), _amount: amount, _note: note });
-    setBusy(false);
-    if (error) { setErrMsg(error.message); setStep("error"); return; }
-    await reload();
-    setStep("success");
-  };
+  if (loading) return <LifePayTheme><div className="flex min-h-screen items-center justify-center"><LpSpinner label="Carregando sua conta..." /></div></LifePayTheme>;
 
-  if (step === "success") return (
-    <div className="text-center py-10">
-      <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-500/20 text-emerald-400">
-        <Check className="h-8 w-8" />
-      </div>
-      <div className="mt-4 text-lg font-bold">Pix enviado!</div>
-      <div className="mt-1 text-sm text-white/60">{fmt(amount)} para <span className="font-mono">{pix}</span></div>
-      <button onClick={onDone} className="mt-6 lp-btn-primary w-full">Concluir</button>
-    </div>
-  );
-  if (step === "error") return (
-    <div className="text-center py-10">
-      <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-red-500/20 text-red-400">
-        <X className="h-8 w-8" />
-      </div>
-      <div className="mt-4 text-lg font-bold">Não foi possível enviar</div>
-      <div className="mt-1 text-sm text-white/60">{errMsg}</div>
-      <button onClick={() => setStep("form")} className="mt-6 lp-btn-primary w-full">Tentar novamente</button>
-    </div>
-  );
-  if (step === "confirm") return (
-    <div className="space-y-5">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-center">
-        <div className="text-xs text-white/50 uppercase tracking-widest">Você vai enviar</div>
-        <div className="mt-2 text-3xl font-bold">{fmt(amount)}</div>
-        <div className="mt-1 text-xs text-white/50">Robux</div>
-      </div>
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-2">
-        <Row k="Para" v={names[Object.keys(names).find((k) => names[k].pix.toLowerCase() === pix.trim().toLowerCase()) ?? ""]?.name ?? pix} />
-        <Row k="Chave Pix" v={<span className="font-mono text-xs">{pix}</span>} />
-        {note && <Row k="Mensagem" v={note} />}
-        <Row k="Saldo após" v={fmt(account.balance - amount)} />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <button onClick={() => setStep("form")} className="rounded-full border border-white/15 py-3 text-sm font-medium">Voltar</button>
-        <button onClick={confirm} disabled={busy} className="lp-btn-primary">
-          {busy ? "Enviando..." : "Confirmar Pix"}
-        </button>
-      </div>
-    </div>
-  );
+  if (fatal || !account || !userId) {
+    return (
+      <LifePayTheme>
+        <div className="flex min-h-screen items-center justify-center px-5">
+          <div className="w-full max-w-md space-y-4">
+            <LpAlert>{fatal ?? "Conta LifePay indisponível."}</LpAlert>
+            <button onClick={signOut} className="lp-btn lp-btn-ghost w-full">Sair</button>
+          </div>
+        </div>
+      </LifePayTheme>
+    );
+  }
+
+  if (account.status !== "active") {
+    return (
+      <LifePayTheme>
+        <div className="flex min-h-screen items-center justify-center px-5 text-center">
+          <div className="lp-card max-w-md p-8">
+            <AlertTriangle className="mx-auto h-7 w-7" style={{ color: "var(--lp-warn)" }} />
+            <h1 className="mt-4 text-lg font-semibold">Conta {ACCOUNT_STATUS_LABEL[account.status]?.toLowerCase()}</h1>
+            <p className="mt-2 text-sm lp-muted">
+              Sua conta LifePay está indisponível no momento. Fale com um administrador autorizado para regularizar o acesso.
+            </p>
+            <button onClick={signOut} className="lp-btn lp-btn-ghost mt-6">Sair</button>
+          </div>
+        </div>
+      </LifePayTheme>
+    );
+  }
+
+  if (!account.first_access_done || account.must_change_password) {
+    return <FirstAccess onDone={async () => { await refresh(userId); }} />;
+  }
+
+  const ctx = { userId, account, keys, txs, names, refresh: () => refresh(userId), setTab };
 
   return (
-    <div className="space-y-5">
-      {contacts.length > 0 && (
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-2">Contatos recentes</div>
-          <div className="flex gap-3 overflow-x-auto -mx-5 px-5 pb-1 lp-scroll">
-            {contacts.map((c) => (
-              <button key={c.uid} onClick={() => setPix(c.pix)}
-                className="flex shrink-0 flex-col items-center gap-1.5 w-16">
-                <div className={`grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-[#ffd84d] to-amber-600 text-black font-bold text-lg ${pix === c.pix ? "ring-2 ring-white" : ""}`}>
-                  {c.name.charAt(0).toUpperCase()}
-                </div>
-                <span className="text-[10px] text-center text-white/70 truncate w-full">{c.name.split(" ")[0]}</span>
+    <LifePayTheme>
+      <div className="flex min-h-screen flex-col pb-20 md:flex-row md:pb-0">
+        {/* Sidebar desktop */}
+        <aside className="hidden w-60 shrink-0 flex-col border-r p-4 lp-divide md:flex" style={{ background: "var(--lp-bg-2)" }}>
+          <div className="px-2 py-3"><LifePayMark /></div>
+          <nav className="mt-4 flex-1 space-y-1">
+            {TABS.map((t) => (
+              <button key={t.key} onClick={() => setTab(t.key)}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors"
+                style={tab === t.key
+                  ? { background: "rgba(47,227,194,.12)", color: "var(--lp-accent)", fontWeight: 600 }
+                  : { color: "var(--lp-fg-2)" }}>
+                <t.icon className="h-4 w-4" /> {t.label}
               </button>
             ))}
-          </div>
+          </nav>
+          <button onClick={signOut} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm lp-muted hover:text-white">
+            <LogOut className="h-4 w-4" /> Sair
+          </button>
+        </aside>
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b px-5 py-3 lp-divide md:hidden"
+            style={{ background: "rgba(10,11,13,.9)", backdropFilter: "blur(12px)" }}>
+            <LifePayMark size={24} />
+            <button onClick={signOut} className="lp-btn lp-btn-ghost px-3 py-1.5 text-xs"><LogOut className="h-3.5 w-3.5" /> Sair</button>
+          </header>
+
+          <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-6">
+            {tab === "home" && <HomeTab {...ctx} />}
+            {tab === "send" && <SendTab {...ctx} />}
+            {tab === "receive" && <ReceiveTab {...ctx} />}
+            {tab === "keys" && <KeysTab {...ctx} />}
+            {tab === "statement" && <StatementTab {...ctx} />}
+            {tab === "profile" && <ProfileTab {...ctx} />}
+            {tab === "security" && <SecurityTab {...ctx} />}
+            {tab === "support" && <SupportTab />}
+          </main>
         </div>
-      )}
 
-      <label className="block">
-        <span className="text-xs font-semibold uppercase tracking-widest text-white/40">Chave Pix ou email</span>
-        <div className="relative mt-1.5">
-          <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
-          <input value={pix} onChange={(e) => setPix(e.target.value)}
-            className="w-full rounded-2xl bg-white/[0.04] border border-white/10 py-3.5 pl-10 pr-4 text-sm outline-none focus:border-[#ffd84d]"
-            placeholder="email@exemplo.com" />
-        </div>
-      </label>
-
-      <div>
-        <div className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-2">Valor</div>
-        <div className="flex items-baseline gap-1 rounded-2xl bg-white/[0.04] border border-white/10 px-4 py-3">
-          <span className="text-white/50 text-sm">R$</span>
-          <input value={amount || ""} onChange={(e) => setAmount(Math.floor(Number(e.target.value.replace(/[^\d]/g, ""))) || 0)}
-            inputMode="numeric" placeholder="0"
-            className="flex-1 bg-transparent text-2xl font-bold outline-none" />
-          <span className="text-[10px] text-white/40">Robux</span>
-        </div>
-        <div className="mt-2 flex gap-2 overflow-x-auto lp-scroll">
-          {chips.map((c) => (
-            <button key={c} onClick={() => setAmount(c)}
-              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${amount === c ? "border-[#ffd84d] bg-[#ffd84d]/10 text-[#ffd84d]" : "border-white/10 text-white/70 hover:border-white/30"}`}>
-              R$ {fmtInt(c)}
-            </button>
-          ))}
-        </div>
-        <div className="mt-2 text-[11px] text-white/40">Saldo disponível: <span className="text-white/80 font-semibold">{fmt(account.balance)}</span></div>
+        {/* Bottom nav mobile */}
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t px-1 py-1.5 lp-divide md:hidden"
+          style={{ background: "rgba(10,11,13,.95)", backdropFilter: "blur(12px)" }}>
+          {(["home", "send", "receive", "statement", "security"] as TabKey[]).map((k) => {
+            const t = TABS.find((x) => x.key === k)!;
+            return (
+              <button key={k} onClick={() => setTab(k)} className="flex flex-col items-center gap-1 py-1.5 text-[10px]"
+                style={{ color: tab === k ? "var(--lp-accent)" : "var(--lp-fg-2)" }}>
+                <t.icon className="h-4.5 w-4.5" style={{ width: 18, height: 18 }} />
+                {t.label.split(" ")[0]}
+              </button>
+            );
+          })}
+        </nav>
       </div>
-
-      <label className="block">
-        <span className="text-xs font-semibold uppercase tracking-widest text-white/40">Mensagem (opcional)</span>
-        <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={140}
-          className="mt-1.5 w-full rounded-2xl bg-white/[0.04] border border-white/10 py-3 px-4 text-sm outline-none focus:border-[#ffd84d]"
-          placeholder="ex: jantar de ontem" />
-      </label>
-
-      <button onClick={submit} disabled={!pix.trim() || !amount} className="lp-btn-primary w-full">
-        <Send className="h-4 w-4" /> Continuar
-      </button>
-    </div>
+    </LifePayTheme>
   );
 }
 
-function Row({ k, v }: { k: string; v: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-white/50">{k}</span>
-      <span className="text-white font-medium text-right max-w-[60%] truncate">{v}</span>
-    </div>
-  );
-}
+/* ================================================================== *
+ * Primeiro acesso                                                     *
+ * ================================================================== */
 
-// ────── Receive (cobrar) ──────
-function ReceivePix({ account }: { account: Account }) {
-  const [amount, setAmount] = useState<number>(0);
-  const [copied, setCopied] = useState(false);
-  const link = `${typeof window !== "undefined" ? window.location.origin : ""}/lifepay/app?pay=${encodeURIComponent(account.pix_key)}${amount ? `&amount=${amount}` : ""}`;
-  return (
-    <div className="space-y-5">
-      <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-5 text-center">
-        <div className="text-xs text-white/50 uppercase tracking-widest">Valor a cobrar</div>
-        <div className="mt-2 flex items-baseline justify-center gap-1">
-          <span className="text-white/50 text-sm">R$</span>
-          <input value={amount || ""} onChange={(e) => setAmount(Math.floor(Number(e.target.value.replace(/[^\d]/g, ""))) || 0)}
-            inputMode="numeric" placeholder="0"
-            className="w-40 bg-transparent text-3xl font-bold text-center outline-none" />
-        </div>
-        <div className="text-[11px] text-white/40 mt-1">Robux · deixe 0 para cobrança aberta</div>
-      </div>
-
-      <div className="rounded-2xl border border-white/10 p-5 flex items-center justify-center bg-white">
-        <QrPreview value={link} />
-      </div>
-
-      <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Link de pagamento</div>
-        <div className="mt-1 font-mono text-xs text-white/80 break-all">{link}</div>
-      </div>
-
-      <button onClick={async () => { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-        className="lp-btn-primary w-full">
-        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Link copiado" : "Copiar link"}
-      </button>
-    </div>
-  );
-}
-
-// ────── My key ──────
-function MyKey({ account }: { account: Account }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <div className="space-y-5">
-      <div className="rounded-2xl border border-[#ffd84d]/20 bg-gradient-to-br from-[#ffd84d]/10 to-transparent p-5 text-center">
-        <div className="text-xs text-[#ffd84d] uppercase tracking-widest font-semibold">Sua chave Pix</div>
-        <div className="mt-3 font-mono text-lg break-all text-white">{account.pix_key}</div>
-        <div className="mt-1 text-[11px] text-white/40">Compartilhe para receber Robux</div>
-      </div>
-      <div className="rounded-2xl border border-white/10 p-5 flex items-center justify-center bg-white">
-        <QrPreview value={account.pix_key} />
-      </div>
-      <button onClick={async () => { await navigator.clipboard.writeText(account.pix_key); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-        className="lp-btn-primary w-full">
-        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Chave copiada" : "Copiar chave"}
-      </button>
-    </div>
-  );
-}
-
-// ────── Read QR (paste code fallback) ──────
-function ReadQR({ account, txs, names, reload, onDone }: any) {
-  const [code, setCode] = useState("");
-  return (
-    <div className="space-y-5">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center">
-        <QrCode className="mx-auto h-16 w-16 text-white/30" />
-        <div className="mt-3 text-sm text-white/60">Câmera não disponível na versão web.</div>
-        <div className="text-xs text-white/40 mt-1">Cole o código Pix abaixo para simular a leitura.</div>
-      </div>
-      <label className="block">
-        <span className="text-xs font-semibold uppercase tracking-widest text-white/40">Código / chave</span>
-        <input value={code} onChange={(e) => setCode(e.target.value)}
-          className="mt-1.5 w-full rounded-2xl bg-white/[0.04] border border-white/10 py-3 px-4 text-sm font-mono outline-none focus:border-[#ffd84d]"
-          placeholder="email@exemplo.com" />
-      </label>
-      {code && (
-        <SendPix
-          account={account} txs={txs} names={names} reload={reload} onDone={onDone}
-          key={code}
-        />
-      )}
-    </div>
-  );
-}
-
-// Simple visual "QR" (not a real QR, decorative placeholder that reads as one)
-function QrPreview({ value }: { value: string }) {
-  // deterministic pseudo-pattern from string
-  const size = 21;
-  const cells: boolean[] = [];
-  let h = 0;
-  for (let i = 0; i < value.length; i++) h = (h * 31 + value.charCodeAt(i)) >>> 0;
-  for (let i = 0; i < size * size; i++) {
-    h = (h * 1103515245 + 12345) >>> 0;
-    cells.push((h & 0xff) > 128);
-  }
-  const isCorner = (r: number, c: number) => (r < 7 && c < 7) || (r < 7 && c >= size - 7) || (r >= size - 7 && c < 7);
-  return (
-    <div className="grid" style={{ gridTemplateColumns: `repeat(${size}, 8px)`, gap: 0 }}>
-      {Array.from({ length: size * size }).map((_, i) => {
-        const r = Math.floor(i / size); const c = i % size;
-        const corner = isCorner(r, c);
-        const border = corner && (
-          (r === 0 || r === 6 || r === size - 7 || r === size - 1 || c === 0 || c === 6 || c === size - 7 || c === size - 1) ||
-          (r >= 2 && r <= 4 && c >= 2 && c <= 4) ||
-          (r >= 2 && r <= 4 && c >= size - 5 && c <= size - 3) ||
-          (r >= size - 5 && r <= size - 3 && c >= 2 && c <= 4)
-        );
-        const filled = corner ? border : cells[i];
-        return <div key={i} style={{ width: 8, height: 8, background: filled ? "#000" : "transparent" }} />;
-      })}
-    </div>
-  );
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// ADMIN (embedded in Menu)
-function AdminPanel({ reload }: { reload: () => Promise<void> }) {
-  const [target, setTarget] = useState("");
-  const [amount, setAmount] = useState("");
-  const [note, setNote] = useState("");
-  const [mode, setMode] = useState<"grant" | "debit">("grant");
+function FirstAccess({ onDone }: { onDone: () => Promise<void> }) {
+  const run = useServerFn(lifepayFirstAccess);
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [pin, setPin] = useState("");
+  const [terms, setTerms] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
-  const run = async (e: React.FormEvent) => {
+  const issues = next ? passwordIssues(next) : [];
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMsg(null); setBusy(true);
-    const amt = Math.floor(Number(amount.replace(/[^\d]/g, "")));
-    if (!amt || amt <= 0) { setMsg({ type: "err", text: "Valor inválido" }); setBusy(false); return; }
-    const signed = mode === "grant" ? amt : -amt;
-    const { error } = await supabase.rpc("lifepay_admin_adjust", { _target_pix: target.trim(), _amount: signed, _note: note });
-    if (error) { setMsg({ type: "err", text: error.message }); setBusy(false); return; }
-    setMsg({ type: "ok", text: mode === "grant" ? `Creditado ${fmt(amt)} em ${target}` : `Debitado ${fmt(amt)} de ${target}` });
-    setTarget(""); setAmount(""); setNote("");
-    await reload();
-    setBusy(false);
+    setErr(null);
+    if (next !== confirm) { setErr("A confirmação da nova senha não confere."); return; }
+    setBusy(true);
+    try {
+      await run({ data: { currentPassword: current, newPassword: next, pin: pin || undefined, acceptTerms: terms } });
+      await onDone();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Não foi possível concluir.");
+    } finally { setBusy(false); }
   };
 
   return (
-    <form onSubmit={run} className="mt-3 space-y-3 rounded-2xl border border-[#ffd84d]/20 bg-black/40 p-4">
-      <div className="grid grid-cols-2 gap-2">
-        <button type="button" onClick={() => setMode("grant")}
-          className={`rounded-xl py-2 text-xs font-semibold ${mode === "grant" ? "bg-[#ffd84d] text-black" : "bg-white/[0.05] text-white/70"}`}>+ Creditar</button>
-        <button type="button" onClick={() => setMode("debit")}
-          className={`rounded-xl py-2 text-xs font-semibold ${mode === "debit" ? "bg-[#ffd84d] text-black" : "bg-white/[0.05] text-white/70"}`}>− Debitar</button>
+    <LifePayTheme>
+      <div className="lp-grid-bg flex min-h-screen items-center justify-center px-5 py-10">
+        <div className="lp-card w-full max-w-md p-7">
+          <LifePayMark />
+          <h1 className="mt-5 text-2xl font-bold tracking-tight">Primeiro acesso</h1>
+          <p className="mt-1 text-sm lp-muted">Confirme a senha inicial e defina suas credenciais de acesso.</p>
+          <form onSubmit={submit} className="mt-6 space-y-4">
+            <div>
+              <label className="lp-label">Senha inicial</label>
+              <input type="password" required value={current} onChange={(e) => setCurrent(e.target.value)} className="lp-input" autoComplete="current-password" />
+            </div>
+            <div>
+              <label className="lp-label">Nova senha</label>
+              <input type="password" required value={next} onChange={(e) => setNext(e.target.value)} className="lp-input" autoComplete="new-password" />
+              {issues.length > 0 && <p className="mt-1 text-[11px]" style={{ color: "var(--lp-warn)" }}>Requisitos: {issues.join(", ")}.</p>}
+            </div>
+            <div>
+              <label className="lp-label">Confirmar nova senha</label>
+              <input type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} className="lp-input" autoComplete="new-password" />
+            </div>
+            <div>
+              <label className="lp-label">PIN de operações (opcional, 4 a 8 dígitos)</label>
+              <input inputMode="numeric" pattern="\d*" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 8))} className="lp-input" placeholder="••••" />
+            </div>
+            <label className="flex cursor-pointer items-start gap-2 text-xs lp-muted">
+              <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5 h-3.5 w-3.5 accent-[color:var(--lp-accent)]" />
+              <span>Li e aceito os <Link to="/lifepay/termos" className="lp-accent underline">termos de uso</Link> e a <Link to="/lifepay/privacidade" className="lp-accent underline">política de privacidade</Link>.</span>
+            </label>
+            {err && <LpAlert>{err}</LpAlert>}
+            <button type="submit" disabled={busy} className="lp-btn lp-btn-primary w-full py-3">
+              {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Concluindo...</> : "Concluir e entrar"}
+            </button>
+            <p className="text-center text-[11px] lp-muted">O reconhecimento facial pode ser ativado depois, em Segurança.</p>
+          </form>
+        </div>
       </div>
-      <input value={target} onChange={(e) => setTarget(e.target.value)} required placeholder="Chave Pix do alvo"
-        className="w-full rounded-xl bg-white/[0.04] border border-white/10 py-2.5 px-3 text-sm outline-none focus:border-[#ffd84d]" />
-      <input value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))} required inputMode="numeric" placeholder="Valor (Robux)"
-        className="w-full rounded-xl bg-white/[0.04] border border-white/10 py-2.5 px-3 text-sm outline-none focus:border-[#ffd84d]" />
-      <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={140} placeholder="Motivo (opcional)"
-        className="w-full rounded-xl bg-white/[0.04] border border-white/10 py-2.5 px-3 text-sm outline-none focus:border-[#ffd84d]" />
-      {msg && (
-        <div className={`rounded-xl px-3 py-2 text-xs ${msg.type === "ok" ? "bg-emerald-500/10 text-emerald-300" : "bg-red-500/10 text-red-300"}`}>{msg.text}</div>
-      )}
-      <button disabled={busy} className="lp-btn-primary w-full">{busy ? "Executando..." : "Executar"}</button>
-    </form>
+    </LifePayTheme>
   );
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-const CSS = `
-.lp { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
-.lp .lp-icon-btn { display:grid; place-items:center; height: 36px; width: 36px; border-radius: 999px; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); }
-.lp .lp-icon-btn:hover { background: rgba(255,255,255,0.1); }
-.lp .lp-bcard { border-radius: 20px; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.08); }
-.lp .lp-btn-primary { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding: 14px 18px; border-radius: 999px; background: #ffd84d; color: #0a0a0a; font-weight: 700; font-size: 14px; transition: opacity .15s, transform .1s; }
-.lp .lp-btn-primary:hover { opacity: .92; }
-.lp .lp-btn-primary:active { transform: scale(.98); }
-.lp .lp-btn-primary:disabled { opacity: .4; cursor: not-allowed; }
-.lp .lp-scroll::-webkit-scrollbar { display: none; }
-.lp .lp-scroll { scrollbar-width: none; }
-`;
+/* ================================================================== *
+ * Contexto comum                                                      *
+ * ================================================================== */
+
+type Ctx = {
+  userId: string;
+  account: LifePayAccount;
+  keys: LifePayKey[];
+  txs: LifePayTx[];
+  names: Map<string, string>;
+  refresh: () => Promise<void>;
+  setTab: (t: TabKey) => void;
+};
+
+function useCopy() {
+  const [copied, setCopied] = useState<string | null>(null);
+  const copy = async (text: string, id = text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(id);
+      setTimeout(() => setCopied(null), 1800);
+    } catch { /* clipboard indisponível */ }
+  };
+  return { copied, copy };
+}
+
+/* ================================================================== *
+ * Início                                                              *
+ * ================================================================== */
+
+function HomeTab({ account, txs, names, userId, setTab, keys }: Ctx) {
+  const [hidden, setHidden] = useState(false);
+  const firstName = (account.full_name ?? account.display_name).split(" ")[0];
+  const emailKey = keys.find((k) => k.key_type === "email")?.key_value ?? account.pix_key;
+  const { copied, copy } = useCopy();
+
+  const shortcuts: { label: string; icon: typeof Send; onClick: () => void }[] = [
+    { label: "Transferir", icon: Send, onClick: () => setTab("send") },
+    { label: "Receber", icon: ArrowDownLeft, onClick: () => setTab("receive") },
+    { label: "Copiar chave", icon: Copy, onClick: () => copy(emailKey, "home-key") },
+    { label: "Extrato", icon: Receipt, onClick: () => setTab("statement") },
+    { label: "Chaves", icon: KeyRound, onClick: () => setTab("keys") },
+    { label: "Segurança", icon: ShieldCheck, onClick: () => setTab("security") },
+    { label: "Perfil", icon: User, onClick: () => setTab("profile") },
+    { label: "Suporte", icon: LifeBuoy, onClick: () => setTab("support") },
+  ];
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <div className="text-sm lp-muted">Olá, {firstName}</div>
+        <h1 className="text-2xl font-bold tracking-tight">Sua conta LifePay</h1>
+      </div>
+
+      <div className="lp-card p-6">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-semibold uppercase tracking-wider lp-muted">Saldo disponível</span>
+          <button onClick={() => setHidden(!hidden)} aria-label={hidden ? "Mostrar saldo" : "Ocultar saldo"} className="lp-muted hover:text-white">
+            {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+        <div className="mt-1 text-3xl font-black tabular-nums">
+          {hidden ? "R$ ••••••" : formatBRL(account.balance)}
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
+          <div className="lp-card-2 p-3">
+            <div className="lp-muted">Limite do cartão</div>
+            <div className="mt-0.5 font-semibold">{hidden ? "••••" : formatBRL(account.credit_limit)}</div>
+          </div>
+          <div className="lp-card-2 p-3">
+            <div className="lp-muted">Fatura atual</div>
+            <div className="mt-0.5 font-semibold">Disponível na etapa de cartão</div>
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] lp-muted">
+          <span className="lp-chip">Fechamento dia {account.closing_day}</span>
+          <span className="lp-chip">Vencimento dia {account.due_day}</span>
+          <span className="lp-chip lp-chip-ok">{ACCOUNT_STATUS_LABEL[account.status]}</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+        {shortcuts.map((s) => (
+          <button key={s.label} onClick={s.onClick} className="lp-card-2 flex flex-col items-center gap-1.5 px-1 py-3 text-[10px] transition-colors hover:brightness-125">
+            <s.icon className="h-4 w-4 lp-accent" />
+            <span className="text-center leading-tight">{s.label === "Copiar chave" && copied === "home-key" ? "Copiado!" : s.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="lp-card p-5">
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-semibold">Últimas movimentações</div>
+          <button onClick={() => setTab("statement")} className="text-xs lp-accent hover:underline">Ver extrato</button>
+        </div>
+        <div className="mt-3">
+          {txs.length === 0
+            ? <p className="py-6 text-center text-xs lp-muted">Nenhuma movimentação por enquanto.</p>
+            : <TxList txs={txs.slice(0, 6)} userId={userId} names={names} />}
+        </div>
+      </div>
+
+      <div className="lp-card-2 flex items-start gap-3 p-4 text-xs lp-muted">
+        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 lp-accent" />
+        <div>
+          Nunca compartilhe sua senha ou PIN. O LifePay pede confirmação apenas dentro do próprio aplicativo.
+          {account.last_access_at && <> Último acesso: {fmtDate(account.last_access_at)}.</>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================== *
+ * Lista de movimentações + detalhe                                    *
+ * ================================================================== */
+
+function TxList({ txs, userId, names }: { txs: LifePayTx[]; userId: string; names: Map<string, string> }) {
+  const [open, setOpen] = useState<LifePayTx | null>(null);
+  return (
+    <>
+      <ul className="divide-y lp-divide">
+        {txs.map((t) => {
+          const out = t.from_user === userId;
+          const other = out ? t.to_user : t.from_user;
+          const label = KIND_LABEL[t.kind] ?? t.kind;
+          const who = other ? names.get(other) ?? "Conta LifePay" : "LifePay";
+          return (
+            <li key={t.id}>
+              <button onClick={() => setOpen(t)} className="flex w-full items-center gap-3 py-3 text-left">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full" style={{ background: "var(--lp-surface-2)" }}>
+                  {out ? <ArrowUpRight className="h-4 w-4" style={{ color: "var(--lp-danger)" }} />
+                       : <ArrowDownLeft className="h-4 w-4 lp-accent" />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm">{label} · {who}</span>
+                  <span className="block text-[11px] lp-muted">{fmtDate(t.created_at)}{t.note ? ` · ${t.note}` : ""}</span>
+                </span>
+                <span className="shrink-0 text-sm font-semibold tabular-nums" style={{ color: out ? "var(--lp-fg)" : "var(--lp-accent)" }}>
+                  {out ? "-" : "+"}{formatBRL(t.amount)}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <LpSheet open={!!open} onClose={() => setOpen(null)} title="Detalhes da movimentação">
+        {open && <Receipt2 tx={open} userId={userId} names={names} />}
+      </LpSheet>
+    </>
+  );
+}
+
+function Receipt2({ tx, userId, names }: { tx: LifePayTx; userId: string; names: Map<string, string> }) {
+  const out = tx.from_user === userId;
+  const { copied, copy } = useCopy();
+  const lines = [
+    ["Operação", KIND_LABEL[tx.kind] ?? tx.kind],
+    ["Status", tx.status === "completed" ? "Concluída" : tx.status],
+    ["De", tx.from_user ? (tx.from_user === userId ? "Você" : names.get(tx.from_user) ?? "Conta LifePay") : "LifePay"],
+    ["Para", tx.to_user ? (tx.to_user === userId ? "Você" : names.get(tx.to_user) ?? "Conta LifePay") : "LifePay"],
+    ["Chave utilizada", tx.key_used ?? "—"],
+    ["Valor", formatBRL(tx.amount)],
+    ["Descrição", tx.note ?? "—"],
+    ["Data", fmtDate(tx.created_at)],
+    ["Autenticação", tx.auth_method ?? "—"],
+    ["Saldo anterior", out ? (tx.from_balance_before != null ? formatBRL(tx.from_balance_before) : "—") : (tx.to_balance_before != null ? formatBRL(tx.to_balance_before) : "—")],
+    ["Saldo posterior", out ? (tx.from_balance_after != null ? formatBRL(tx.from_balance_after) : "—") : (tx.to_balance_after != null ? formatBRL(tx.to_balance_after) : "—")],
+    ["Identificador", tx.receipt_code ?? tx.id.slice(0, 8).toUpperCase()],
+  ] as [string, string][];
+
+  const text = `LifePay — comprovante\n` + lines.map(([k, v]) => `${k}: ${v}`).join("\n");
+
+  const share = async () => {
+    if (navigator.share) { try { await navigator.share({ title: "Comprovante LifePay", text }); return; } catch { /* cancelado */ } }
+    copy(text, "receipt");
+  };
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <LifePayMark size={24} />
+        <span className="lp-chip lp-chip-ok">Comprovante</span>
+      </div>
+      <dl className="divide-y lp-divide text-sm">
+        {lines.map(([k, v]) => (
+          <div key={k} className="flex items-start justify-between gap-4 py-2.5">
+            <dt className="lp-muted">{k}</dt>
+            <dd className="max-w-[60%] break-words text-right font-medium">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="mt-5 flex flex-wrap gap-2">
+        <button onClick={() => copy(text, "receipt")} className="lp-btn lp-btn-soft">
+          {copied === "receipt" ? <><Check className="h-4 w-4" /> Copiado</> : <><Copy className="h-4 w-4" /> Copiar</>}
+        </button>
+        <button onClick={share} className="lp-btn lp-btn-soft"><Share2 className="h-4 w-4" /> Compartilhar</button>
+        <button onClick={() => window.print()} className="lp-btn lp-btn-soft"><Printer className="h-4 w-4" /> Salvar PDF</button>
+      </div>
+      <p className="mt-4 text-[11px] lp-muted">Comprovantes concluídos não podem ser alterados.</p>
+    </div>
+  );
+}
+
+/* ================================================================== *
+ * Transferir                                                          *
+ * ================================================================== */
+
+type Step = "key" | "amount" | "review" | "done";
+
+function SendTab({ account, userId, names, txs, refresh }: Ctx) {
+  const verify = useServerFn(lifepayVerifySecret);
+  const [step, setStep] = useState<Step>("key");
+  const [keyInput, setKeyInput] = useState("");
+  const [target, setTarget] = useState<ResolvedKey | null>(null);
+  const [amountText, setAmountText] = useState("");
+  const [note, setNote] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [secret, setSecret] = useState("");
+  const [method, setMethod] = useState<"password" | "pin">("password");
+  const [result, setResult] = useState<LifePayTx | null>(null);
+  const idem = useRef<string>(newIdempotencyKey());
+
+  const amount = useMemo(() => parseBRLToCents(amountText), [amountText]);
+
+  const recents = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const t of txs) {
+      if (t.kind !== "transfer") continue;
+      const other = t.from_user === userId ? t.to_user : t.from_user;
+      if (other && other !== userId && !seen.has(other)) seen.set(other, names.get(other) ?? "Conta LifePay");
+    }
+    return Array.from(seen.entries()).slice(0, 4);
+  }, [txs, userId, names]);
+
+  const lookup = async () => {
+    setErr(null); setBusy(true);
+    try {
+      const r = await resolveKey(keyInput.trim());
+      if (!r) throw new Error("Chave LifePay não encontrada ou inativa.");
+      if (r.user_id === userId) throw new Error("Não é possível transferir para a própria conta.");
+      if (r.status !== "active") throw new Error("A conta do destinatário está bloqueada.");
+      setTarget(r); setStep("amount");
+    } catch (e) { setErr(e instanceof Error ? e.message : "Falha na consulta."); }
+    finally { setBusy(false); }
+  };
+
+  const goReview = () => {
+    setErr(null);
+    if (!Number.isFinite(amount) || amount <= 0) { setErr("Informe um valor maior que zero."); return; }
+    if (amount > account.balance) { setErr("Saldo insuficiente para esta transferência."); return; }
+    setStep("review");
+  };
+
+  const confirmTransfer = async () => {
+    setErr(null); setBusy(true);
+    try {
+      await verify({ data: { method, value: secret } });
+      const tx = await transfer({
+        key: target!.key_value, amount, note: note.trim() || undefined,
+        authMethod: method, idempotencyKey: idem.current,
+      });
+      setResult(tx); setConfirmOpen(false); setStep("done"); setSecret("");
+      await refresh();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Não foi possível concluir a transferência.");
+    } finally { setBusy(false); }
+  };
+
+  const restart = () => {
+    idem.current = newIdempotencyKey();
+    setStep("key"); setKeyInput(""); setTarget(null); setAmountText(""); setNote(""); setResult(null); setErr(null);
+  };
+
+  if (step === "done" && result) {
+    return (
+      <div className="space-y-4">
+        <div className="lp-card p-6 text-center">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-full" style={{ background: "rgba(47,227,194,.15)" }}>
+            <Check className="h-6 w-6 lp-accent" />
+          </div>
+          <h2 className="mt-3 text-lg font-semibold">Transferência concluída</h2>
+          <p className="mt-1 text-sm lp-muted">{formatBRL(result.amount)} para {target?.display_name}</p>
+        </div>
+        <div className="lp-card p-5"><Receipt2 tx={result} userId={userId} names={new Map([[target!.user_id, target!.display_name]])} /></div>
+        <button onClick={restart} className="lp-btn lp-btn-ghost w-full">Fazer outra transferência</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Transferência LifePay</h1>
+        <p className="mt-1 text-sm lp-muted">Envie valores para outra conta usando e-mail ou chave aleatória.</p>
+      </div>
+
+      <div className="lp-card p-5">
+        <div className="mb-4 flex items-center gap-2 text-[11px] lp-muted">
+          {["Destinatário", "Valor", "Revisão"].map((s, i) => (
+            <span key={s} className="lp-chip" style={i === ["key", "amount", "review"].indexOf(step)
+              ? { color: "var(--lp-accent)", borderColor: "rgba(47,227,194,.4)" } : undefined}>{i + 1}. {s}</span>
+          ))}
+        </div>
+
+        {step === "key" && (
+          <div className="space-y-4">
+            <div>
+              <label className="lp-label">E-mail ou chave aleatória</label>
+              <input value={keyInput} onChange={(e) => setKeyInput(e.target.value)} className="lp-input" placeholder="destinatario@empresa.com" />
+            </div>
+            {recents.length > 0 && (
+              <div>
+                <div className="lp-label">Contatos recentes</div>
+                <div className="flex flex-wrap gap-2">
+                  {recents.map(([id, name]) => (
+                    <span key={id} className="lp-chip">{name}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {err && <LpAlert>{err}</LpAlert>}
+            <button onClick={lookup} disabled={busy || !keyInput.trim()} className="lp-btn lp-btn-primary w-full">
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Localizar destinatário"}
+            </button>
+          </div>
+        )}
+
+        {step === "amount" && target && (
+          <div className="space-y-4">
+            <div className="lp-card-2 p-4">
+              <div className="text-[11px] uppercase tracking-wider lp-muted">Destinatário</div>
+              <div className="mt-0.5 font-semibold">{target.display_name}</div>
+              <div className="text-xs lp-muted">{target.key_value}</div>
+            </div>
+            <div>
+              <label className="lp-label">Valor</label>
+              <input inputMode="decimal" value={amountText} onChange={(e) => setAmountText(e.target.value)} className="lp-input text-lg" placeholder="0,00" />
+              <div className="mt-2 flex flex-wrap gap-2">
+                {[1000, 2500, 5000, 10000].map((c) => (
+                  <button key={c} onClick={() => setAmountText((c / 100).toFixed(2).replace(".", ","))} className="lp-chip hover:text-white">
+                    {formatBRL(c)}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-xs lp-muted">Saldo disponível: {formatBRL(account.balance)}</p>
+            </div>
+            <div>
+              <label className="lp-label">Descrição (opcional)</label>
+              <input value={note} onChange={(e) => setNote(e.target.value.slice(0, 140))} className="lp-input" placeholder="Ex.: reembolso" />
+            </div>
+            {err && <LpAlert>{err}</LpAlert>}
+            <div className="flex gap-2">
+              <button onClick={() => { setStep("key"); setErr(null); }} className="lp-btn lp-btn-ghost flex-1">Voltar</button>
+              <button onClick={goReview} className="lp-btn lp-btn-primary flex-1">Continuar</button>
+            </div>
+          </div>
+        )}
+
+        {step === "review" && target && (
+          <div className="space-y-4">
+            <dl className="divide-y lp-divide text-sm">
+              {[
+                ["Destinatário", target.display_name],
+                ["Chave utilizada", target.key_value],
+                ["Valor", formatBRL(amount)],
+                ["Descrição", note.trim() || "—"],
+                ["Data", new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })],
+                ["Saldo após a operação", formatBRL(account.balance - amount)],
+              ].map(([k, v]) => (
+                <div key={k} className="flex justify-between gap-4 py-2.5">
+                  <dt className="lp-muted">{k}</dt><dd className="text-right font-medium">{v}</dd>
+                </div>
+              ))}
+            </dl>
+            {err && <LpAlert>{err}</LpAlert>}
+            <div className="flex gap-2">
+              <button onClick={() => { setStep("amount"); setErr(null); }} className="lp-btn lp-btn-ghost flex-1">Voltar</button>
+              <button onClick={() => { setErr(null); setConfirmOpen(true); }} className="lp-btn lp-btn-primary flex-1">Confirmar</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <LpSheet open={confirmOpen} onClose={() => !busy && setConfirmOpen(false)} title="Confirmar operação">
+        <div className="space-y-4">
+          <p className="text-sm lp-muted">Confirme {formatBRL(amount)} para {target?.display_name}.</p>
+          <div className="flex gap-2">
+            <button onClick={() => setMethod("password")} className={`lp-btn flex-1 ${method === "password" ? "lp-btn-primary" : "lp-btn-soft"}`}>Senha</button>
+            <button onClick={() => setMethod("pin")} className={`lp-btn flex-1 ${method === "pin" ? "lp-btn-primary" : "lp-btn-soft"}`}>PIN</button>
+          </div>
+          <div>
+            <label className="lp-label">{method === "password" ? "Sua senha" : "Seu PIN"}</label>
+            <input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} className="lp-input"
+              inputMode={method === "pin" ? "numeric" : undefined} autoComplete="off" />
+          </div>
+          {err && <LpAlert>{err}</LpAlert>}
+          <button onClick={confirmTransfer} disabled={busy || !secret} className="lp-btn lp-btn-primary w-full py-3">
+            {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Processando...</> : "Confirmar transferência"}
+          </button>
+          <p className="text-center text-[11px] lp-muted">A operação só é executada após a confirmação de identidade.</p>
+        </div>
+      </LpSheet>
+    </div>
+  );
+}
+
+/* ================================================================== *
+ * Receber                                                             *
+ * ================================================================== */
+
+function ReceiveTab({ account, keys, setTab }: Ctx) {
+  const { copied, copy } = useCopy();
+  const active = keys.filter((k) => k.status === "active");
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Receber</h1>
+        <p className="mt-1 text-sm lp-muted">Compartilhe uma das suas chaves para receber valores.</p>
+      </div>
+      {active.length === 0 ? (
+        <LpEmpty icon={<KeyRound className="h-5 w-5 lp-accent" />} title="Nenhuma chave ativa"
+          hint="Ative ou crie uma chave para poder receber."
+          action={<button onClick={() => setTab("keys")} className="lp-btn lp-btn-primary">Gerenciar chaves</button>} />
+      ) : (
+        <div className="space-y-3">
+          {active.map((k) => (
+            <div key={k.id} className="lp-card flex items-center justify-between gap-3 p-5">
+              <div className="min-w-0">
+                <div className="text-[11px] uppercase tracking-wider lp-muted">{k.key_type === "email" ? "Chave de e-mail" : "Chave aleatória"}</div>
+                <div className="mt-0.5 truncate font-mono text-sm">{k.key_value}</div>
+              </div>
+              <button onClick={() => copy(k.key_value, k.id)} className="lp-btn lp-btn-soft shrink-0">
+                {copied === k.id ? <><Check className="h-4 w-4" /> Copiado</> : <><Copy className="h-4 w-4" /> Copiar</>}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="lp-card-2 p-4 text-xs lp-muted">
+        Titular: {account.full_name ?? account.display_name}. Quem transferir para você verá apenas o seu nome de exibição.
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================== *
+ * Chaves                                                              *
+ * ================================================================== */
+
+function KeysTab({ keys, refresh }: Ctx) {
+  const { copied, copy } = useCopy();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const act = async (fn: () => Promise<unknown>) => {
+    setErr(null); setBusy(true);
+    try { await fn(); await refresh(); }
+    catch (e) { setErr(e instanceof Error ? e.message : "Falha na operação."); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Chaves LifePay</h1>
+          <p className="mt-1 text-sm lp-muted">Sua chave de e-mail é permanente. Você pode ter até 5 chaves aleatórias.</p>
+        </div>
+        <button onClick={() => act(createRandomKey)} disabled={busy} className="lp-btn lp-btn-primary shrink-0">
+          <Plus className="h-4 w-4" /> Nova chave
+        </button>
+      </div>
+
+      {err && <LpAlert>{err}</LpAlert>}
+
+      <div className="space-y-3">
+        {keys.map((k) => (
+          <div key={k.id} className="lp-card p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] uppercase tracking-wider lp-muted">{k.key_type === "email" ? "E-mail" : "Aleatória"}</span>
+                  <span className={`lp-chip ${k.status === "active" ? "lp-chip-ok" : ""}`}>{k.status === "active" ? "Ativa" : "Inativa"}</span>
+                </div>
+                <div className="mt-1 truncate font-mono text-sm">{k.key_value}</div>
+                <div className="text-[11px] lp-muted">Criada em {fmtDate(k.created_at)}</div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => copy(k.key_value, k.id)} className="lp-btn lp-btn-soft px-3 py-2 text-xs">
+                  {copied === k.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} Copiar
+                </button>
+                <button onClick={() => act(() => updateKey(k.id, k.status === "active" ? "deactivate" : "activate"))}
+                  disabled={busy} className="lp-btn lp-btn-soft px-3 py-2 text-xs">
+                  <Power className="h-3.5 w-3.5" /> {k.status === "active" ? "Desativar" : "Ativar"}
+                </button>
+                {k.key_type === "random" && (
+                  <button onClick={() => { if (confirm("Remover esta chave? Ela deixa de funcionar imediatamente.")) act(() => updateKey(k.id, "delete")); }}
+                    disabled={busy} className="lp-btn lp-btn-danger px-3 py-2 text-xs"><Trash2 className="h-3.5 w-3.5" /> Excluir</button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================== *
+ * Extrato                                                             *
+ * ================================================================== */
+
+function StatementTab({ userId, names }: Ctx) {
+  const [direction, setDirection] = useState<"all" | "in" | "out">("all");
+  const [kind, setKind] = useState("all");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [rows, setRows] = useState<LifePayTx[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setErr(null); setRows(null);
+    try {
+      setRows(await loadTransactions(userId, {
+        direction, kind,
+        from: from ? new Date(from).toISOString() : undefined,
+        to: to ? new Date(`${to}T23:59:59`).toISOString() : undefined,
+        limit: 200,
+      }));
+    } catch (e) { setErr(e instanceof Error ? e.message : "Falha ao carregar."); setRows([]); }
+  }, [userId, direction, kind, from, to]);
+
+  useEffect(() => { load(); }, [load]);
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Extrato</h1>
+        <p className="mt-1 text-sm lp-muted">Toda movimentação com saldo anterior, saldo posterior e comprovante.</p>
+      </div>
+
+      <div className="lp-card space-y-3 p-4">
+        <div className="flex flex-wrap gap-2">
+          {([["all", "Tudo"], ["in", "Entradas"], ["out", "Saídas"]] as const).map(([k, l]) => (
+            <button key={k} onClick={() => setDirection(k)} className={`lp-btn px-3 py-1.5 text-xs ${direction === k ? "lp-btn-primary" : "lp-btn-soft"}`}>{l}</button>
+          ))}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div>
+            <label className="lp-label">Tipo</label>
+            <select value={kind} onChange={(e) => setKind(e.target.value)} className="lp-input">
+              <option value="all">Todos</option>
+              {Object.entries(KIND_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+            </select>
+          </div>
+          <div><label className="lp-label">De</label><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="lp-input" /></div>
+          <div><label className="lp-label">Até</label><input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="lp-input" /></div>
+        </div>
+      </div>
+
+      {err && <LpAlert>{err}</LpAlert>}
+      {rows === null ? <LpSpinner label="Carregando movimentações..." />
+        : rows.length === 0
+          ? <LpEmpty icon={<Receipt className="h-5 w-5 lp-accent" />} title="Nenhuma movimentação no período" hint="Ajuste os filtros para ver outros períodos." />
+          : <div className="lp-card px-5"><TxList txs={rows} userId={userId} names={names} /></div>}
+    </div>
+  );
+}
+
+/* ================================================================== *
+ * Perfil                                                              *
+ * ================================================================== */
+
+function ProfileTab({ account }: Ctx) {
+  const rows: [string, string][] = [
+    ["Nome completo", account.full_name ?? account.display_name],
+    ["E-mail", account.email ?? "—"],
+    ["Tipo de conta", account.account_type],
+    ["Status", ACCOUNT_STATUS_LABEL[account.status] ?? account.status],
+    ["Fechamento da fatura", `Dia ${account.closing_day}`],
+    ["Vencimento da fatura", `Dia ${account.due_day}`],
+    ["Conta criada em", fmtDate(account.created_at)],
+    ["Último acesso", account.last_access_at ? fmtDate(account.last_access_at) : "—"],
+  ];
+  return (
+    <div className="space-y-5">
+      <h1 className="text-2xl font-bold tracking-tight">Perfil</h1>
+      <div className="lp-card p-5">
+        <dl className="divide-y lp-divide text-sm">
+          {rows.map(([k, v]) => (
+            <div key={k} className="flex justify-between gap-4 py-2.5"><dt className="lp-muted">{k}</dt><dd className="text-right font-medium">{v}</dd></div>
+          ))}
+        </dl>
+      </div>
+      <p className="text-xs lp-muted">
+        Alterações de dados cadastrais são feitas por um administrador autorizado da Furry's Life Inc.
+      </p>
+    </div>
+  );
+}
+
+/* ================================================================== *
+ * Segurança                                                           *
+ * ================================================================== */
+
+function SecurityTab({ account }: Ctx) {
+  const setPinFn = useServerFn(lifepaySetPin);
+  const [pin, setPin] = useState("");
+  const [pw, setPw] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [newPw, setNewPw] = useState("");
+  const [pwMsg, setPwMsg] = useState<string | null>(null);
+
+  const savePin = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr(null); setMsg(null); setBusy(true);
+    try {
+      await setPinFn({ data: { pin, password: pw } });
+      setMsg("PIN atualizado."); setPin(""); setPw("");
+    } catch (e) { setErr(e instanceof Error ? e.message : "Falha ao salvar o PIN."); }
+    finally { setBusy(false); }
+  };
+
+  const changePassword = async (e: React.FormEvent) => {
+    e.preventDefault(); setPwMsg(null); setErr(null);
+    const issues = passwordIssues(newPw);
+    if (issues.length) { setErr(`A senha precisa de ${issues.join(", ")}.`); return; }
+    const { error } = await supabase.auth.updateUser({ password: newPw });
+    if (error) setErr(error.message);
+    else { setPwMsg("Senha alterada com sucesso."); setNewPw(""); }
+  };
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Segurança e acesso</h1>
+        <p className="mt-1 text-sm lp-muted">Gerencie a confirmação das suas operações.</p>
+      </div>
+
+      {err && <LpAlert>{err}</LpAlert>}
+
+      <form onSubmit={changePassword} className="lp-card space-y-3 p-5">
+        <div className="text-sm font-semibold">Alterar senha</div>
+        <input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} className="lp-input" placeholder="Nova senha" autoComplete="new-password" />
+        {pwMsg && <LpAlert tone="success">{pwMsg}</LpAlert>}
+        <button type="submit" disabled={!newPw} className="lp-btn lp-btn-primary">Salvar nova senha</button>
+      </form>
+
+      <form onSubmit={savePin} className="lp-card space-y-3 p-5">
+        <div className="text-sm font-semibold">PIN de operações</div>
+        <p className="text-xs lp-muted">Use um PIN de 4 a 8 dígitos para confirmar transferências sem digitar a senha.</p>
+        <input inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 8))} className="lp-input" placeholder="Novo PIN" />
+        <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} className="lp-input" placeholder="Sua senha atual" autoComplete="current-password" />
+        {msg && <LpAlert tone="success">{msg}</LpAlert>}
+        <button type="submit" disabled={busy || !pin || !pw} className="lp-btn lp-btn-primary">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar PIN"}
+        </button>
+      </form>
+
+      <div className="lp-card p-5">
+        <div className="flex items-center gap-2 text-sm font-semibold"><CreditCard className="h-4 w-4 lp-accent" /> Acesso e reconhecimento facial</div>
+        <p className="mt-2 text-xs lp-muted">
+          A biometria do dispositivo e o reconhecimento facial serão ativados nesta área na próxima etapa da implantação.
+          A senha continua sendo a forma principal de confirmação.
+        </p>
+      </div>
+
+      <div className="lp-card-2 p-4 text-xs lp-muted">
+        Último acesso: {account.last_access_at ? fmtDate(account.last_access_at) : "—"}
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================== *
+ * Suporte                                                             *
+ * ================================================================== */
+
+function SupportTab() {
+  return (
+    <div className="space-y-5">
+      <h1 className="text-2xl font-bold tracking-tight">Suporte</h1>
+      <div className="lp-card space-y-3 p-5 text-sm lp-muted">
+        <p>Precisa de ajuda com sua conta LifePay? Fale com um administrador autorizado da Furry's Life Inc.</p>
+        <p>Para questões de acesso, bloqueio de conta ou ajustes, o atendimento é feito pelos canais internos da empresa.</p>
+        <div className="flex flex-wrap gap-2 pt-2">
+          <Link to="/#contato" className="lp-btn lp-btn-soft">Falar com a empresa</Link>
+          <Link to="/lifepay/sobre" className="lp-btn lp-btn-ghost">Sobre o LifePay</Link>
+        </div>
+      </div>
+      <div className="lp-card-2 flex items-start gap-2 p-4 text-[11px] lp-muted">
+        <RefreshCw className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {DISCLOSURE}
+      </div>
+    </div>
+  );
+}
