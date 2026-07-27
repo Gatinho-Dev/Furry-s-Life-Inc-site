@@ -12,7 +12,7 @@ import {
   INSTALLMENT_OPTIONS, INVOICE_STATUS_LABEL,
   type LifePayAccount, type LifePayCard, type LifePayInvoice, type LifePayPurchase,
 } from "@/lib/lifepay-client";
-import { lifepayRevealCard } from "@/lib/lifepay.functions";
+import { lifepayRevealCard, lifepayVerifySecret } from "@/lib/lifepay.functions";
 
 const fmtDay = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString("pt-BR");
 const fmtMonth = (d: string) =>
