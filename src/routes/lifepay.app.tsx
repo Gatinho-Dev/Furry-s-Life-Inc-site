@@ -188,7 +188,8 @@ function LifePayApp() {
             {tab === "send" && <SendTab {...ctx} />}
             {tab === "receive" && <ReceiveTab {...ctx} />}
             {tab === "keys" && <KeysTab {...ctx} />}
-            {tab === "statement" && <StatementTab {...ctx} />}
+            {tab === "cards" && <CardsTab userId={ctx.userId} account={ctx.account} refresh={ctx.refresh} />}
+            {tab === "invoices" && <InvoicesTab userId={ctx.userId} account={ctx.account} refresh={ctx.refresh} />}
             {tab === "profile" && <ProfileTab {...ctx} />}
             {tab === "security" && <SecurityTab {...ctx} />}
             {tab === "support" && <SupportTab />}
