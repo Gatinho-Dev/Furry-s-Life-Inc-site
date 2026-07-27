@@ -455,6 +455,7 @@ export type Database = {
           closing_day: number
           created_at: string
           credit_limit: number
+          credit_used: number
           display_name: string
           due_day: number
           email: string | null
@@ -477,6 +478,7 @@ export type Database = {
           closing_day?: number
           created_at?: string
           credit_limit?: number
+          credit_used?: number
           display_name: string
           due_day?: number
           email?: string | null
@@ -499,6 +501,7 @@ export type Database = {
           closing_day?: number
           created_at?: string
           credit_limit?: number
+          credit_used?: number
           display_name?: string
           due_day?: number
           email?: string | null
@@ -591,6 +594,162 @@ export type Database = {
         }
         Relationships: []
       }
+      lifepay_cards: {
+        Row: {
+          brand: string
+          card_limit: number
+          created_at: string
+          cvv: string
+          deleted_at: string | null
+          exp_month: number
+          exp_year: number
+          expires_at: string | null
+          holder_name: string
+          id: string
+          is_temporary: boolean
+          is_virtual: boolean
+          label: string
+          last4: string
+          pan: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string
+          card_limit?: number
+          created_at?: string
+          cvv: string
+          deleted_at?: string | null
+          exp_month: number
+          exp_year: number
+          expires_at?: string | null
+          holder_name: string
+          id?: string
+          is_temporary?: boolean
+          is_virtual?: boolean
+          label?: string
+          last4: string
+          pan: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand?: string
+          card_limit?: number
+          created_at?: string
+          cvv?: string
+          deleted_at?: string | null
+          exp_month?: number
+          exp_year?: number
+          expires_at?: string | null
+          holder_name?: string
+          id?: string
+          is_temporary?: boolean
+          is_virtual?: boolean
+          label?: string
+          last4?: string
+          pan?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lifepay_installments: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          invoice_id: string | null
+          number: number
+          purchase_id: string
+          status: string
+          total_count: number
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          invoice_id?: string | null
+          number: number
+          purchase_id: string
+          status?: string
+          total_count: number
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          invoice_id?: string | null
+          number?: number
+          purchase_id?: string
+          status?: string
+          total_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lifepay_installments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "lifepay_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lifepay_installments_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "lifepay_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lifepay_invoices: {
+        Row: {
+          closing_date: string
+          created_at: string
+          due_date: string
+          id: string
+          paid: number
+          reference_month: string
+          status: string
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          closing_date: string
+          created_at?: string
+          due_date: string
+          id?: string
+          paid?: number
+          reference_month: string
+          status?: string
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          closing_date?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          paid?: number
+          reference_month?: string
+          status?: string
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lifepay_keys: {
         Row: {
           created_at: string
@@ -620,6 +779,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      lifepay_purchases: {
+        Row: {
+          amount: number
+          card_id: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          idempotency_key: string | null
+          installments_count: number
+          merchant: string
+          purchased_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          card_id?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          idempotency_key?: string | null
+          installments_count?: number
+          merchant: string
+          purchased_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          card_id?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          idempotency_key?: string | null
+          installments_count?: number
+          merchant?: string
+          purchased_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lifepay_purchases_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "lifepay_cards"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lifepay_transactions: {
         Row: {
@@ -1212,6 +1424,7 @@ export type Database = {
           closing_day: number
           created_at: string
           credit_limit: number
+          credit_used: number
           display_name: string
           due_day: number
           email: string | null
@@ -1288,6 +1501,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      lifepay_card_action: {
+        Args: { _action: string; _id: string }
+        Returns: boolean
+      }
       lifepay_counterparty_names: {
         Args: never
         Returns: {
@@ -1295,6 +1512,10 @@ export type Database = {
           pix_key: string
           user_id: string
         }[]
+      }
+      lifepay_create_card: {
+        Args: { _label?: string; _limit?: number; _temporary?: boolean }
+        Returns: string
       }
       lifepay_create_random_key: {
         Args: never
@@ -1314,12 +1535,96 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      lifepay_gen_pan: { Args: never; Returns: string }
+      lifepay_invoice_for: {
+        Args: { _ref: string; _user: string }
+        Returns: {
+          closing_date: string
+          created_at: string
+          due_date: string
+          id: string
+          paid: number
+          reference_month: string
+          status: string
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lifepay_invoices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       lifepay_lookup_pix: {
         Args: { _pix: string }
         Returns: {
           display_name: string
           pix_key: string
         }[]
+      }
+      lifepay_pay_invoice: {
+        Args: {
+          _amount: number
+          _auth_method: string
+          _idem: string
+          _invoice_id: string
+        }
+        Returns: {
+          amount: number
+          auth_method: string | null
+          created_at: string
+          from_balance_after: number | null
+          from_balance_before: number | null
+          from_user: string | null
+          id: string
+          idempotency_key: string | null
+          key_used: string | null
+          kind: string
+          note: string | null
+          receipt_code: string | null
+          status: string
+          to_balance_after: number | null
+          to_balance_before: number | null
+          to_user: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lifepay_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      lifepay_purchase: {
+        Args: {
+          _amount: number
+          _card_id: string
+          _category: string
+          _idem: string
+          _installments: number
+          _merchant: string
+        }
+        Returns: {
+          amount: number
+          card_id: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          idempotency_key: string | null
+          installments_count: number
+          merchant: string
+          purchased_at: string
+          status: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lifepay_purchases"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       lifepay_resolve_key: {
         Args: { _key: string }
@@ -1330,6 +1635,10 @@ export type Database = {
           status: string
           user_id: string
         }[]
+      }
+      lifepay_set_card_limit: {
+        Args: { _id: string; _limit: number }
+        Returns: boolean
       }
       lifepay_transfer: {
         Args: { _amount: number; _note?: string; _to_pix: string }

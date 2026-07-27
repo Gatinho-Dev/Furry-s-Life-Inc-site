@@ -363,3 +363,51 @@ export const lifepayAdminAudit = createServerFn({ method: "GET" })
       .select("*").order("created_at", { ascending: false }).limit(200);
     return data ?? [];
   });
+
+/* ------------------------------------------------------------------ *
+ * Cartão: dados completos só após confirmação de identidade           *
+ * ------------------------------------------------------------------ */
+
+export const lifepayRevealCard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { card_id: string; method: "password" | "pin"; value: string }) => {
+    if (!d?.card_id) throw new Error("Cartão inválido.");
+    if (d?.method !== "password" && d?.method !== "pin") throw new Error("Método inválido.");
+    if (!d?.value) throw new Error("Informe a confirmação.");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    if (data.method === "password") {
+      const email = (context.claims as any)?.email as string | undefined;
+      if (!email || !(await verifyPasswordFor(email, data.value))) throw new Error("Senha incorreta.");
+    } else {
+      const { verifyPinHash } = await import("@/lib/lifepay-crypto.server");
+      const { data: acc } = await context.supabase
+        .from("lifepay_accounts").select("pin_hash").eq("user_id", context.userId).maybeSingle();
+      if (!acc?.pin_hash) throw new Error("Nenhum PIN cadastrado.");
+      if (!verifyPinHash(data.value, acc.pin_hash)) throw new Error("PIN incorreto.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: card, error } = await supabaseAdmin
+      .from("lifepay_cards")
+      .select("id, pan, cvv, exp_month, exp_year, holder_name, user_id, deleted_at")
+      .eq("id", data.card_id).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!card || (card as any).user_id !== context.userId || (card as any).deleted_at) {
+      throw new Error("Cartão não encontrado.");
+    }
+
+    await supabaseAdmin.from("lifepay_audit_logs").insert({
+      actor_id: context.userId, actor_kind: "user", action: "card_revealed",
+      target_user: context.userId, target_ref: data.card_id, auth_method: data.method,
+    });
+
+    const c = card as any;
+    return {
+      pan: String(c.pan).replace(/(\d{4})(?=\d)/g, "$1 "),
+      cvv: c.cvv as string,
+      expiry: `${String(c.exp_month).padStart(2, "0")}/${String(c.exp_year).slice(-2)}`,
+      holder: c.holder_name as string,
+    };
+  });

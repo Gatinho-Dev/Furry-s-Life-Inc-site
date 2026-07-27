@@ -4,9 +4,10 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   Home, Send, ArrowDownLeft, KeyRound, Receipt, User, ShieldCheck, LifeBuoy,
   Eye, EyeOff, Copy, Check, Loader2, LogOut, Plus, Trash2, Power, RefreshCw,
-  ArrowUpRight, Share2, Printer, CreditCard, AlertTriangle,
+  ArrowUpRight, Share2, Printer, CreditCard, AlertTriangle, FileText,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { CardsTab, InvoicesTab } from "@/components/lifepay/cards-invoices";
 import {
   LifePayTheme, LifePayMark, LpAlert, LpEmpty, LpSheet, LpSpinner, DISCLOSURE,
 } from "@/components/lifepay/ui";
@@ -32,13 +33,15 @@ export const Route = createFileRoute("/lifepay/app")({
   component: LifePayApp,
 });
 
-type TabKey = "home" | "send" | "receive" | "keys" | "statement" | "profile" | "security" | "support";
+type TabKey = "home" | "send" | "receive" | "keys" | "cards" | "invoices" | "statement" | "profile" | "security" | "support";
 
 const TABS: { key: TabKey; label: string; icon: typeof Home }[] = [
   { key: "home", label: "Início", icon: Home },
   { key: "send", label: "Transferências", icon: Send },
   { key: "receive", label: "Receber", icon: ArrowDownLeft },
   { key: "keys", label: "Chaves LifePay", icon: KeyRound },
+  { key: "cards", label: "Cartões", icon: CreditCard },
+  { key: "invoices", label: "Faturas", icon: FileText },
   { key: "statement", label: "Extrato", icon: Receipt },
   { key: "profile", label: "Perfil", icon: User },
   { key: "security", label: "Segurança", icon: ShieldCheck },
@@ -186,6 +189,8 @@ function LifePayApp() {
             {tab === "send" && <SendTab {...ctx} />}
             {tab === "receive" && <ReceiveTab {...ctx} />}
             {tab === "keys" && <KeysTab {...ctx} />}
+            {tab === "cards" && <CardsTab userId={ctx.userId} account={ctx.account} refresh={ctx.refresh} />}
+            {tab === "invoices" && <InvoicesTab userId={ctx.userId} account={ctx.account} refresh={ctx.refresh} />}
             {tab === "statement" && <StatementTab {...ctx} />}
             {tab === "profile" && <ProfileTab {...ctx} />}
             {tab === "security" && <SecurityTab {...ctx} />}

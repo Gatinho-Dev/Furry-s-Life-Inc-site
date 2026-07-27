@@ -128,3 +128,138 @@ export async function updateKey(id: string, action: "delete" | "activate" | "dea
 export function newIdempotencyKey(): string {
   return (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`).replace(/-/g, "");
 }
+
+/* ============ Fase 2: cartões, compras, parcelas e faturas ============ */
+
+export type LifePayCard = {
+  id: string;
+  user_id: string;
+  label: string;
+  brand: string;
+  last4: string;
+  exp_month: number;
+  exp_year: number;
+  holder_name: string;
+  card_limit: number;
+  is_virtual: boolean;
+  is_temporary: boolean;
+  expires_at: string | null;
+  status: string;
+  created_at: string;
+};
+
+export type LifePayInvoice = {
+  id: string;
+  user_id: string;
+  reference_month: string;
+  closing_date: string;
+  due_date: string;
+  total: number;
+  paid: number;
+  status: string;
+};
+
+export type LifePayInstallment = {
+  id: string;
+  purchase_id: string;
+  invoice_id: string | null;
+  number: number;
+  total_count: number;
+  amount: number;
+  due_date: string;
+  status: string;
+};
+
+export type LifePayPurchase = {
+  id: string;
+  card_id: string | null;
+  merchant: string;
+  category: string;
+  amount: number;
+  installments_count: number;
+  status: string;
+  purchased_at: string;
+};
+
+const CARD_COLS =
+  "id, user_id, label, brand, last4, exp_month, exp_year, holder_name, card_limit, is_virtual, is_temporary, expires_at, status, created_at";
+
+export async function loadCards(userId: string): Promise<LifePayCard[]> {
+  const { data, error } = await db.from("lifepay_cards").select(CARD_COLS)
+    .eq("user_id", userId).is("deleted_at", null).order("created_at", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as LifePayCard[];
+}
+
+export async function createCard(label: string, temporary: boolean, limit?: number): Promise<string> {
+  const { data, error } = await db.rpc("lifepay_create_card", {
+    _label: label, _temporary: temporary, _limit: limit ?? null,
+  });
+  if (error) throw new Error(error.message);
+  return data as string;
+}
+
+export async function cardAction(id: string, action: "block" | "unblock" | "delete") {
+  const { error } = await db.rpc("lifepay_card_action", { _id: id, _action: action });
+  if (error) throw new Error(error.message);
+}
+
+export async function setCardLimit(id: string, limit: number) {
+  const { error } = await db.rpc("lifepay_set_card_limit", { _id: id, _limit: limit });
+  if (error) throw new Error(error.message);
+}
+
+export async function loadInvoices(userId: string): Promise<LifePayInvoice[]> {
+  const { data, error } = await db.from("lifepay_invoices").select("*")
+    .eq("user_id", userId).order("reference_month", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as LifePayInvoice[];
+}
+
+export async function loadInstallments(invoiceId: string): Promise<(LifePayInstallment & { purchase: LifePayPurchase | null })[]> {
+  const { data, error } = await db.from("lifepay_installments")
+    .select("*, purchase:lifepay_purchases(id, card_id, merchant, category, amount, installments_count, status, purchased_at)")
+    .eq("invoice_id", invoiceId).order("created_at", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as any[];
+}
+
+export async function loadPurchases(userId: string, limit = 50): Promise<LifePayPurchase[]> {
+  const { data, error } = await db.from("lifepay_purchases").select("*")
+    .eq("user_id", userId).order("purchased_at", { ascending: false }).limit(limit);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as LifePayPurchase[];
+}
+
+export async function createPurchase(args: {
+  cardId: string; merchant: string; amount: number; installments: number; category?: string; idempotencyKey: string;
+}): Promise<LifePayPurchase> {
+  const { data, error } = await db.rpc("lifepay_purchase", {
+    _card_id: args.cardId, _merchant: args.merchant, _amount: args.amount,
+    _installments: args.installments, _category: args.category ?? "geral", _idem: args.idempotencyKey,
+  });
+  if (error) throw new Error(error.message);
+  return (Array.isArray(data) ? data[0] : data) as LifePayPurchase;
+}
+
+export async function payInvoice(args: {
+  invoiceId: string; amount: number; authMethod: string; idempotencyKey: string;
+}): Promise<LifePayTx> {
+  const { data, error } = await db.rpc("lifepay_pay_invoice", {
+    _invoice_id: args.invoiceId, _amount: args.amount,
+    _auth_method: args.authMethod, _idem: args.idempotencyKey,
+  });
+  if (error) throw new Error(error.message);
+  return (Array.isArray(data) ? data[0] : data) as LifePayTx;
+}
+
+export const INSTALLMENT_OPTIONS = [1, 2, 3, 4, 5, 6, 8, 10, 12];
+
+export const INVOICE_STATUS_LABEL: Record<string, string> = {
+  open: "Aberta",
+  closed: "Fechada",
+  partial: "Parcialmente paga",
+  paid: "Paga",
+  overdue: "Atrasada",
+  canceled: "Cancelada",
+};

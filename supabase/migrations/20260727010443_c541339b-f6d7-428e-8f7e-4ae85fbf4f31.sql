@@ -1,0 +1,10 @@
+REVOKE EXECUTE ON FUNCTION public.lifepay_create_card(text, boolean, bigint) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.lifepay_card_action(uuid, text) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.lifepay_set_card_limit(uuid, bigint) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.lifepay_purchase(uuid, text, bigint, int, text, text) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.lifepay_pay_invoice(uuid, bigint, text, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.lifepay_create_card(text, boolean, bigint) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.lifepay_card_action(uuid, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.lifepay_set_card_limit(uuid, bigint) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.lifepay_purchase(uuid, text, bigint, int, text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.lifepay_pay_invoice(uuid, bigint, text, text) TO authenticated;
