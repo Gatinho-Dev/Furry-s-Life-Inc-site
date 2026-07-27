@@ -32,13 +32,15 @@ export const Route = createFileRoute("/lifepay/app")({
   component: LifePayApp,
 });
 
-type TabKey = "home" | "send" | "receive" | "keys" | "statement" | "profile" | "security" | "support";
+type TabKey = "home" | "send" | "receive" | "keys" | "cards" | "invoices" | "statement" | "profile" | "security" | "support";
 
 const TABS: { key: TabKey; label: string; icon: typeof Home }[] = [
   { key: "home", label: "Início", icon: Home },
   { key: "send", label: "Transferências", icon: Send },
   { key: "receive", label: "Receber", icon: ArrowDownLeft },
   { key: "keys", label: "Chaves LifePay", icon: KeyRound },
+  { key: "cards", label: "Cartões", icon: CreditCard },
+  { key: "invoices", label: "Faturas", icon: FileText },
   { key: "statement", label: "Extrato", icon: Receipt },
   { key: "profile", label: "Perfil", icon: User },
   { key: "security", label: "Segurança", icon: ShieldCheck },
