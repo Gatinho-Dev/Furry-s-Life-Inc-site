@@ -190,6 +190,7 @@ function LifePayApp() {
             {tab === "keys" && <KeysTab {...ctx} />}
             {tab === "cards" && <CardsTab userId={ctx.userId} account={ctx.account} refresh={ctx.refresh} />}
             {tab === "invoices" && <InvoicesTab userId={ctx.userId} account={ctx.account} refresh={ctx.refresh} />}
+            {tab === "statement" && <StatementTab {...ctx} />}
             {tab === "profile" && <ProfileTab {...ctx} />}
             {tab === "security" && <SecurityTab {...ctx} />}
             {tab === "support" && <SupportTab />}
