@@ -448,7 +448,7 @@ export function InvoicesTab({ userId, account, refresh }: Props) {
 
   const current = useMemo(() => (invoices ?? []).find((i) => i.status !== "paid" && i.status !== "canceled") ?? null, [invoices]);
 
-  const doPay = async (method: "password" | "pin", _value: string) => { void method; void _value; };
+  
 
   if (invoices === null) return <LpSpinner label="Carregando faturas..." />;
 
