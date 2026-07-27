@@ -81,7 +81,7 @@ export function CardsTab({ userId, account, refresh }: Props) {
 
   useEffect(() => { reload().catch((e) => setErr(e.message)); }, [reload]);
 
-  const available = Math.max(0, account.credit_limit - (account as any).credit_used ?? 0);
+  const available = Math.max(0, account.credit_limit - (((account as any).credit_used ?? 0) as number));
 
   const run = async (fn: () => Promise<unknown>) => {
     setBusy(true); setErr(null);
