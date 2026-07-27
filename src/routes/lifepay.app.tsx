@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   Home, Send, ArrowDownLeft, KeyRound, Receipt, User, ShieldCheck, LifeBuoy,
   Eye, EyeOff, Copy, Check, Loader2, LogOut, Plus, Trash2, Power, RefreshCw,
-  ArrowUpRight, Share2, Printer, CreditCard, AlertTriangle,
+  ArrowUpRight, Share2, Printer, CreditCard, AlertTriangle, FileText,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
