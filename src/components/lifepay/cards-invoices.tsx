@@ -576,8 +576,6 @@ export function InvoicesTab({ userId, account, refresh }: Props) {
         </div>
       </LpSheet>
 
-      {/* placeholder para manter assinatura estável */}
-      <span className="hidden" onClick={() => doPay("password", "")} />
     </div>
   );
 }
