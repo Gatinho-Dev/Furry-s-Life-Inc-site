@@ -594,7 +594,7 @@ function PayInvoiceSheet({
   const [method, setMethod] = useState<"password" | "pin">("password");
   const [secret, setSecret] = useState("");
   const [idem, setIdem] = useState(newIdempotencyKey);
-  const verify = useServerFn(lifepayVerifySecretRef);
+  const verify = useServerFn(lifepayVerifySecret);
 
   useEffect(() => { if (invoice) { setSecret(""); setIdem(newIdempotencyKey()); } }, [invoice]);
 
