@@ -682,17 +682,26 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
       <LpSheet open={confirmOpen} onClose={() => !busy && setConfirmOpen(false)} title="Confirmar operação">
         <div className="space-y-4">
           <p className="text-sm lp-muted">Confirme {formatBRL(amount)} para {target?.display_name}.</p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button onClick={() => setMethod("password")} className={`lp-btn flex-1 ${method === "password" ? "lp-btn-primary" : "lp-btn-soft"}`}>Senha</button>
             <button onClick={() => setMethod("pin")} className={`lp-btn flex-1 ${method === "pin" ? "lp-btn-primary" : "lp-btn-soft"}`}>PIN</button>
+            {bio.hasBiometrics && (
+              <button onClick={() => { setMethod("biometric"); setSecret(""); }}
+                className={`lp-btn flex-1 ${method === "biometric" ? "lp-btn-primary" : "lp-btn-soft"}`}>Biometria</button>
+            )}
           </div>
-          <div>
-            <label className="lp-label">{method === "password" ? "Sua senha" : "Seu PIN"}</label>
-            <input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} className="lp-input"
-              inputMode={method === "pin" ? "numeric" : undefined} autoComplete="off" />
-          </div>
+          {method === "biometric" ? (
+            <p className="text-sm lp-muted">Ao confirmar, seu dispositivo pedirá a digital ou o reconhecimento facial.</p>
+          ) : (
+            <div>
+              <label className="lp-label">{method === "password" ? "Sua senha" : "Seu PIN"}</label>
+              <input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} className="lp-input"
+                inputMode={method === "pin" ? "numeric" : undefined} autoComplete="off" />
+            </div>
+          )}
           {err && <LpAlert>{err}</LpAlert>}
-          <button onClick={confirmTransfer} disabled={busy || !secret} className="lp-btn lp-btn-primary w-full py-3">
+          <button onClick={confirmTransfer} disabled={busy || (method !== "biometric" && !secret)} className="lp-btn lp-btn-primary w-full py-3">
+
             {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Processando...</> : "Confirmar transferência"}
           </button>
           <p className="text-center text-[11px] lp-muted">A operação só é executada após a confirmação de identidade.</p>
