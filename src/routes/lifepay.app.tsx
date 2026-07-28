@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CardsTab, InvoicesTab } from "@/components/lifepay/cards-invoices";
+import { BiometricsCard, useBiometrics } from "@/components/lifepay/biometrics";
+
 import {
   LifePayTheme, LifePayMark, LpAlert, LpEmpty, LpSheet, LpSpinner, DISCLOSURE,
 } from "@/components/lifepay/ui";
@@ -508,7 +510,9 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
   const [busy, setBusy] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [secret, setSecret] = useState("");
-  const [method, setMethod] = useState<"password" | "pin">("password");
+  const [method, setMethod] = useState<"password" | "pin" | "biometric">("password");
+  const bio = useBiometrics();
+
   const [result, setResult] = useState<LifePayTx | null>(null);
   const idem = useRef<string>(newIdempotencyKey());
 
@@ -546,11 +550,13 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
   const confirmTransfer = async () => {
     setErr(null); setBusy(true);
     try {
-      await verify({ data: { method, value: secret } });
+      if (method === "biometric") await bio.confirm("transfer");
+      else await verify({ data: { method, value: secret } });
       const tx = await transfer({
         key: target!.key_value, amount, note: note.trim() || undefined,
         authMethod: method, idempotencyKey: idem.current,
       });
+
       setResult(tx); setConfirmOpen(false); setStep("done"); setSecret("");
       await refresh();
     } catch (e) {
@@ -676,17 +682,26 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
       <LpSheet open={confirmOpen} onClose={() => !busy && setConfirmOpen(false)} title="Confirmar operação">
         <div className="space-y-4">
           <p className="text-sm lp-muted">Confirme {formatBRL(amount)} para {target?.display_name}.</p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button onClick={() => setMethod("password")} className={`lp-btn flex-1 ${method === "password" ? "lp-btn-primary" : "lp-btn-soft"}`}>Senha</button>
             <button onClick={() => setMethod("pin")} className={`lp-btn flex-1 ${method === "pin" ? "lp-btn-primary" : "lp-btn-soft"}`}>PIN</button>
+            {bio.hasBiometrics && (
+              <button onClick={() => { setMethod("biometric"); setSecret(""); }}
+                className={`lp-btn flex-1 ${method === "biometric" ? "lp-btn-primary" : "lp-btn-soft"}`}>Biometria</button>
+            )}
           </div>
-          <div>
-            <label className="lp-label">{method === "password" ? "Sua senha" : "Seu PIN"}</label>
-            <input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} className="lp-input"
-              inputMode={method === "pin" ? "numeric" : undefined} autoComplete="off" />
-          </div>
+          {method === "biometric" ? (
+            <p className="text-sm lp-muted">Ao confirmar, seu dispositivo pedirá a digital ou o reconhecimento facial.</p>
+          ) : (
+            <div>
+              <label className="lp-label">{method === "password" ? "Sua senha" : "Seu PIN"}</label>
+              <input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} className="lp-input"
+                inputMode={method === "pin" ? "numeric" : undefined} autoComplete="off" />
+            </div>
+          )}
           {err && <LpAlert>{err}</LpAlert>}
-          <button onClick={confirmTransfer} disabled={busy || !secret} className="lp-btn lp-btn-primary w-full py-3">
+          <button onClick={confirmTransfer} disabled={busy || (method !== "biometric" && !secret)} className="lp-btn lp-btn-primary w-full py-3">
+
             {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Processando...</> : "Confirmar transferência"}
           </button>
           <p className="text-center text-[11px] lp-muted">A operação só é executada após a confirmação de identidade.</p>
@@ -950,13 +965,8 @@ function SecurityTab({ account }: Ctx) {
         </button>
       </form>
 
-      <div className="lp-card p-5">
-        <div className="flex items-center gap-2 text-sm font-semibold"><CreditCard className="h-4 w-4 lp-accent" /> Acesso e reconhecimento facial</div>
-        <p className="mt-2 text-xs lp-muted">
-          A biometria do dispositivo e o reconhecimento facial serão ativados nesta área na próxima etapa da implantação.
-          A senha continua sendo a forma principal de confirmação.
-        </p>
-      </div>
+      <BiometricsCard />
+
 
       <div className="lp-card-2 p-4 text-xs lp-muted">
         Último acesso: {account.last_access_at ? fmtDate(account.last_access_at) : "—"}

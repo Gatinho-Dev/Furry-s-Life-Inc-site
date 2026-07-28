@@ -57,7 +57,7 @@ export function StaffShell<T extends string>({ brand, subtitle, tabs, active, on
           <Link to="/staff/dashboard" className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground">
             <ArrowLeft className="h-3.5 w-3.5" /> Painel central
           </Link>
-          <button onClick={async () => { await auth.signOut(); nav({ to: "/auth" }); }}
+          <button onClick={async () => { await auth.signOut(); nav({ to: "/auth", search: { redirect: undefined } }); }}
             className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground">
             <LogOut className="h-3.5 w-3.5" /> Sair
           </button>

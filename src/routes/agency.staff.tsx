@@ -34,7 +34,7 @@ function AgencyStaff() {
     <div className="min-h-screen bg-black text-white">
       <header className="flex items-center justify-between border-b border-white/10 px-6 py-4">
         <Link to="/staff/dashboard" className="inline-flex items-center gap-1.5 text-sm text-white/60 hover:text-white"><ArrowLeft className="h-4 w-4" /> Painel central</Link>
-        <button onClick={async () => { await auth.signOut(); nav({ to: "/auth" }); }} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10"><LogOut className="h-4 w-4" /> Sair</button>
+        <button onClick={async () => { await auth.signOut(); nav({ to: "/auth", search: { redirect: undefined } }); }} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10"><LogOut className="h-4 w-4" /> Sair</button>
       </header>
       <main className="mx-auto max-w-6xl space-y-6 p-6">
         <div>

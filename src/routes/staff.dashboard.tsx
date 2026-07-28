@@ -36,7 +36,7 @@ function Dashboard() {
   const nav = useNavigate(); const auth = useAuth();
   const [tab, setTab] = useState<"home" | "users" | "inbox">("home");
 
-  useEffect(() => { if (!auth.loading && !auth.user) nav({ to: "/auth" }); }, [auth.loading, auth.user, nav]);
+  useEffect(() => { if (!auth.loading && !auth.user) nav({ to: "/auth", search: { redirect: undefined } }); }, [auth.loading, auth.user, nav]);
   if (auth.loading || !auth.user) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground"/></div>;
 
   const myRole = auth.roles[0] ?? "staff";
@@ -53,7 +53,7 @@ function Dashboard() {
         <div className="flex items-center gap-2">
           <span className="hidden items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary sm:inline-flex"><ShieldCheck className="h-3 w-3"/>{myRole}</span>
           <Link to="/" className="hidden text-xs text-muted-foreground hover:text-foreground md:inline">Ir ao site</Link>
-          <button onClick={async () => { await auth.signOut(); nav({ to: "/auth" }); }} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary"><LogOut className="h-4 w-4"/>Sair</button>
+          <button onClick={async () => { await auth.signOut(); nav({ to: "/auth", search: { redirect: undefined } }); }} className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary"><LogOut className="h-4 w-4"/>Sair</button>
         </div>
       </header>
 
