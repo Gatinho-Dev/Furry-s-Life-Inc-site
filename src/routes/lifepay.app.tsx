@@ -550,11 +550,13 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
   const confirmTransfer = async () => {
     setErr(null); setBusy(true);
     try {
-      await verify({ data: { method, value: secret } });
+      if (method === "biometric") await bio.confirm("transfer");
+      else await verify({ data: { method, value: secret } });
       const tx = await transfer({
         key: target!.key_value, amount, note: note.trim() || undefined,
         authMethod: method, idempotencyKey: idem.current,
       });
+
       setResult(tx); setConfirmOpen(false); setStep("done"); setSecret("");
       await refresh();
     } catch (e) {
