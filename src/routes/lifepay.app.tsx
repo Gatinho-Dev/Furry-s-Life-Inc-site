@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CardsTab, InvoicesTab } from "@/components/lifepay/cards-invoices";
+import { BiometricsCard, useBiometrics } from "@/components/lifepay/biometrics";
+
 import {
   LifePayTheme, LifePayMark, LpAlert, LpEmpty, LpSheet, LpSpinner, DISCLOSURE,
 } from "@/components/lifepay/ui";
