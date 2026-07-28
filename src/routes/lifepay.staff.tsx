@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/use-auth";
 import { StaffShell, KpiCard, type ShellTab } from "@/components/staff/StaffShell";
-import { LpAlert, LpSheet } from "@/components/lifepay/ui";
+import { LpAlert, LpSheet, LIFEPAY_CSS } from "@/components/lifepay/ui";
 import { LIFEPAY_PERMISSIONS, ACCOUNT_TYPES, ACCOUNT_STATUS_LABEL, formatBRL, parseBRLToCents } from "@/lib/lifepay-perms";
 import {
   lifepayAdminMyPerms, lifepayAdminListAccounts, lifepayAdminCreateAccount, lifepayAdminUpdateAccount,
