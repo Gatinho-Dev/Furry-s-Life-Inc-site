@@ -186,8 +186,12 @@ function LifePayStaff() {
         {!loading && tab === "audit" && <AuditPanel canAudit={can("audit")} />}
       </div>
 
-      <CreateAccountSheet open={openCreate} onClose={() => setOpenCreate(false)} onDone={reload} />
-      <AccountSheet userId={selected} can={can} onClose={() => setSelected(null)} onDone={reload} />
+      <div className="lp-root" style={{ minHeight: 0, background: "transparent" }}>
+        <style dangerouslySetInnerHTML={{ __html: LIFEPAY_CSS }} />
+        <CreateAccountSheet open={openCreate} onClose={() => setOpenCreate(false)} onDone={reload} />
+        <AccountSheet userId={selected} can={can} onClose={() => setSelected(null)} onDone={reload} />
+      </div>
+
     </StaffShell>
   );
 }
