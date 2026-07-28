@@ -510,7 +510,9 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
   const [busy, setBusy] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [secret, setSecret] = useState("");
-  const [method, setMethod] = useState<"password" | "pin">("password");
+  const [method, setMethod] = useState<"password" | "pin" | "biometric">("password");
+  const bio = useBiometrics();
+
   const [result, setResult] = useState<LifePayTx | null>(null);
   const idem = useRef<string>(newIdempotencyKey());
 
