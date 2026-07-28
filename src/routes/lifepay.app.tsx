@@ -950,13 +950,8 @@ function SecurityTab({ account }: Ctx) {
         </button>
       </form>
 
-      <div className="lp-card p-5">
-        <div className="flex items-center gap-2 text-sm font-semibold"><CreditCard className="h-4 w-4 lp-accent" /> Acesso e reconhecimento facial</div>
-        <p className="mt-2 text-xs lp-muted">
-          A biometria do dispositivo e o reconhecimento facial serão ativados nesta área na próxima etapa da implantação.
-          A senha continua sendo a forma principal de confirmação.
-        </p>
-      </div>
+      <BiometricsCard />
+
 
       <div className="lp-card-2 p-4 text-xs lp-muted">
         Último acesso: {account.last_access_at ? fmtDate(account.last_access_at) : "—"}
