@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CardsTab, InvoicesTab } from "@/components/lifepay/cards-invoices";
-import { BiometricsCard, useBiometrics } from "@/components/lifepay/biometrics";
+import { FaceIdCard, FaceIdConfirm, useFaceId } from "@/components/lifepay/faceid";
 
 import {
   LifePayTheme, LifePayMark, LpAlert, LpEmpty, LpSheet, LpSpinner, DISCLOSURE,
@@ -511,7 +511,8 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [secret, setSecret] = useState("");
   const [method, setMethod] = useState<"password" | "pin" | "biometric">("password");
-  const bio = useBiometrics();
+  const face = useFaceId();
+  const [faceOpen, setFaceOpen] = useState(false);
 
   const [result, setResult] = useState<LifePayTx | null>(null);
   const idem = useRef<string>(newIdempotencyKey());
@@ -550,8 +551,7 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
   const confirmTransfer = async () => {
     setErr(null); setBusy(true);
     try {
-      if (method === "biometric") await bio.confirm("transfer");
-      else await verify({ data: { method, value: secret } });
+      if (method !== "biometric") await verify({ data: { method, value: secret } });
       const tx = await transfer({
         key: target!.key_value, amount, note: note.trim() || undefined,
         authMethod: method, idempotencyKey: idem.current,
@@ -685,13 +685,13 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
           <div className="flex flex-wrap gap-2">
             <button onClick={() => setMethod("password")} className={`lp-btn flex-1 ${method === "password" ? "lp-btn-primary" : "lp-btn-soft"}`}>Senha</button>
             <button onClick={() => setMethod("pin")} className={`lp-btn flex-1 ${method === "pin" ? "lp-btn-primary" : "lp-btn-soft"}`}>PIN</button>
-            {bio.hasBiometrics && (
+            {face.enrolled && (
               <button onClick={() => { setMethod("biometric"); setSecret(""); }}
-                className={`lp-btn flex-1 ${method === "biometric" ? "lp-btn-primary" : "lp-btn-soft"}`}>Biometria</button>
+                className={`lp-btn flex-1 ${method === "biometric" ? "lp-btn-primary" : "lp-btn-soft"}`}>Face ID</button>
             )}
           </div>
           {method === "biometric" ? (
-            <p className="text-sm lp-muted">Ao confirmar, seu dispositivo pedirá a digital ou o reconhecimento facial.</p>
+            <p className="text-sm lp-muted">Ao confirmar, a câmera fará o reconhecimento facial do LifePay.</p>
           ) : (
             <div>
               <label className="lp-label">{method === "password" ? "Sua senha" : "Seu PIN"}</label>
@@ -700,13 +700,17 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
             </div>
           )}
           {err && <LpAlert>{err}</LpAlert>}
-          <button onClick={confirmTransfer} disabled={busy || (method !== "biometric" && !secret)} className="lp-btn lp-btn-primary w-full py-3">
+          <button onClick={() => { if (method === "biometric") { setErr(null); setFaceOpen(true); } else void confirmTransfer(); }} disabled={busy || (method !== "biometric" && !secret)} className="lp-btn lp-btn-primary w-full py-3">
 
             {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Processando...</> : "Confirmar transferência"}
           </button>
           <p className="text-center text-[11px] lp-muted">A operação só é executada após a confirmação de identidade.</p>
         </div>
       </LpSheet>
+
+      <FaceIdConfirm open={faceOpen} purpose="transfer"
+        onCancel={() => setFaceOpen(false)}
+        onSuccess={() => { setFaceOpen(false); void confirmTransfer(); }} />
     </div>
   );
 }
@@ -965,7 +969,7 @@ function SecurityTab({ account }: Ctx) {
         </button>
       </form>
 
-      <BiometricsCard />
+      <FaceIdCard />
 
 
       <div className="lp-card-2 p-4 text-xs lp-muted">
