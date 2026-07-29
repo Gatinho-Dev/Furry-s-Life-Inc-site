@@ -657,6 +657,36 @@ export type Database = {
         }
         Relationships: []
       }
+      lifepay_faceid: {
+        Row: {
+          created_at: string
+          device_label: string
+          id: string
+          last_used_at: string | null
+          samples: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_label?: string
+          id?: string
+          last_used_at?: string | null
+          samples: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_label?: string
+          id?: string
+          last_used_at?: string | null
+          samples?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lifepay_installments: {
         Row: {
           amount: number
