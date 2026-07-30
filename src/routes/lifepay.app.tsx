@@ -15,10 +15,11 @@ import {
 } from "@/components/lifepay/ui";
 import { formatBRL, parseBRLToCents, passwordIssues, ACCOUNT_STATUS_LABEL } from "@/lib/lifepay-perms";
 import {
-  ensureAccount, loadAccount, loadKeys, loadTransactions, resolveKey, transfer,
-  createRandomKey, updateKey, counterpartyNames, newIdempotencyKey,
-  type LifePayAccount, type LifePayKey, type LifePayTx, type ResolvedKey,
+  ensureAccount, loadAccount, loadKeys, loadTransactions, resolveKey, transferV3,
+  createRandomKey, updateKey, counterpartyNames, newIdempotencyKey, loadCards, INSTALLMENT_OPTIONS,
+  type LifePayAccount, type LifePayKey, type LifePayTx, type ResolvedKey, type LifePayCard,
 } from "@/lib/lifepay-client";
+
 import { lifepayFirstAccess, lifepaySetPin, lifepayTouchAccess, lifepayVerifySecret } from "@/lib/lifepay.functions";
 
 export const Route = createFileRoute("/lifepay/app")({
