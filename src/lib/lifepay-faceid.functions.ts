@@ -12,7 +12,10 @@ export type FaceIdStatus = {
   created_at: string | null;
   last_used_at: string | null;
   samples: number;
+  /** Cadastro feito com uma versão anterior da assinatura — precisa refazer. */
+  stale: boolean;
 };
+
 
 function validVectors(v: unknown): number[][] {
   if (!Array.isArray(v) || v.length < 2) throw new Error("Escaneamento incompleto. Refaça o cadastro do Face ID.");
