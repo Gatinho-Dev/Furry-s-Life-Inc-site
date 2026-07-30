@@ -15,7 +15,7 @@ export type FaceIdStatus = {
 };
 
 function validVectors(v: unknown): number[][] {
-  if (!Array.isArray(v) || v.length < 3) throw new Error("Escaneamento incompleto. Refaça o cadastro do Face ID.");
+  if (!Array.isArray(v) || v.length < 2) throw new Error("Escaneamento incompleto. Refaça o cadastro do Face ID.");
   return v.map((s) => {
     if (!Array.isArray(s) || s.length !== FACE_DIM) throw new Error("Assinatura facial inválida.");
     return s.map((n) => {
@@ -25,6 +25,7 @@ function validVectors(v: unknown): number[][] {
     });
   });
 }
+
 
 export const lifepayFaceStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
