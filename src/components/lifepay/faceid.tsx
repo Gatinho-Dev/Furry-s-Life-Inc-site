@@ -334,6 +334,12 @@ export function FaceIdCard() {
       {err && <LpAlert>{err}</LpAlert>}
       {msg && <LpAlert tone="success">{msg}</LpAlert>}
 
+      {face.status?.stale && (
+        <LpAlert tone="info">
+          Seu Face ID foi cadastrado numa versão anterior do reconhecimento. Refaça o escaneamento para voltar a usá-lo.
+        </LpAlert>
+      )}
+
       {face.loading ? (
         <div className="flex items-center gap-2 text-xs lp-muted"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Carregando...</div>
       ) : face.enrolled ? (
@@ -358,6 +364,7 @@ export function FaceIdCard() {
       ) : (
         <p className="text-xs lp-muted">Nenhum Face ID configurado neste perfil.</p>
       )}
+
 
       <div className="flex flex-col gap-2 sm:flex-row">
         {!face.enrolled && (
