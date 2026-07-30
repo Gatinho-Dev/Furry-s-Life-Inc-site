@@ -136,7 +136,7 @@ function ScannerOverlay({
   const [status, setStatus] = React.useState<"scanning" | "saving" | "ok" | "fail">("scanning");
   const [failMsg, setFailMsg] = React.useState<string | null>(null);
 
-  const totalNeeded = mode === "enroll" ? FACE_STEPS.length : 3;
+  const totalNeeded = mode === "enroll" ? FACE_STEPS.length : 4;
 
   React.useEffect(() => {
     if (!open) { setProgress(0); setStepIdx(0); setStatus("scanning"); setFailMsg(null); }
