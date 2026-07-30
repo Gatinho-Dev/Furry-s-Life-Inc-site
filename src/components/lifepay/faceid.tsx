@@ -159,10 +159,11 @@ function ScannerOverlay({
           continue;
         }
         // Evita capturar o mesmo frame duas vezes no cadastro (exige variação de ângulo).
-        if (mode === "enroll" && samples.length && cosine(v, samples[samples.length - 1]) > 0.995) {
+        if (mode === "enroll" && samples.length && cosine(v, samples[samples.length - 1]) > 0.985) {
           setHint("Mova a cabeça devagar");
           continue;
         }
+
         samples.push(v);
         setStepIdx(samples.length);
         setProgress(samples.length / totalNeeded);
