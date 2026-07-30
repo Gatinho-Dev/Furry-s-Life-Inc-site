@@ -498,10 +498,12 @@ function Receipt2({ tx, userId, names }: { tx: LifePayTx; userId: string; names:
  * ================================================================== */
 
 type Step = "key" | "amount" | "review" | "done";
+const STEP_ORDER: Step[] = ["key", "amount", "review", "done"];
 
 function SendTab({ account, userId, names, txs, refresh }: Ctx) {
   const verify = useServerFn(lifepayVerifySecret);
   const [step, setStep] = useState<Step>("key");
+  const [dir, setDir] = useState<1 | -1>(1);
   const [keyInput, setKeyInput] = useState("");
   const [target, setTarget] = useState<ResolvedKey | null>(null);
   const [amountText, setAmountText] = useState("");
@@ -514,10 +516,33 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
   const face = useFaceId();
   const [faceOpen, setFaceOpen] = useState(false);
 
+  // Origem do dinheiro: saldo em conta ou cartão de crédito (parcelável).
+  const [source, setSource] = useState<"balance" | "credit">("balance");
+  const [cards, setCards] = useState<LifePayCard[]>([]);
+  const [cardId, setCardId] = useState<string>("");
+  const [installments, setInstallments] = useState(1);
+
   const [result, setResult] = useState<LifePayTx | null>(null);
   const idem = useRef<string>(newIdempotencyKey());
 
   const amount = useMemo(() => parseBRLToCents(amountText), [amountText]);
+
+  useEffect(() => {
+    loadCards(userId)
+      .then((c) => {
+        const usable = c.filter((x) => x.status === "active");
+        setCards(usable);
+        setCardId((prev) => prev || usable[0]?.id || "");
+      })
+      .catch(() => {});
+  }, [userId]);
+
+  const go = (s: Step) => {
+    setDir(STEP_ORDER.indexOf(s) >= STEP_ORDER.indexOf(step) ? 1 : -1);
+    setErr(null);
+    setStep(s);
+  };
+  const anim = dir === 1 ? "lp-step-in" : "lp-step-back";
 
   const recents = useMemo(() => {
     const seen = new Map<string, string>();
@@ -536,28 +561,36 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
       if (!r) throw new Error("Chave LifePay não encontrada ou inativa.");
       if (r.user_id === userId) throw new Error("Não é possível transferir para a própria conta.");
       if (r.status !== "active") throw new Error("A conta do destinatário está bloqueada.");
-      setTarget(r); setStep("amount");
+      setTarget(r); go("amount");
     } catch (e) { setErr(e instanceof Error ? e.message : "Falha na consulta."); }
     finally { setBusy(false); }
   };
 
+  const selectedCard = cards.find((c) => c.id === cardId) ?? null;
+
   const goReview = () => {
     setErr(null);
     if (!Number.isFinite(amount) || amount <= 0) { setErr("Informe um valor maior que zero."); return; }
-    if (amount > account.balance) { setErr("Saldo insuficiente para esta transferência."); return; }
-    setStep("review");
+    if (source === "balance" && amount > account.balance) { setErr("Saldo insuficiente para esta transferência."); return; }
+    if (source === "credit") {
+      if (!selectedCard) { setErr("Selecione um cartão de crédito ativo."); return; }
+      if (amount > selectedCard.card_limit) { setErr("Valor acima do limite do cartão selecionado."); return; }
+    }
+    go("review");
   };
 
   const confirmTransfer = async () => {
     setErr(null); setBusy(true);
     try {
       if (method !== "biometric") await verify({ data: { method, value: secret } });
-      const tx = await transfer({
+      const tx = await transferV3({
         key: target!.key_value, amount, note: note.trim() || undefined,
         authMethod: method, idempotencyKey: idem.current,
+        source, cardId: source === "credit" ? cardId : null,
+        installments: source === "credit" ? installments : 1,
       });
 
-      setResult(tx); setConfirmOpen(false); setStep("done"); setSecret("");
+      setResult(tx); setConfirmOpen(false); setDir(1); setStep("done"); setSecret("");
       await refresh();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Não foi possível concluir a transferência.");
@@ -566,45 +599,63 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
 
   const restart = () => {
     idem.current = newIdempotencyKey();
-    setStep("key"); setKeyInput(""); setTarget(null); setAmountText(""); setNote(""); setResult(null); setErr(null);
+    setDir(-1);
+    setStep("key"); setKeyInput(""); setTarget(null); setAmountText(""); setNote("");
+    setResult(null); setErr(null); setSource("balance"); setInstallments(1);
   };
 
   if (step === "done" && result) {
     return (
       <div className="space-y-4">
-        <div className="lp-card p-6 text-center">
-          <div className="mx-auto grid h-12 w-12 place-items-center rounded-full" style={{ background: "rgba(47,227,194,.15)" }}>
-            <Check className="h-6 w-6 lp-accent" />
+        <div className="lp-card lp-pop p-6 text-center">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full lp-pop" style={{ background: "rgba(47,227,194,.15)" }}>
+            <Check className="h-7 w-7 lp-accent" />
           </div>
           <h2 className="mt-3 text-lg font-semibold">Transferência concluída</h2>
           <p className="mt-1 text-sm lp-muted">{formatBRL(result.amount)} para {target?.display_name}</p>
+          {source === "credit" && (
+            <p className="mt-1 text-xs lp-muted">
+              Paga no crédito {installments > 1 ? `em ${installments}x de ${formatBRL(Math.floor(amount / installments))}` : "à vista"}.
+            </p>
+          )}
         </div>
-        <div className="lp-card p-5"><Receipt2 tx={result} userId={userId} names={new Map([[target!.user_id, target!.display_name]])} /></div>
+        <div className="lp-card lp-fade p-5"><Receipt2 tx={result} userId={userId} names={new Map([[target!.user_id, target!.display_name]])} /></div>
         <button onClick={restart} className="lp-btn lp-btn-ghost w-full">Fazer outra transferência</button>
       </div>
     );
   }
 
+  const installmentValue = installments > 0 ? Math.floor(amount / installments) : amount;
+
   return (
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Transferência LifePay</h1>
-        <p className="mt-1 text-sm lp-muted">Envie valores para outra conta usando e-mail ou chave aleatória.</p>
+        <p className="mt-1 text-sm lp-muted">Envie valores usando e-mail ou chave aleatória — pelo saldo ou no crédito.</p>
       </div>
 
-      <div className="lp-card p-5">
+      <div className="lp-card overflow-hidden p-5">
         <div className="mb-4 flex items-center gap-2 text-[11px] lp-muted">
-          {["Destinatário", "Valor", "Revisão"].map((s, i) => (
-            <span key={s} className="lp-chip" style={i === ["key", "amount", "review"].indexOf(step)
-              ? { color: "var(--lp-accent)", borderColor: "rgba(47,227,194,.4)" } : undefined}>{i + 1}. {s}</span>
-          ))}
+          {["Destinatário", "Valor", "Revisão"].map((s, i) => {
+            const active = i === ["key", "amount", "review"].indexOf(step);
+            const done = i < ["key", "amount", "review"].indexOf(step);
+            return (
+              <span key={s} className="lp-chip lp-press"
+                style={active ? { color: "var(--lp-accent)", borderColor: "rgba(47,227,194,.45)", background: "rgba(47,227,194,.08)" }
+                  : done ? { color: "var(--lp-fg)" } : undefined}>
+                {done ? <Check className="h-3 w-3" /> : `${i + 1}.`} {s}
+              </span>
+            );
+          })}
         </div>
 
         {step === "key" && (
-          <div className="space-y-4">
+          <div key="key" className={`space-y-4 ${anim}`}>
             <div>
               <label className="lp-label">E-mail ou chave aleatória</label>
-              <input value={keyInput} onChange={(e) => setKeyInput(e.target.value)} className="lp-input" placeholder="destinatario@empresa.com" />
+              <input value={keyInput} onChange={(e) => setKeyInput(e.target.value)} className="lp-input"
+                placeholder="destinatario@empresa.com"
+                onKeyDown={(e) => { if (e.key === "Enter" && keyInput.trim()) void lookup(); }} />
             </div>
             {recents.length > 0 && (
               <div>
@@ -624,47 +675,105 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
         )}
 
         {step === "amount" && target && (
-          <div className="space-y-4">
+          <div key="amount" className={`space-y-4 ${anim}`}>
             <div className="lp-card-2 p-4">
               <div className="text-[11px] uppercase tracking-wider lp-muted">Destinatário</div>
               <div className="mt-0.5 font-semibold">{target.display_name}</div>
               <div className="text-xs lp-muted">{target.key_value}</div>
             </div>
-            <div>
-              <label className="lp-label">Valor</label>
-              <input inputMode="decimal" value={amountText} onChange={(e) => setAmountText(e.target.value)} className="lp-input text-lg" placeholder="0,00" />
-              <div className="mt-2 flex flex-wrap gap-2">
+
+            <div className="text-center">
+              <label className="lp-label text-center">Valor</label>
+              <input inputMode="decimal" value={amountText} onChange={(e) => setAmountText(e.target.value)}
+                className="lp-input text-center text-3xl font-black tabular-nums" placeholder="0,00"
+                style={{ letterSpacing: "-0.02em" }} />
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
                 {[1000, 2500, 5000, 10000].map((c) => (
-                  <button key={c} onClick={() => setAmountText((c / 100).toFixed(2).replace(".", ","))} className="lp-chip hover:text-white">
+                  <button key={c} onClick={() => setAmountText((c / 100).toFixed(2).replace(".", ","))} className="lp-chip lp-press hover:text-white">
                     {formatBRL(c)}
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-xs lp-muted">Saldo disponível: {formatBRL(account.balance)}</p>
             </div>
+
+            <div>
+              <div className="lp-label">Pagar com</div>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => setSource("balance")}
+                  className={`lp-card-2 lp-press p-3 text-left ${source === "balance" ? "" : "opacity-60"}`}
+                  style={source === "balance" ? { borderColor: "var(--lp-accent)", background: "rgba(47,227,194,.08)" } : undefined}>
+                  <div className="flex items-center gap-2 text-sm font-semibold"><Wallet2 /> Saldo</div>
+                  <div className="mt-0.5 text-[11px] lp-muted">{formatBRL(account.balance)} disponível</div>
+                </button>
+                <button onClick={() => setSource("credit")} disabled={!cards.length}
+                  className={`lp-card-2 lp-press p-3 text-left ${source === "credit" ? "" : "opacity-60"}`}
+                  style={source === "credit" ? { borderColor: "var(--lp-accent)", background: "rgba(47,227,194,.08)" } : undefined}>
+                  <div className="flex items-center gap-2 text-sm font-semibold"><CreditCard className="h-4 w-4" /> Crédito</div>
+                  <div className="mt-0.5 text-[11px] lp-muted">
+                    {cards.length ? "Parcele em até 12x" : "Nenhum cartão ativo"}
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {source === "credit" && cards.length > 0 && (
+              <div className="lp-card-2 space-y-3 p-4 lp-fade">
+                <div>
+                  <label className="lp-label">Cartão</label>
+                  <select value={cardId} onChange={(e) => setCardId(e.target.value)} className="lp-input">
+                    {cards.map((c) => (
+                      <option key={c.id} value={c.id}>{c.label} · •••• {c.last4} · limite {formatBRL(c.card_limit)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="lp-label">Parcelamento</label>
+                  <div className="flex flex-wrap gap-2">
+                    {INSTALLMENT_OPTIONS.map((n) => (
+                      <button key={n} onClick={() => setInstallments(n)}
+                        className={`lp-btn lp-press px-3 py-1.5 text-xs ${installments === n ? "lp-btn-primary" : "lp-btn-soft"}`}>
+                        {n}x
+                      </button>
+                    ))}
+                  </div>
+                  {Number.isFinite(amount) && amount > 0 && (
+                    <p className="mt-2 text-xs lp-muted">
+                      {installments}x de {formatBRL(installmentValue)} · total {formatBRL(amount)} · sem juros
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="lp-label">Descrição (opcional)</label>
               <input value={note} onChange={(e) => setNote(e.target.value.slice(0, 140))} className="lp-input" placeholder="Ex.: reembolso" />
             </div>
             {err && <LpAlert>{err}</LpAlert>}
             <div className="flex gap-2">
-              <button onClick={() => { setStep("key"); setErr(null); }} className="lp-btn lp-btn-ghost flex-1">Voltar</button>
+              <button onClick={() => go("key")} className="lp-btn lp-btn-ghost flex-1">Voltar</button>
               <button onClick={goReview} className="lp-btn lp-btn-primary flex-1">Continuar</button>
             </div>
           </div>
         )}
 
         {step === "review" && target && (
-          <div className="space-y-4">
+          <div key="review" className={`space-y-4 ${anim}`}>
             <dl className="divide-y lp-divide text-sm">
-              {[
+              {([
                 ["Destinatário", target.display_name],
                 ["Chave utilizada", target.key_value],
                 ["Valor", formatBRL(amount)],
+                ["Forma de pagamento", source === "balance"
+                  ? "Saldo em conta"
+                  : `Crédito · ${selectedCard?.label} •••• ${selectedCard?.last4}`],
+                ...(source === "credit"
+                  ? [["Parcelamento", `${installments}x de ${formatBRL(installmentValue)}`] as [string, string]]
+                  : []),
                 ["Descrição", note.trim() || "—"],
                 ["Data", new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })],
-                ["Saldo após a operação", formatBRL(account.balance - amount)],
-              ].map(([k, v]) => (
+                ["Saldo após a operação", formatBRL(source === "balance" ? account.balance - amount : account.balance)],
+              ] as [string, string][]).map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-4 py-2.5">
                   <dt className="lp-muted">{k}</dt><dd className="text-right font-medium">{v}</dd>
                 </div>
@@ -672,7 +781,7 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
             </dl>
             {err && <LpAlert>{err}</LpAlert>}
             <div className="flex gap-2">
-              <button onClick={() => { setStep("amount"); setErr(null); }} className="lp-btn lp-btn-ghost flex-1">Voltar</button>
+              <button onClick={() => go("amount")} className="lp-btn lp-btn-ghost flex-1">Voltar</button>
               <button onClick={() => { setErr(null); setConfirmOpen(true); }} className="lp-btn lp-btn-primary flex-1">Confirmar</button>
             </div>
           </div>
@@ -685,7 +794,7 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
           <div className="flex flex-wrap gap-2">
             <button onClick={() => setMethod("password")} className={`lp-btn flex-1 ${method === "password" ? "lp-btn-primary" : "lp-btn-soft"}`}>Senha</button>
             <button onClick={() => setMethod("pin")} className={`lp-btn flex-1 ${method === "pin" ? "lp-btn-primary" : "lp-btn-soft"}`}>PIN</button>
-            {face.enrolled && (
+            {face.enrolled && !face.status?.stale && (
               <button onClick={() => { setMethod("biometric"); setSecret(""); }}
                 className={`lp-btn flex-1 ${method === "biometric" ? "lp-btn-primary" : "lp-btn-soft"}`}>Face ID</button>
             )}
@@ -701,7 +810,6 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
           )}
           {err && <LpAlert>{err}</LpAlert>}
           <button onClick={() => { if (method === "biometric") { setErr(null); setFaceOpen(true); } else void confirmTransfer(); }} disabled={busy || (method !== "biometric" && !secret)} className="lp-btn lp-btn-primary w-full py-3">
-
             {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Processando...</> : "Confirmar transferência"}
           </button>
           <p className="text-center text-[11px] lp-muted">A operação só é executada após a confirmação de identidade.</p>
@@ -714,6 +822,11 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
     </div>
   );
 }
+
+function Wallet2() {
+  return <Receipt className="h-4 w-4" />;
+}
+
 
 /* ================================================================== *
  * Receber                                                             *
