@@ -20,7 +20,7 @@ import {
   type LifePayAccount, type LifePayKey, type LifePayTx, type ResolvedKey, type LifePayCard,
 } from "@/lib/lifepay-client";
 
-import { lifepayFirstAccess, lifepaySetPin, lifepayTouchAccess, lifepayVerifySecret } from "@/lib/lifepay.functions";
+import { lifepaySetPin, lifepayTouchAccess, lifepayVerifySecret } from "@/lib/lifepay.functions";
 
 export const Route = createFileRoute("/lifepay/app")({
   head: () => ({
@@ -152,14 +152,10 @@ function LifePayApp() {
     );
   }
 
-  if (!account.first_access_done || account.must_change_password) {
-    return <FirstAccess onDone={async () => { await refresh(userId); }} />;
-  }
-
   const ctx = { userId, account, keys, txs, names, refresh: () => refresh(userId), setTab };
 
   return (
-    <LifePayTheme>
+    <LifePayTheme mode={account.account_type}>
       <div className="flex min-h-screen flex-col pb-20 md:flex-row md:pb-0">
         {/* Sidebar desktop */}
         <aside className="hidden w-60 shrink-0 flex-col border-r p-4 lp-divide md:flex" style={{ background: "var(--lp-bg-2)" }}>
@@ -215,76 +211,6 @@ function LifePayApp() {
             );
           })}
         </nav>
-      </div>
-    </LifePayTheme>
-  );
-}
-
-/* ================================================================== *
- * Primeiro acesso                                                     *
- * ================================================================== */
-
-function FirstAccess({ onDone }: { onDone: () => Promise<void> }) {
-  const run = useServerFn(lifepayFirstAccess);
-  const [current, setCurrent] = useState("");
-  const [next, setNext] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [pin, setPin] = useState("");
-  const [terms, setTerms] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  const issues = next ? passwordIssues(next) : [];
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErr(null);
-    if (next !== confirm) { setErr("A confirmação da nova senha não confere."); return; }
-    setBusy(true);
-    try {
-      await run({ data: { currentPassword: current, newPassword: next, pin: pin || undefined, acceptTerms: terms } });
-      await onDone();
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Não foi possível concluir.");
-    } finally { setBusy(false); }
-  };
-
-  return (
-    <LifePayTheme>
-      <div className="lp-grid-bg flex min-h-screen items-center justify-center px-5 py-10">
-        <div className="lp-card w-full max-w-md p-7">
-          <LifePayMark />
-          <h1 className="mt-5 text-2xl font-bold tracking-tight">Primeiro acesso</h1>
-          <p className="mt-1 text-sm lp-muted">Confirme a senha inicial e defina suas credenciais de acesso.</p>
-          <form onSubmit={submit} className="mt-6 space-y-4">
-            <div>
-              <label className="lp-label">Senha inicial</label>
-              <input type="password" required value={current} onChange={(e) => setCurrent(e.target.value)} className="lp-input" autoComplete="current-password" />
-            </div>
-            <div>
-              <label className="lp-label">Nova senha</label>
-              <input type="password" required value={next} onChange={(e) => setNext(e.target.value)} className="lp-input" autoComplete="new-password" />
-              {issues.length > 0 && <p className="mt-1 text-[11px]" style={{ color: "var(--lp-warn)" }}>Requisitos: {issues.join(", ")}.</p>}
-            </div>
-            <div>
-              <label className="lp-label">Confirmar nova senha</label>
-              <input type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} className="lp-input" autoComplete="new-password" />
-            </div>
-            <div>
-              <label className="lp-label">PIN de operações (opcional, 4 a 8 dígitos)</label>
-              <input inputMode="numeric" pattern="\d*" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 8))} className="lp-input" placeholder="••••" />
-            </div>
-            <label className="flex cursor-pointer items-start gap-2 text-xs lp-muted">
-              <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5 h-3.5 w-3.5 accent-[color:var(--lp-accent)]" />
-              <span>Li e aceito os <Link to="/lifepay/termos" className="lp-accent underline">termos de uso</Link> e a <Link to="/lifepay/privacidade" className="lp-accent underline">política de privacidade</Link>.</span>
-            </label>
-            {err && <LpAlert>{err}</LpAlert>}
-            <button type="submit" disabled={busy} className="lp-btn lp-btn-primary w-full py-3">
-              {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Concluindo...</> : "Concluir e entrar"}
-            </button>
-            <p className="text-center text-[11px] lp-muted">O reconhecimento facial pode ser ativado depois, em Segurança.</p>
-          </form>
-        </div>
       </div>
     </LifePayTheme>
   );
