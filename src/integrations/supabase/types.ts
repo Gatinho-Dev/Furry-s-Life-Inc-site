@@ -456,16 +456,20 @@ export type Database = {
           created_at: string
           credit_limit: number
           credit_used: number
+          department: string | null
           display_name: string
           due_day: number
           email: string | null
           first_access_done: boolean
           full_name: string | null
           is_admin: boolean
+          job_title: string | null
           last_access_at: string | null
           must_change_password: boolean
           pin_hash: string | null
           pix_key: string
+          salary_cents: number
+          salary_day: number
           status: string
           terms_accepted_at: string | null
           updated_at: string
@@ -479,16 +483,20 @@ export type Database = {
           created_at?: string
           credit_limit?: number
           credit_used?: number
+          department?: string | null
           display_name: string
           due_day?: number
           email?: string | null
           first_access_done?: boolean
           full_name?: string | null
           is_admin?: boolean
+          job_title?: string | null
           last_access_at?: string | null
           must_change_password?: boolean
           pin_hash?: string | null
           pix_key: string
+          salary_cents?: number
+          salary_day?: number
           status?: string
           terms_accepted_at?: string | null
           updated_at?: string
@@ -502,16 +510,20 @@ export type Database = {
           created_at?: string
           credit_limit?: number
           credit_used?: number
+          department?: string | null
           display_name?: string
           due_day?: number
           email?: string | null
           first_access_done?: boolean
           full_name?: string | null
           is_admin?: boolean
+          job_title?: string | null
           last_access_at?: string | null
           must_change_password?: boolean
           pin_hash?: string | null
           pix_key?: string
+          salary_cents?: number
+          salary_day?: number
           status?: string
           terms_accepted_at?: string | null
           updated_at?: string
@@ -1521,16 +1533,20 @@ export type Database = {
           created_at: string
           credit_limit: number
           credit_used: number
+          department: string | null
           display_name: string
           due_day: number
           email: string | null
           first_access_done: boolean
           full_name: string | null
           is_admin: boolean
+          job_title: string | null
           last_access_at: string | null
           must_change_password: boolean
           pin_hash: string | null
           pix_key: string
+          salary_cents: number
+          salary_day: number
           status: string
           terms_accepted_at: string | null
           updated_at: string
@@ -1770,6 +1786,42 @@ export type Database = {
           _idem: string
           _key: string
           _note: string
+        }
+        Returns: {
+          amount: number
+          auth_method: string | null
+          created_at: string
+          from_balance_after: number | null
+          from_balance_before: number | null
+          from_user: string | null
+          id: string
+          idempotency_key: string | null
+          key_used: string | null
+          kind: string
+          note: string | null
+          receipt_code: string | null
+          status: string
+          to_balance_after: number | null
+          to_balance_before: number | null
+          to_user: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lifepay_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      lifepay_transfer_v3: {
+        Args: {
+          _amount: number
+          _auth_method: string
+          _card_id?: string
+          _idem: string
+          _installments?: number
+          _key: string
+          _note: string
+          _source?: string
         }
         Returns: {
           amount: number
