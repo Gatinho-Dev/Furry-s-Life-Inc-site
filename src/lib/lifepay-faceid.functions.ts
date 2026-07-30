@@ -38,14 +38,17 @@ export const lifepayFaceStatus = createServerFn({ method: "GET" })
       .select("device_label, created_at, last_used_at, samples")
       .eq("user_id", context.userId)
       .maybeSingle();
-    if (!data) return { enrolled: false, device_label: null, created_at: null, last_used_at: null, samples: 0 };
+    if (!data) return { enrolled: false, device_label: null, created_at: null, last_used_at: null, samples: 0, stale: false };
+    const samples: unknown[] = Array.isArray(data.samples) ? data.samples : [];
     return {
       enrolled: true,
       device_label: data.device_label,
       created_at: data.created_at,
       last_used_at: data.last_used_at,
-      samples: Array.isArray(data.samples) ? data.samples.length : 0,
+      samples: samples.length,
+      stale: !samples.some((s) => Array.isArray(s) && s.length === FACE_DIM),
     };
+
   });
 
 export const lifepayFaceEnroll = createServerFn({ method: "POST" })
