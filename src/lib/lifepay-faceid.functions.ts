@@ -85,11 +85,18 @@ export const lifepayFaceVerify = createServerFn({ method: "POST" })
       .from("lifepay_faceid").select("id, samples").eq("user_id", context.userId).maybeSingle();
     if (!row) throw new Error("Nenhum Face ID cadastrado neste perfil.");
 
-    const stored: number[][] = Array.isArray(row.samples) ? row.samples : [];
-    let best = -1;
-    for (const probe of data.samples) {
-      for (const ref of stored) best = Math.max(best, cosine(probe, ref));
+    const all: number[][] = Array.isArray(row.samples) ? row.samples : [];
+    const stored = all.filter((s) => Array.isArray(s) && s.length === FACE_DIM);
+    if (!stored.length) {
+      throw new Error("Seu Face ID foi cadastrado numa versão anterior. Refaça o escaneamento em Segurança.");
     }
+
+    // Melhor similaridade de cada amostra capturada; considera a média das duas melhores.
+    const perProbe = data.samples
+      .map((probe) => stored.reduce((m, ref) => Math.max(m, cosine(probe, ref)), -1))
+      .sort((a, b) => b - a);
+    const top = perProbe.slice(0, 2);
+    const best = top.reduce((s, v) => s + v, 0) / top.length;
 
     await db.from("lifepay_audit_logs").insert({
       actor_id: context.userId, actor_kind: "user",
@@ -102,6 +109,7 @@ export const lifepayFaceVerify = createServerFn({ method: "POST" })
     await db.from("lifepay_faceid").update({ last_used_at: new Date().toISOString() }).eq("id", row.id);
     return { ok: true, score: Number(best.toFixed(4)), method: "faceid" as const };
   });
+
 
 export const lifepayFaceRemove = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
