@@ -207,7 +207,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const inputCls = "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary";
+// Os formulários abaixo abrem dentro do tema escuro do LifePay: usar o campo do
+// próprio tema evita fundo branco com texto branco (invisível).
+const inputCls = "lp-input";
+
 
 function CreateAccountSheet({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: () => Promise<void> }) {
   const create = useServerFn(lifepayAdminCreateAccount);
