@@ -12,10 +12,13 @@ export type FaceIdStatus = {
   created_at: string | null;
   last_used_at: string | null;
   samples: number;
+  /** Cadastro feito com uma versão anterior da assinatura — precisa refazer. */
+  stale: boolean;
 };
 
+
 function validVectors(v: unknown): number[][] {
-  if (!Array.isArray(v) || v.length < 3) throw new Error("Escaneamento incompleto. Refaça o cadastro do Face ID.");
+  if (!Array.isArray(v) || v.length < 2) throw new Error("Escaneamento incompleto. Refaça o cadastro do Face ID.");
   return v.map((s) => {
     if (!Array.isArray(s) || s.length !== FACE_DIM) throw new Error("Assinatura facial inválida.");
     return s.map((n) => {
@@ -26,6 +29,7 @@ function validVectors(v: unknown): number[][] {
   });
 }
 
+
 export const lifepayFaceStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<FaceIdStatus> => {
@@ -34,14 +38,17 @@ export const lifepayFaceStatus = createServerFn({ method: "GET" })
       .select("device_label, created_at, last_used_at, samples")
       .eq("user_id", context.userId)
       .maybeSingle();
-    if (!data) return { enrolled: false, device_label: null, created_at: null, last_used_at: null, samples: 0 };
+    if (!data) return { enrolled: false, device_label: null, created_at: null, last_used_at: null, samples: 0, stale: false };
+    const samples: unknown[] = Array.isArray(data.samples) ? data.samples : [];
     return {
       enrolled: true,
       device_label: data.device_label,
       created_at: data.created_at,
       last_used_at: data.last_used_at,
-      samples: Array.isArray(data.samples) ? data.samples.length : 0,
+      samples: samples.length,
+      stale: !samples.some((s) => Array.isArray(s) && s.length === FACE_DIM),
     };
+
   });
 
 export const lifepayFaceEnroll = createServerFn({ method: "POST" })
@@ -84,11 +91,18 @@ export const lifepayFaceVerify = createServerFn({ method: "POST" })
       .from("lifepay_faceid").select("id, samples").eq("user_id", context.userId).maybeSingle();
     if (!row) throw new Error("Nenhum Face ID cadastrado neste perfil.");
 
-    const stored: number[][] = Array.isArray(row.samples) ? row.samples : [];
-    let best = -1;
-    for (const probe of data.samples) {
-      for (const ref of stored) best = Math.max(best, cosine(probe, ref));
+    const all: number[][] = Array.isArray(row.samples) ? row.samples : [];
+    const stored = all.filter((s) => Array.isArray(s) && s.length === FACE_DIM);
+    if (!stored.length) {
+      throw new Error("Seu Face ID foi cadastrado numa versão anterior. Refaça o escaneamento em Segurança.");
     }
+
+    // Melhor similaridade de cada amostra capturada; considera a média das duas melhores.
+    const perProbe = data.samples
+      .map((probe) => stored.reduce((m, ref) => Math.max(m, cosine(probe, ref)), -1))
+      .sort((a, b) => b - a);
+    const top = perProbe.slice(0, 2);
+    const best = top.reduce((s, v) => s + v, 0) / top.length;
 
     await db.from("lifepay_audit_logs").insert({
       actor_id: context.userId, actor_kind: "user",
@@ -101,6 +115,7 @@ export const lifepayFaceVerify = createServerFn({ method: "POST" })
     await db.from("lifepay_faceid").update({ last_used_at: new Date().toISOString() }).eq("id", row.id);
     return { ok: true, score: Number(best.toFixed(4)), method: "faceid" as const };
   });
+
 
 export const lifepayFaceRemove = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

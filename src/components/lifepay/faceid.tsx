@@ -136,7 +136,7 @@ function ScannerOverlay({
   const [status, setStatus] = React.useState<"scanning" | "saving" | "ok" | "fail">("scanning");
   const [failMsg, setFailMsg] = React.useState<string | null>(null);
 
-  const totalNeeded = mode === "enroll" ? FACE_STEPS.length : 3;
+  const totalNeeded = mode === "enroll" ? FACE_STEPS.length : 4;
 
   React.useEffect(() => {
     if (!open) { setProgress(0); setStepIdx(0); setStatus("scanning"); setFailMsg(null); }
@@ -159,10 +159,11 @@ function ScannerOverlay({
           continue;
         }
         // Evita capturar o mesmo frame duas vezes no cadastro (exige variação de ângulo).
-        if (mode === "enroll" && samples.length && cosine(v, samples[samples.length - 1]) > 0.995) {
+        if (mode === "enroll" && samples.length && cosine(v, samples[samples.length - 1]) > 0.985) {
           setHint("Mova a cabeça devagar");
           continue;
         }
+
         samples.push(v);
         setStepIdx(samples.length);
         setProgress(samples.length / totalNeeded);
@@ -334,6 +335,12 @@ export function FaceIdCard() {
       {err && <LpAlert>{err}</LpAlert>}
       {msg && <LpAlert tone="success">{msg}</LpAlert>}
 
+      {face.status?.stale && (
+        <LpAlert tone="info">
+          Seu Face ID foi cadastrado numa versão anterior do reconhecimento. Refaça o escaneamento para voltar a usá-lo.
+        </LpAlert>
+      )}
+
       {face.loading ? (
         <div className="flex items-center gap-2 text-xs lp-muted"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Carregando...</div>
       ) : face.enrolled ? (
@@ -358,6 +365,7 @@ export function FaceIdCard() {
       ) : (
         <p className="text-xs lp-muted">Nenhum Face ID configurado neste perfil.</p>
       )}
+
 
       <div className="flex flex-col gap-2 sm:flex-row">
         {!face.enrolled && (

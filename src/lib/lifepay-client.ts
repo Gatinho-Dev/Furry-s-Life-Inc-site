@@ -16,6 +16,10 @@ export type LifePayAccount = {
   must_change_password: boolean;
   last_access_at: string | null;
   created_at: string;
+  salary_cents?: number;
+  salary_day?: number;
+  job_title?: string | null;
+  department?: string | null;
 };
 
 export type LifePayKey = {
@@ -109,6 +113,20 @@ export async function transfer(args: {
   const { data, error } = await db.rpc("lifepay_transfer_v2", {
     _key: args.key, _amount: args.amount, _note: args.note ?? null,
     _auth_method: args.authMethod, _idem: args.idempotencyKey,
+  });
+  if (error) throw new Error(error.message);
+  return (Array.isArray(data) ? data[0] : data) as LifePayTx;
+}
+
+/** Transferência com origem em saldo ou cartão de crédito (parcelável). */
+export async function transferV3(args: {
+  key: string; amount: number; note?: string; authMethod: string; idempotencyKey: string;
+  source: "balance" | "credit"; cardId?: string | null; installments?: number;
+}): Promise<LifePayTx> {
+  const { data, error } = await db.rpc("lifepay_transfer_v3", {
+    _key: args.key, _amount: args.amount, _note: args.note ?? null,
+    _auth_method: args.authMethod, _idem: args.idempotencyKey,
+    _source: args.source, _card_id: args.cardId ?? null, _installments: args.installments ?? 1,
   });
   if (error) throw new Error(error.message);
   return (Array.isArray(data) ? data[0] : data) as LifePayTx;
