@@ -73,16 +73,39 @@ export const LIFEPAY_CSS = `
   .lp-fade, .lp-step-in, .lp-step-back, .lp-pop { animation: none; }
 }
 
+/* ---- Modos de conta: cada tipo tem sua própria identidade ---- */
+.lp-root[data-mode="premium"] {
+  --lp-accent: #E9C46A; --lp-accent-2: #C9A227;
+  --lp-bg: #0B0A07; --lp-bg-2: #141209; --lp-surface: #191509; --lp-surface-2: #221C0E;
+}
+.lp-root[data-mode="corporate"] {
+  --lp-accent: #7CA8FF; --lp-accent-2: #4E7FE0;
+  --lp-bg: #07090D; --lp-bg-2: #0D1219; --lp-surface: #12171F; --lp-surface-2: #1A2029;
+}
+.lp-mode-banner { border-radius: 999px; padding:.25rem .75rem; font-size:.68rem; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; color:#04211B; background: linear-gradient(120deg, var(--lp-accent), var(--lp-accent-2)); }
 `;
 
-export function LifePayTheme({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+export type LifePayMode = "standard" | "premium" | "corporate";
+
+export const MODE_LABEL: Record<string, string> = {
+  standard: "Conta pessoal",
+  premium: "Conta premium",
+  corporate: "Conta empresarial",
+};
+
+export function LifePayTheme({ children, className = "", mode = "standard" }: {
+  children: React.ReactNode; className?: string; mode?: LifePayMode | string;
+}) {
+  const m = mode === "premium" || mode === "corporate" ? mode : "standard";
   return (
-    <div className={`lp-root ${className}`}>
+    <div className={`lp-root ${className}`} data-mode={m}>
       <style dangerouslySetInnerHTML={{ __html: LIFEPAY_CSS }} />
       {children}
     </div>
   );
 }
+
 
 export function LpSpinner({ label }: { label?: string }) {
   return (
