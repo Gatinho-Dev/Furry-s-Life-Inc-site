@@ -42,6 +42,12 @@ export const LIFEPAY_CSS = `
   padding:.8rem 1rem; font-size:.9rem; color: var(--lp-fg); outline:none; transition: border-color .15s ease, box-shadow .15s ease; }
 .lp-input::placeholder { color:#69727B; }
 .lp-input:focus { border-color: var(--lp-accent); box-shadow: 0 0 0 3px rgba(47,227,194,.15); }
+/* Rede de segurança: qualquer campo dentro do tema LifePay fica legível. */
+.lp-root input, .lp-root select, .lp-root textarea {
+  background-color: var(--lp-bg-2); color: var(--lp-fg); border-color: var(--lp-line-2); color-scheme: dark; }
+.lp-root input::placeholder, .lp-root textarea::placeholder { color:#69727B; }
+.lp-root option { background: var(--lp-surface); color: var(--lp-fg); }
+.lp-root input[type="checkbox"], .lp-root input[type="radio"] { background-color: transparent; }
 .lp-label { display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.09em; color: var(--lp-fg-2); margin-bottom:.4rem; font-weight:600; }
 .lp-chip { display:inline-flex; align-items:center; gap:.35rem; border-radius:999px; padding:.25rem .7rem; font-size:.7rem; font-weight:600;
   border:1px solid var(--lp-line-2); color: var(--lp-fg-2); }
@@ -52,7 +58,21 @@ export const LIFEPAY_CSS = `
   radial-gradient(circle at 85% 10%, rgba(47,227,194,.05), transparent 40%); }
 @keyframes lp-fade-up { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform:none; } }
 .lp-fade { animation: lp-fade-up .35s ease both; }
-@media (prefers-reduced-motion: reduce) { .lp-fade { animation: none; } }
+/* Transições estilo Apple para o fluxo de transferência */
+@keyframes lp-slide-in { from { opacity:0; transform: translateX(22px) scale(.99); } to { opacity:1; transform:none; } }
+@keyframes lp-slide-back { from { opacity:0; transform: translateX(-22px) scale(.99); } to { opacity:1; transform:none; } }
+@keyframes lp-pop { 0% { opacity:0; transform: scale(.86); } 60% { transform: scale(1.04); } 100% { opacity:1; transform: scale(1); } }
+.lp-step-in { animation: lp-slide-in .42s cubic-bezier(.22,.9,.24,1) both; }
+.lp-step-back { animation: lp-slide-back .42s cubic-bezier(.22,.9,.24,1) both; }
+.lp-pop { animation: lp-pop .5s cubic-bezier(.22,1.2,.3,1) both; }
+.lp-press { transition: transform .16s cubic-bezier(.2,.8,.2,1), background .16s ease, box-shadow .16s ease; }
+.lp-press:active:not(:disabled) { transform: scale(.97); }
+.lp-btn { will-change: transform; }
+.lp-btn:active:not(:disabled) { transform: scale(.975); }
+@media (prefers-reduced-motion: reduce) {
+  .lp-fade, .lp-step-in, .lp-step-back, .lp-pop { animation: none; }
+}
+
 `;
 
 export function LifePayTheme({ children, className = "" }: { children: React.ReactNode; className?: string }) {
