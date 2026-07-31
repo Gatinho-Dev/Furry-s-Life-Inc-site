@@ -439,7 +439,7 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
   const [busy, setBusy] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [secret, setSecret] = useState("");
-  const [method, setMethod] = useState<"password" | "pin" | "biometric">("password");
+  const [method, setMethod] = useState<"pin" | "biometric">("pin");
   const face = useFaceId();
   const [faceOpen, setFaceOpen] = useState(false);
 
