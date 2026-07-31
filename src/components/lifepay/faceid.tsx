@@ -158,7 +158,7 @@ function ScannerOverlay({
 
     const loop = async () => {
       while (!stop && samples.length < totalNeeded) {
-        await new Promise((r) => setTimeout(r, mode === "enroll" ? 750 : 420));
+        await new Promise((r) => setTimeout(r, mode === "enroll" ? 420 : 180));
         if (stop) return;
         const v = await capture();
         if (!v) {
@@ -167,8 +167,9 @@ function ScannerOverlay({
           continue;
         }
         // Evita capturar o mesmo frame duas vezes no cadastro (exige variação de ângulo).
-        if (mode === "enroll" && samples.length && cosine(v, samples[samples.length - 1]) > 0.985) {
+        if (mode === "enroll" && samples.length && cosine(v, samples[samples.length - 1]) > 0.995) {
           setHint("Mova a cabeça devagar");
+
           continue;
         }
 
