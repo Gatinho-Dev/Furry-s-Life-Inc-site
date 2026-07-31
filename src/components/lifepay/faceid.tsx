@@ -7,9 +7,10 @@ import {
   type FaceIdStatus,
 } from "@/lib/lifepay-faceid.functions";
 import {
-  detectFaceBox, frameToDescriptor, cosine,
-  FACE_STEPS, FACE_MIN_ENERGY,
+  detectFaceBox, frameToDescriptor, cosine, averageDescriptors,
+  FACE_STEPS, FACE_MIN_ENERGY, FACE_FRAMES_PER_SAMPLE,
 } from "@/lib/faceid-descriptor";
+
 
 /* --------------------------------------------------------------- *
  * Liquid Glass                                                     *
@@ -108,15 +109,22 @@ function useScanner(mode: Mode, open: boolean) {
     };
   }, [open, mode]);
 
+  /** Uma amostra = média de vários frames (reduz ruído e melhora o acerto). */
   const capture = React.useCallback(async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas || video.readyState < 2) return null;
-    const box = await detectFaceBox(video);
-    const { vector, energy } = frameToDescriptor(video, box, canvas);
-    if (energy < FACE_MIN_ENERGY) return null;
-    return vector;
+    const frames: number[][] = [];
+    for (let i = 0; i < FACE_FRAMES_PER_SAMPLE; i++) {
+      const box = await detectFaceBox(video);
+      const { vector, energy } = frameToDescriptor(video, box, canvas);
+      if (energy >= FACE_MIN_ENERGY) frames.push(vector);
+      if (i < FACE_FRAMES_PER_SAMPLE - 1) await new Promise((r) => setTimeout(r, 110));
+    }
+    if (frames.length < 2) return null;
+    return averageDescriptors(frames);
   }, []);
+
 
   return { videoRef, canvasRef, ready, error, capture };
 }
@@ -136,7 +144,7 @@ function ScannerOverlay({
   const [status, setStatus] = React.useState<"scanning" | "saving" | "ok" | "fail">("scanning");
   const [failMsg, setFailMsg] = React.useState<string | null>(null);
 
-  const totalNeeded = mode === "enroll" ? FACE_STEPS.length : 4;
+  const totalNeeded = mode === "enroll" ? FACE_STEPS.length : 5;
 
   React.useEffect(() => {
     if (!open) { setProgress(0); setStepIdx(0); setStatus("scanning"); setFailMsg(null); }
@@ -150,7 +158,7 @@ function ScannerOverlay({
 
     const loop = async () => {
       while (!stop && samples.length < totalNeeded) {
-        await new Promise((r) => setTimeout(r, mode === "enroll" ? 750 : 420));
+        await new Promise((r) => setTimeout(r, mode === "enroll" ? 420 : 180));
         if (stop) return;
         const v = await capture();
         if (!v) {
@@ -159,8 +167,9 @@ function ScannerOverlay({
           continue;
         }
         // Evita capturar o mesmo frame duas vezes no cadastro (exige variação de ângulo).
-        if (mode === "enroll" && samples.length && cosine(v, samples[samples.length - 1]) > 0.985) {
+        if (mode === "enroll" && samples.length && cosine(v, samples[samples.length - 1]) > 0.995) {
           setHint("Mova a cabeça devagar");
+
           continue;
         }
 

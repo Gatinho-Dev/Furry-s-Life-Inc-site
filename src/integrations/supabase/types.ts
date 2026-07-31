@@ -1586,33 +1586,6 @@ export type Database = {
         Returns: boolean
       }
       is_ceo_or_admin: { Args: { _user_id: string }; Returns: boolean }
-      lifepay_admin_adjust: {
-        Args: { _amount: number; _note?: string; _target_pix: string }
-        Returns: {
-          amount: number
-          auth_method: string | null
-          created_at: string
-          from_balance_after: number | null
-          from_balance_before: number | null
-          from_user: string | null
-          id: string
-          idempotency_key: string | null
-          key_used: string | null
-          kind: string
-          note: string | null
-          receipt_code: string | null
-          status: string
-          to_balance_after: number | null
-          to_balance_before: number | null
-          to_user: string | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "lifepay_transactions"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       lifepay_card_action: {
         Args: { _action: string; _id: string }
         Returns: boolean
@@ -1668,13 +1641,6 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
-      }
-      lifepay_lookup_pix: {
-        Args: { _pix: string }
-        Returns: {
-          display_name: string
-          pix_key: string
-        }[]
       }
       lifepay_pay_invoice: {
         Args: {
@@ -1751,33 +1717,6 @@ export type Database = {
       lifepay_set_card_limit: {
         Args: { _id: string; _limit: number }
         Returns: boolean
-      }
-      lifepay_transfer: {
-        Args: { _amount: number; _note?: string; _to_pix: string }
-        Returns: {
-          amount: number
-          auth_method: string | null
-          created_at: string
-          from_balance_after: number | null
-          from_balance_before: number | null
-          from_user: string | null
-          id: string
-          idempotency_key: string | null
-          key_used: string | null
-          kind: string
-          note: string | null
-          receipt_code: string | null
-          status: string
-          to_balance_after: number | null
-          to_balance_before: number | null
-          to_user: string | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "lifepay_transactions"
-          isOneToOne: true
-          isSetofReturn: false
-        }
       }
       lifepay_transfer_v2: {
         Args: {

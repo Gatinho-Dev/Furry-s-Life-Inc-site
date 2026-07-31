@@ -439,7 +439,7 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
   const [busy, setBusy] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [secret, setSecret] = useState("");
-  const [method, setMethod] = useState<"password" | "pin" | "biometric">("password");
+  const [method, setMethod] = useState<"pin" | "biometric">("pin");
   const face = useFaceId();
   const [faceOpen, setFaceOpen] = useState(false);
 
@@ -719,7 +719,6 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
         <div className="space-y-4">
           <p className="text-sm lp-muted">Confirme {formatBRL(amount)} para {target?.display_name}.</p>
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => setMethod("password")} className={`lp-btn flex-1 ${method === "password" ? "lp-btn-primary" : "lp-btn-soft"}`}>Senha</button>
             <button onClick={() => setMethod("pin")} className={`lp-btn flex-1 ${method === "pin" ? "lp-btn-primary" : "lp-btn-soft"}`}>PIN</button>
             {face.enrolled && !face.status?.stale && (
               <button onClick={() => { setMethod("biometric"); setSecret(""); }}
@@ -730,11 +729,13 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
             <p className="text-sm lp-muted">Ao confirmar, a câmera fará o reconhecimento facial do LifePay.</p>
           ) : (
             <div>
-              <label className="lp-label">{method === "password" ? "Sua senha" : "Seu PIN"}</label>
+              <label className="lp-label">Seu PIN</label>
               <input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} className="lp-input"
-                inputMode={method === "pin" ? "numeric" : undefined} autoComplete="off" />
+                inputMode="numeric" autoComplete="off" />
+              <p className="mt-1 text-[11px] lp-muted">Sem PIN cadastrado? Crie um na aba Segurança.</p>
             </div>
           )}
+
           {err && <LpAlert>{err}</LpAlert>}
           <button onClick={() => { if (method === "biometric") { setErr(null); setFaceOpen(true); } else void confirmTransfer(); }} disabled={busy || (method !== "biometric" && !secret)} className="lp-btn lp-btn-primary w-full py-3">
             {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Processando...</> : "Confirmar transferência"}

@@ -6,6 +6,7 @@ import { useAuth, type SubsidiaryKey } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { subsidiaries, SUBSIDIARY_LABELS, DISCORD_URL } from "@/lib/site-data";
 import { adminCreateUser, adminDeleteUser, adminResetPassword } from "@/lib/admin-users.functions";
+import { WorkersPanel, EmailsPanel } from "@/components/staff/directory";
 import symbol from "@/assets/fli-symbol.png.asset.json";
 
 export const Route = createFileRoute("/staff/dashboard")({
@@ -34,7 +35,7 @@ type StaffRow = {
 
 function Dashboard() {
   const nav = useNavigate(); const auth = useAuth();
-  const [tab, setTab] = useState<"home" | "users" | "inbox">("home");
+  const [tab, setTab] = useState<"home" | "users" | "workers" | "emails" | "inbox">("home");
 
   useEffect(() => { if (!auth.loading && !auth.user) nav({ to: "/auth", search: { redirect: undefined } }); }, [auth.loading, auth.user, nav]);
   if (auth.loading || !auth.user) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground"/></div>;
@@ -61,6 +62,8 @@ function Dashboard() {
         <nav className="flex gap-1">
           <TabBtn active={tab==="home"} onClick={()=>setTab("home")} icon={<Building2 className="h-4 w-4"/>} label="Mini-sites"/>
           {auth.isCeoOrAdmin && <TabBtn active={tab==="users"} onClick={()=>setTab("users")} icon={<Users className="h-4 w-4"/>} label="Usuários & cargos"/>}
+          {auth.isCeoOrAdmin && <TabBtn active={tab==="workers"} onClick={()=>setTab("workers")} icon={<Users className="h-4 w-4"/>} label="Trabalhadores"/>}
+          {auth.isCeoOrAdmin && <TabBtn active={tab==="emails"} onClick={()=>setTab("emails")} icon={<Mail className="h-4 w-4"/>} label="E-mails"/>}
           {auth.isCeoOrAdmin && <TabBtn active={tab==="inbox"} onClick={()=>setTab("inbox")} icon={<InboxIcon className="h-4 w-4"/>} label="Inbox"/>}
         </nav>
       </div>
@@ -91,6 +94,8 @@ function Dashboard() {
           </section>
         )}
         {tab==="users" && auth.isCeoOrAdmin && <UsersPanel currentUserId={auth.user.id}/>}
+        {tab==="workers" && auth.isCeoOrAdmin && <WorkersPanel/>}
+        {tab==="emails" && auth.isCeoOrAdmin && <EmailsPanel/>}
         {tab==="inbox" && auth.isCeoOrAdmin && <InboxPanel/>}
         <div className="mt-8 text-xs text-muted-foreground">Discord interno: <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{DISCORD_URL}</a></div>
       </main>

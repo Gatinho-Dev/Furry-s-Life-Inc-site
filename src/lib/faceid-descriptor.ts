@@ -4,14 +4,18 @@
  * O rosto nunca sai do dispositivo como imagem: apenas um vetor numérico
  * normalizado (assinatura) é enviado ao servidor para comparação.
  *
- * v2: normalização local de contraste + gradientes (Sobel). Isso deixa a
- * assinatura muito mais estável a mudanças de iluminação e de distância —
- * que era o motivo do reconhecimento falhar na versão anterior.
+ * v3: descritor HOG (histograma de gradientes orientados, 8x8 células x 8
+ * direções) + aparência com iluminação normalizada. É o mesmo princípio usado
+ * em reconhecimento facial clássico: muito mais discriminativo e estável a
+ * mudanças de luz, distância e leve rotação do que a versão anterior.
  */
 
-const GRID = 12;             // 12x12 células
-const WORK = 48;             // resolução intermediária de trabalho
-export const FACE_DIM = GRID * GRID * 2; // intensidade + gradiente = 288
+const WORK = 64;              // resolução de trabalho (px)
+const CELLS = 8;              // 8x8 células
+const BINS = 8;               // 8 direções por célula
+const HOG_DIM = CELLS * CELLS * BINS;   // 512
+const APP_DIM = CELLS * CELLS;          // 64
+export const FACE_DIM = HOG_DIM + APP_DIM; // 576
 
 type Box = { x: number; y: number; w: number; h: number };
 
@@ -26,8 +30,7 @@ export async function detectFaceBox(source: HTMLVideoElement): Promise<Box> {
       const faces = await det.detect(source);
       const bb = faces?.[0]?.boundingBox;
       if (bb && bb.width > 40) {
-        // Quadrado em volta do rosto — mantém a proporção estável entre capturas.
-        const size = Math.max(bb.width, bb.height) * 1.18;
+        const size = Math.max(bb.width, bb.height) * 1.2;
         const cx = bb.x + bb.width / 2;
         const cy = bb.y + bb.height / 2;
         return {
@@ -66,53 +69,43 @@ function boxBlur(src: Float64Array, n: number, radius: number): Float64Array {
   return out;
 }
 
-function pool(src: Float64Array, n: number, grid: number): Float64Array {
-  const cell = n / grid;
-  const out = new Float64Array(grid * grid);
-  for (let gy = 0; gy < grid; gy++) {
-    for (let gx = 0; gx < grid; gx++) {
-      let sum = 0, cnt = 0;
-      for (let y = Math.floor(gy * cell); y < Math.floor((gy + 1) * cell); y++) {
-        for (let x = Math.floor(gx * cell); x < Math.floor((gx + 1) * cell); x++) {
-          sum += src[y * n + x];
-          cnt++;
-        }
-      }
-      out[gy * grid + gx] = cnt ? sum / cnt : 0;
-    }
-  }
-  return out;
+function l2(v: Float64Array | number[], from = 0, to?: number): number {
+  const end = to ?? v.length;
+  let s = 0;
+  for (let i = from; i < end; i++) s += (v as any)[i] * (v as any)[i];
+  return Math.sqrt(s);
 }
 
-function normalize(v: Float64Array): void {
+/** Centraliza (média zero) e normaliza (norma 1) um trecho do vetor. */
+function centerNormalize(v: Float64Array, from: number, to: number): void {
   let mean = 0;
-  for (let i = 0; i < v.length; i++) mean += v[i];
-  mean /= v.length;
-  let norm = 0;
-  for (let i = 0; i < v.length; i++) { v[i] -= mean; norm += v[i] * v[i]; }
-  norm = Math.sqrt(norm) || 1;
-  for (let i = 0; i < v.length; i++) v[i] /= norm;
+  for (let i = from; i < to; i++) mean += v[i];
+  mean /= to - from;
+  for (let i = from; i < to; i++) v[i] -= mean;
+  const n = l2(v, from, to) || 1;
+  for (let i = from; i < to; i++) v[i] /= n;
 }
 
 /** Converte um frame de vídeo numa assinatura facial normalizada. */
 export function frameToDescriptor(
-  source: HTMLVideoElement,
+  source: HTMLVideoElement | HTMLCanvasElement,
   box: Box,
   canvas: HTMLCanvasElement,
 ): { vector: number[]; energy: number } {
   canvas.width = WORK;
   canvas.height = WORK;
   const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-  ctx.drawImage(source, box.x, box.y, box.w, box.h, 0, 0, WORK, WORK);
+  ctx.drawImage(source as any, box.x, box.y, box.w, box.h, 0, 0, WORK, WORK);
   const { data } = ctx.getImageData(0, 0, WORK, WORK);
 
   const gray = new Float64Array(WORK * WORK);
   for (let i = 0; i < WORK * WORK; i++) {
     const p = i * 4;
-    gray[i] = 0.299 * data[p] + 0.587 * data[p + 1] + 0.114 * data[p + 2];
+    // Compressão gamma (sqrt) reduz o efeito da luz forte/fraca.
+    gray[i] = Math.sqrt((0.299 * data[p] + 0.587 * data[p + 1] + 0.114 * data[p + 2]) / 255) * 255;
   }
 
-  // Contraste/brilho global: usado para descartar frames escuros ou sem rosto.
+  // Energia (contraste) — descarta frames escuros ou sem rosto.
   let gMean = 0;
   for (let i = 0; i < gray.length; i++) gMean += gray[i];
   gMean /= gray.length;
@@ -120,38 +113,90 @@ export function frameToDescriptor(
   for (let i = 0; i < gray.length; i++) variance += (gray[i] - gMean) ** 2;
   const energy = Math.sqrt(variance / gray.length) / 255;
 
-  // Normalização local de iluminação (subtrai o brilho de fundo).
-  const blurred = boxBlur(gray, WORK, 3);
-  const local = new Float64Array(WORK * WORK);
-  for (let i = 0; i < gray.length; i++) local[i] = gray[i] - blurred[i];
-
-  // Gradiente (Sobel) — estrutura do rosto, robusta à iluminação.
-  const grad = new Float64Array(WORK * WORK);
   const at = (x: number, y: number) =>
     gray[Math.min(WORK - 1, Math.max(0, y)) * WORK + Math.min(WORK - 1, Math.max(0, x))];
+
+  // ---- HOG: histograma de gradientes com voto bilinear em células/direções ----
+  const hog = new Float64Array(HOG_DIM);
+  const cellSize = WORK / CELLS;
   for (let y = 0; y < WORK; y++) {
     for (let x = 0; x < WORK; x++) {
-      const gx =
-        -at(x - 1, y - 1) - 2 * at(x - 1, y) - at(x - 1, y + 1) +
-        at(x + 1, y - 1) + 2 * at(x + 1, y) + at(x + 1, y + 1);
-      const gy =
-        -at(x - 1, y - 1) - 2 * at(x, y - 1) - at(x + 1, y - 1) +
-        at(x - 1, y + 1) + 2 * at(x, y + 1) + at(x + 1, y + 1);
-      grad[y * WORK + x] = Math.hypot(gx, gy);
+      const gx = at(x + 1, y) - at(x - 1, y);
+      const gy = at(x, y + 1) - at(x, y - 1);
+      const mag = Math.hypot(gx, gy);
+      if (mag < 1e-6) continue;
+      let ang = Math.atan2(gy, gx);
+      if (ang < 0) ang += Math.PI;               // gradiente sem sinal (0..pi)
+      const bin = (ang / Math.PI) * BINS;
+      const b0 = Math.floor(bin) % BINS;
+      const b1 = (b0 + 1) % BINS;
+      const wb = bin - Math.floor(bin);
+
+      const cx = x / cellSize - 0.5;
+      const cy = y / cellSize - 0.5;
+      const cx0 = Math.floor(cx), cy0 = Math.floor(cy);
+      const fx = cx - cx0, fy = cy - cy0;
+
+      for (const [ci, cw] of [[cx0, 1 - fx], [cx0 + 1, fx]] as const) {
+        if (ci < 0 || ci >= CELLS || cw <= 0) continue;
+        for (const [ri, rw] of [[cy0, 1 - fy], [cy0 + 1, fy]] as const) {
+          if (ri < 0 || ri >= CELLS || rw <= 0) continue;
+          const base = (ri * CELLS + ci) * BINS;
+          hog[base + b0] += mag * cw * rw * (1 - wb);
+          hog[base + b1] += mag * cw * rw * wb;
+        }
+      }
     }
   }
 
-  const intensity = pool(local, WORK, GRID);
-  const gradient = pool(grad, WORK, GRID);
-  normalize(intensity);
-  normalize(gradient);
-
-  const vector: number[] = new Array(FACE_DIM);
-  for (let i = 0; i < GRID * GRID; i++) {
-    vector[i] = Number((intensity[i] * 0.7071).toFixed(4));
-    vector[GRID * GRID + i] = Number((gradient[i] * 0.7071).toFixed(4));
+  // Normalização por célula (L2-hys): invariância a contraste local.
+  for (let c = 0; c < CELLS * CELLS; c++) {
+    const base = c * BINS;
+    let n = l2(hog, base, base + BINS) || 1;
+    for (let i = base; i < base + BINS; i++) hog[i] = Math.min(hog[i] / n, 0.25);
+    n = l2(hog, base, base + BINS) || 1;
+    for (let i = base; i < base + BINS; i++) hog[i] /= n;
   }
+
+  // ---- Aparência com iluminação normalizada (formato do rosto) ----
+  const blurred = boxBlur(gray, WORK, 4);
+  const app = new Float64Array(APP_DIM);
+  for (let cy = 0; cy < CELLS; cy++) {
+    for (let cx = 0; cx < CELLS; cx++) {
+      let sum = 0, cnt = 0;
+      for (let y = Math.floor(cy * cellSize); y < Math.floor((cy + 1) * cellSize); y++) {
+        for (let x = Math.floor(cx * cellSize); x < Math.floor((cx + 1) * cellSize); x++) {
+          sum += gray[y * WORK + x] - blurred[y * WORK + x];
+          cnt++;
+        }
+      }
+      app[cy * CELLS + cx] = cnt ? sum / cnt : 0;
+    }
+  }
+
+  const full = new Float64Array(FACE_DIM);
+  full.set(hog, 0);
+  full.set(app, HOG_DIM);
+  // Centralizar cada bloco torna o cosseno realmente discriminativo entre pessoas.
+  centerNormalize(full, 0, HOG_DIM);
+  centerNormalize(full, HOG_DIM, FACE_DIM);
+
+  const W_HOG = 0.88, W_APP = 0.47; // pesos (soma dos quadrados = 1)
+  const vector: number[] = new Array(FACE_DIM);
+  for (let i = 0; i < HOG_DIM; i++) vector[i] = Number((full[i] * W_HOG).toFixed(5));
+  for (let i = HOG_DIM; i < FACE_DIM; i++) vector[i] = Number((full[i] * W_APP).toFixed(5));
   return { vector, energy };
+}
+
+/** Média de várias assinaturas (reduz ruído do sensor) — já renormalizada. */
+export function averageDescriptors(list: number[][]): number[] {
+  const out = new Array(FACE_DIM).fill(0);
+  for (const v of list) for (let i = 0; i < FACE_DIM; i++) out[i] += v[i] ?? 0;
+  let n = 0;
+  for (let i = 0; i < FACE_DIM; i++) n += out[i] * out[i];
+  n = Math.sqrt(n) || 1;
+  for (let i = 0; i < FACE_DIM; i++) out[i] = Number((out[i] / n).toFixed(5));
+  return out;
 }
 
 /** Similaridade do cosseno (vetores já normalizados). */
@@ -163,10 +208,16 @@ export function cosine(a: number[], b: number[]): number {
 }
 
 /** Versão da assinatura — permite invalidar cadastros antigos e incompatíveis. */
-export const FACE_VERSION = 2;
+export const FACE_VERSION = 3;
 
-export const FACE_MATCH_THRESHOLD = 0.72;
-export const FACE_MIN_ENERGY = 0.045;
+/** Limite de aceitação (cosseno médio das melhores amostras). */
+export const FACE_MATCH_THRESHOLD = 0.6;
+/** Mínimo aceito para uma única amostra isolada (evita falso positivo). */
+export const FACE_SINGLE_MIN = 0.48;
+export const FACE_MIN_ENERGY = 0.05;
+
+/** Quantos frames são combinados em cada amostra (média temporal). */
+export const FACE_FRAMES_PER_SAMPLE = 3;
 
 export const FACE_STEPS = [
   "Olhe para a frente",
@@ -174,5 +225,7 @@ export const FACE_STEPS = [
   "Vire levemente para a esquerda",
   "Incline o queixo para cima",
   "Incline o queixo para baixo",
+  "Aproxime um pouco o rosto",
+  "Afaste um pouco o rosto",
   "Olhe para a frente novamente",
 ] as const;

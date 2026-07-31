@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  Loader2, Users, ShieldCheck, ScrollText, Search, RefreshCw, Plus, Wallet, KeyRound, Lock, Unlock,
+  Loader2, Users, ShieldCheck, ScrollText, Search, RefreshCw, Plus, Wallet, KeyRound, Lock, Unlock, Banknote, Save,
 } from "lucide-react";
 import { useAuth } from "@/lib/use-auth";
 import { StaffShell, KpiCard, type ShellTab } from "@/components/staff/StaffShell";
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/lifepay/staff")({
   component: LifePayStaff,
 });
 
-type TabKey = "accounts" | "permissions" | "audit";
+type TabKey = "accounts" | "salaries" | "permissions" | "audit";
 type Account = Awaited<ReturnType<typeof lifepayAdminListAccounts>>[number];
 
 const fmtDate = (s?: string | null) => (s ? new Date(s).toLocaleString("pt-BR") : "—");
@@ -89,6 +89,7 @@ function LifePayStaff() {
 
   const tabs: ShellTab<TabKey>[] = [
     { key: "accounts", label: "Contas", icon: Users },
+    { key: "salaries", label: "Salários", icon: Banknote },
     { key: "permissions", label: "Permissões", icon: ShieldCheck },
     { key: "audit", label: "Auditoria", icon: ScrollText },
   ];
@@ -179,6 +180,12 @@ function LifePayStaff() {
           </>
         )}
 
+        {!loading && tab === "salaries" && can("edit") && (
+          <SalariesPanel accounts={filtered} onSaved={reload} />
+        )}
+        {!loading && tab === "salaries" && !can("edit") && (
+          <LpAlert>Você não tem permissão para configurar salários.</LpAlert>
+        )}
         {!loading && tab === "permissions" && (
           <PermissionsPanel accounts={accounts} isCeoOrAdmin={!!perms?.isCeoOrAdmin} />
         )}
@@ -503,6 +510,78 @@ function AuditPanel({ canAudit }: { canAudit: boolean }) {
             {!filtered.length && <tr><td colSpan={4} className="px-4 py-10 text-center text-sm text-muted-foreground">Nenhum evento.</td></tr>}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Salários ---------------- */
+function SalariesPanel({ accounts, onSaved }: { accounts: Account[]; onSaved: () => Promise<void> | void }) {
+  const updateFn = useServerFn(lifepayAdminUpdateAccount);
+  const [draft, setDraft] = useState<Record<string, { salary: string; day: string; job: string; dep: string }>>({});
+  const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const rowOf = (a: any) => draft[a.user_id] ?? {
+    salary: formatBRL(a.salary_cents ?? 0),
+    day: String(a.salary_day ?? 5),
+    job: a.job_title ?? "",
+    dep: a.department ?? "",
+  };
+  const set = (id: string, patch: Partial<{ salary: string; day: string; job: string; dep: string }>, base: any) =>
+    setDraft((d) => ({ ...d, [id]: { ...rowOf(base), ...patch } }));
+
+  const save = async (a: any) => {
+    const r = rowOf(a);
+    setBusy(a.user_id); setErr(null); setMsg(null);
+    try {
+      await updateFn({ data: { user_id: a.user_id, patch: {
+        salary_cents: parseBRLToCents(r.salary),
+        salary_day: Number(r.day) || 5,
+        job_title: r.job,
+        department: r.dep,
+      } as any } });
+      setMsg("Salário atualizado.");
+      await onSaved();
+    } catch (e) { setErr(e instanceof Error ? e.message : "Falha ao salvar."); }
+    finally { setBusy(null); }
+  };
+
+  const total = accounts.reduce((s, a: any) => s + (a.salary_cents ?? 0), 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="lp-card p-4 text-sm">
+        Folha mensal estimada: <strong>{formatBRL(total)}</strong> · {accounts.length} contas
+      </div>
+      {err && <LpAlert>{err}</LpAlert>}
+      {msg && <LpAlert tone="success">{msg}</LpAlert>}
+      <div className="space-y-3">
+        {accounts.map((a: any) => {
+          const r = rowOf(a);
+          return (
+            <div key={a.user_id} className="lp-card p-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div className="text-sm font-semibold">{a.full_name ?? a.display_name}</div>
+                <div className="text-xs lp-muted">{a.email} · {ACCOUNT_STATUS_LABEL[a.status] ?? a.status}</div>
+              </div>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div><label className="lp-label">Salário</label>
+                  <input className="lp-input" value={r.salary} onChange={(e) => set(a.user_id, { salary: e.target.value }, a)} placeholder="R$ 0,00" /></div>
+                <div><label className="lp-label">Dia do pagamento</label>
+                  <input className="lp-input" inputMode="numeric" value={r.day} onChange={(e) => set(a.user_id, { day: e.target.value }, a)} /></div>
+                <div><label className="lp-label">Cargo</label>
+                  <input className="lp-input" value={r.job} onChange={(e) => set(a.user_id, { job: e.target.value }, a)} /></div>
+                <div><label className="lp-label">Setor</label>
+                  <input className="lp-input" value={r.dep} onChange={(e) => set(a.user_id, { dep: e.target.value }, a)} /></div>
+              </div>
+              <button onClick={() => void save(a)} disabled={busy === a.user_id} className="lp-btn lp-btn-primary mt-3">
+                {busy === a.user_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

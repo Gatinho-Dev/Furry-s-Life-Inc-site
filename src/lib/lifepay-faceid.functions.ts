@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { FACE_DIM, FACE_MATCH_THRESHOLD, cosine } from "@/lib/faceid-descriptor";
+import {
+  FACE_DIM, FACE_MATCH_THRESHOLD, FACE_SINGLE_MIN, cosine, averageDescriptors,
+} from "@/lib/faceid-descriptor";
+
 
 /* ------------------------------------------------------------------ *
  * Face ID do LifePay (reconhecimento facial próprio do site)          *
@@ -60,15 +63,18 @@ export const lifepayFaceEnroll = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
+    // Guarda as amostras + o centroide (média): melhora muito o reconhecimento.
+    const samples = [...data.samples, averageDescriptors(data.samples)];
     const { error } = await db.from("lifepay_faceid").upsert(
       {
         user_id: context.userId,
-        samples: data.samples,
+        samples,
         device_label: data.label.trim() || "Face ID do LifePay",
         last_used_at: null,
       },
       { onConflict: "user_id" },
     );
+
     if (error) throw new Error(error.message);
 
     await db.from("lifepay_audit_logs").insert({
@@ -97,20 +103,24 @@ export const lifepayFaceVerify = createServerFn({ method: "POST" })
       throw new Error("Seu Face ID foi cadastrado numa versão anterior. Refaça o escaneamento em Segurança.");
     }
 
-    // Melhor similaridade de cada amostra capturada; considera a média das duas melhores.
-    const perProbe = data.samples
+    // Compara também o centroide das capturas (menos ruído) e usa a média das
+    // 3 melhores similaridades, exigindo um mínimo em cada uma delas.
+    const probes = [...data.samples, averageDescriptors(data.samples)];
+    const perProbe = probes
       .map((probe) => stored.reduce((m, ref) => Math.max(m, cosine(probe, ref)), -1))
       .sort((a, b) => b - a);
-    const top = perProbe.slice(0, 2);
+    const top = perProbe.slice(0, Math.min(3, perProbe.length));
     const best = top.reduce((s, v) => s + v, 0) / top.length;
+    const ok = best >= FACE_MATCH_THRESHOLD && top.every((v) => v >= FACE_SINGLE_MIN);
 
     await db.from("lifepay_audit_logs").insert({
       actor_id: context.userId, actor_kind: "user",
-      action: best >= FACE_MATCH_THRESHOLD ? "faceid_verified" : "faceid_failed",
+      action: ok ? "faceid_verified" : "faceid_failed",
       target_user: context.userId, target_ref: data.purpose || null, auth_method: "faceid",
     });
 
-    if (best < FACE_MATCH_THRESHOLD) throw new Error("Rosto não reconhecido. Tente novamente com boa iluminação.");
+    if (!ok) throw new Error("Rosto não reconhecido. Tente novamente de frente, com boa iluminação.");
+
 
     await db.from("lifepay_faceid").update({ last_used_at: new Date().toISOString() }).eq("id", row.id);
     return { ok: true, score: Number(best.toFixed(4)), method: "faceid" as const };
