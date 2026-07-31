@@ -63,15 +63,18 @@ export const lifepayFaceEnroll = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
+    // Guarda as amostras + o centroide (média): melhora muito o reconhecimento.
+    const samples = [...data.samples, averageDescriptors(data.samples)];
     const { error } = await db.from("lifepay_faceid").upsert(
       {
         user_id: context.userId,
-        samples: data.samples,
+        samples,
         device_label: data.label.trim() || "Face ID do LifePay",
         last_used_at: null,
       },
       { onConflict: "user_id" },
     );
+
     if (error) throw new Error(error.message);
 
     await db.from("lifepay_audit_logs").insert({
