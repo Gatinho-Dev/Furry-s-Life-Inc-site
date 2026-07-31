@@ -146,7 +146,7 @@ export const lifepayAdminListAccounts = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("lifepay_accounts")
-      .select("user_id, full_name, display_name, email, pix_key, status, account_type, balance, credit_limit, closing_day, due_day, first_access_done, must_change_password, last_access_at, admin_notes, created_at")
+      .select("user_id, full_name, display_name, email, pix_key, status, account_type, balance, credit_limit, closing_day, due_day, first_access_done, must_change_password, last_access_at, admin_notes, created_at, salary_cents, salary_day, job_title, department")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
