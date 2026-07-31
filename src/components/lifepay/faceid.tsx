@@ -7,9 +7,10 @@ import {
   type FaceIdStatus,
 } from "@/lib/lifepay-faceid.functions";
 import {
-  detectFaceBox, frameToDescriptor, cosine,
-  FACE_STEPS, FACE_MIN_ENERGY,
+  detectFaceBox, frameToDescriptor, cosine, averageDescriptors,
+  FACE_STEPS, FACE_MIN_ENERGY, FACE_FRAMES_PER_SAMPLE,
 } from "@/lib/faceid-descriptor";
+
 
 /* --------------------------------------------------------------- *
  * Liquid Glass                                                     *
