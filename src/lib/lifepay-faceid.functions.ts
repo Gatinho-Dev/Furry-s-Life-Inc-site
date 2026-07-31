@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { FACE_DIM, FACE_MATCH_THRESHOLD, cosine } from "@/lib/faceid-descriptor";
+import {
+  FACE_DIM, FACE_MATCH_THRESHOLD, FACE_SINGLE_MIN, cosine, averageDescriptors,
+} from "@/lib/faceid-descriptor";
+
 
 /* ------------------------------------------------------------------ *
  * Face ID do LifePay (reconhecimento facial próprio do site)          *
