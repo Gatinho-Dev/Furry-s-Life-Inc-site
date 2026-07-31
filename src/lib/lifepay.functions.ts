@@ -216,14 +216,24 @@ export const lifepayAdminUpdateAccount = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const allowed = ["full_name", "email", "status", "account_type", "credit_limit", "closing_day", "due_day",
-      "admin_notes", "must_change_password"] as const;
+      "admin_notes", "must_change_password", "salary_cents", "salary_day", "job_title", "department"] as const;
     const patch: Record<string, unknown> = {};
     for (const k of allowed) if (k in data.patch) patch[k] = (data.patch as any)[k];
     if (!Object.keys(patch).length) throw new Error("Nada a alterar.");
 
+    if ("salary_cents" in patch) {
+      const v = Number(patch.salary_cents);
+      if (!Number.isInteger(v) || v < 0) throw new Error("Salário inválido.");
+    }
+    if ("salary_day" in patch) {
+      const v = Number(patch.salary_day);
+      if (!Number.isInteger(v) || v < 1 || v > 28) throw new Error("O dia do pagamento deve ficar entre 1 e 28.");
+    }
+
     if ("status" in patch) await requirePerm(context, "block");
     if ("credit_limit" in patch) await requirePerm(context, "limit");
     if (Object.keys(patch).some((k) => !["status", "credit_limit"].includes(k))) await requirePerm(context, "edit");
+
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: before } = await supabaseAdmin.from("lifepay_accounts")
