@@ -16,7 +16,11 @@ export const LIFEPAY_CSS = `
   --lp-accent-2: #14B894;
   --lp-danger: #FF6B6B;
   --lp-warn: #FFC65C;
-  background: var(--lp-bg);
+  background:
+    radial-gradient(1100px 620px at 12% -8%, color-mix(in srgb, var(--lp-accent) 20%, transparent), transparent 62%),
+    radial-gradient(900px 560px at 92% 4%, color-mix(in srgb, var(--lp-accent) 11%, transparent), transparent 58%),
+    linear-gradient(180deg, var(--lp-bg-2), var(--lp-bg) 55%);
+  background-attachment: fixed;
   color: var(--lp-fg);
   min-height: 100vh;
   font-family: "SF Pro Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
