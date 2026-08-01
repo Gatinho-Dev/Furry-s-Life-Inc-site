@@ -109,20 +109,23 @@ function useScanner(mode: Mode, open: boolean) {
     };
   }, [open, mode]);
 
-  /** Uma amostra = média de vários frames (reduz ruído e melhora o acerto). */
+  /**
+   * Uma amostra = média temporal de vários frames, em 3 escalas de recorte.
+   * Devolve um vetor por escala (mais robusto a distância/enquadramento).
+   */
   const capture = React.useCallback(async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas || video.readyState < 2) return null;
-    const frames: number[][] = [];
+    const perScale: number[][][] = FACE_SCALES.map(() => []);
     for (let i = 0; i < FACE_FRAMES_PER_SAMPLE; i++) {
       const box = await detectFaceBox(video);
-      const { vector, energy } = frameToDescriptor(video, box, canvas);
-      if (energy >= FACE_MIN_ENERGY) frames.push(vector);
+      const { vectors, energy } = frameToDescriptors(video, box, canvas);
+      if (energy >= FACE_MIN_ENERGY) vectors.forEach((v, s) => perScale[s].push(v));
       if (i < FACE_FRAMES_PER_SAMPLE - 1) await new Promise((r) => setTimeout(r, 110));
     }
-    if (frames.length < 2) return null;
-    return averageDescriptors(frames);
+    if (perScale[0].length < 2) return null;
+    return perScale.map((frames) => averageDescriptors(frames));
   }, []);
 
 
