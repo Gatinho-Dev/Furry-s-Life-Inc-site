@@ -157,30 +157,33 @@ function ScannerOverlay({
     if (!open || !ready || status !== "scanning") return;
     let stop = false;
     const samples: number[][] = [];
+    let groups = 0;
+    let lastMid: number[] | null = null;
     let misses = 0;
 
     const loop = async () => {
-      while (!stop && samples.length < totalNeeded) {
+      while (!stop && groups < totalNeeded) {
         await new Promise((r) => setTimeout(r, mode === "enroll" ? 420 : 180));
         if (stop) return;
-        const v = await capture();
-        if (!v) {
+        const g = await capture();
+        if (!g) {
           misses++;
           setHint(misses > 4 ? "Rosto não detectado — melhore a iluminação" : "Posicione o rosto dentro do círculo");
           continue;
         }
+        const mid = g[Math.floor(g.length / 2)];
         // Evita capturar o mesmo frame duas vezes no cadastro (exige variação de ângulo).
-        if (mode === "enroll" && samples.length && cosine(v, samples[samples.length - 1]) > 0.995) {
+        if (mode === "enroll" && lastMid && cosine(mid, lastMid) > 0.995) {
           setHint("Mova a cabeça devagar");
-
           continue;
         }
-
-        samples.push(v);
-        setStepIdx(samples.length);
-        setProgress(samples.length / totalNeeded);
+        lastMid = mid;
+        samples.push(...g);
+        groups++;
+        setStepIdx(groups);
+        setProgress(groups / totalNeeded);
         setHint(mode === "enroll"
-          ? (FACE_STEPS[Math.min(samples.length, FACE_STEPS.length - 1)] as string)
+          ? (FACE_STEPS[Math.min(groups, FACE_STEPS.length - 1)] as string)
           : "Analisando...");
       }
       if (stop) return;
