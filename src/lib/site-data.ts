@@ -37,7 +37,7 @@ export const subsidiaries: Subsidiary[] = [
   { key: "agency",   name: "Life Agency",                  category: "Inteligência",      description: "Agência de inteligência e operações especiais.",                icon: Shield,       href: "/agency" },
   { key: "lifeplus", name: "Life+",                        category: "Saúde",             description: "Serviços de saúde, bem-estar e medicina preventiva.",           icon: HeartPulse },
   { key: "aircare",  name: "Life AirCare",                 category: "Sustentabilidade",  description: "Purificação do ar e tecnologias ambientais.",                   icon: Wind,         href: "/aircare" },
-  { key: "lifepay",  name: "LifePay",                      category: "Finanças",          description: "Banco digital fictício com Pix, cartões, investimentos e PJ.",  icon: Landmark,     href: "/lifepay" },
+  { key: "lifepay",  name: "LifePay",                      category: "Finanças",          description: "Banco digital com Pix, cartões, faturas e investimentos.",  icon: Landmark,     href: "/lifepay" },
 ];
 
 export const newsItems: { date: string; tag: string; title: string; description: string }[] = [];
