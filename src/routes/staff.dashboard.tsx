@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { LogOut, Users, Building2, ShieldCheck, ArrowRight, Loader2, Check, Mail, Plus, Trash2, KeyRound, Inbox as InboxIcon, AlertCircle } from "lucide-react";
 import { useAuth, type SubsidiaryKey } from "@/lib/use-auth";
@@ -277,7 +277,7 @@ function CreateUserModal({ onClose, onCreate }: { onClose: () => void; onCreate:
   const [isWorker, setIsWorker] = useState(false);
   // Fecha só quando o clique começa E termina no fundo — assim selecionar texto
   // dentro do formulário não fecha o modal.
-  const downOnBackdrop = React.useRef(false);
+  const downOnBackdrop = useRef(false);
   const [busy, setBusy] = useState(false); const [err, setErr] = useState<string|null>(null);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setErr(null);
