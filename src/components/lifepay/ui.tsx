@@ -40,16 +40,22 @@ export const LIFEPAY_CSS = `
 
 .lp-muted { color: var(--lp-fg-2); }
 .lp-accent { color: var(--lp-accent); }
-.lp-btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:14px; padding:.75rem 1.15rem;
-  font-size:.875rem; font-weight:600; transition: all .18s ease; border:1px solid transparent; cursor:pointer; }
+.lp-btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:999px; padding:.75rem 1.2rem;
+  font-size:.875rem; font-weight:600; border:1px solid transparent; cursor:pointer;
+  transition: transform .22s cubic-bezier(.2,.9,.2,1), background .22s ease, box-shadow .22s ease, border-color .22s ease; }
 .lp-btn:disabled { opacity:.55; cursor:not-allowed; }
-.lp-btn-primary { background: var(--lp-accent); color:#04211B; }
-.lp-btn-primary:hover:not(:disabled) { background: var(--lp-accent-2); }
-.lp-btn-ghost { background: transparent; border-color: var(--lp-line-2); color: var(--lp-fg); }
-.lp-btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,.05); }
-.lp-btn-soft { background: var(--lp-surface-2); color: var(--lp-fg); border-color: var(--lp-line); }
-.lp-btn-soft:hover:not(:disabled) { background: #232830; }
-.lp-btn-danger { background: rgba(255,107,107,.12); color: var(--lp-danger); border-color: rgba(255,107,107,.35); }
+.lp-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.lp-btn-primary { color:#04211B; background: linear-gradient(160deg, var(--lp-accent), var(--lp-accent-2));
+  border-color: rgba(255,255,255,.24);
+  box-shadow: 0 18px 36px -20px color-mix(in srgb, var(--lp-accent) 80%, transparent), inset 0 1px 0 rgba(255,255,255,.45); }
+.lp-btn-ghost { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: var(--lp-fg);
+  backdrop-filter: blur(16px) saturate(170%); }
+.lp-btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,.12); }
+.lp-btn-soft { background: rgba(255,255,255,.09); color: var(--lp-fg); border-color: rgba(255,255,255,.14);
+  backdrop-filter: blur(16px) saturate(170%); }
+.lp-btn-soft:hover:not(:disabled) { background: rgba(255,255,255,.15); }
+.lp-btn-danger { background: rgba(255,107,107,.14); color: var(--lp-danger); border-color: rgba(255,107,107,.38);
+  backdrop-filter: blur(14px); }
 .lp-input { width:100%; background: var(--lp-bg-2); border:1px solid var(--lp-line-2); border-radius:14px;
   padding:.8rem 1rem; font-size:.9rem; color: var(--lp-fg); outline:none; transition: border-color .15s ease, box-shadow .15s ease; }
 .lp-input::placeholder { color:#69727B; }
