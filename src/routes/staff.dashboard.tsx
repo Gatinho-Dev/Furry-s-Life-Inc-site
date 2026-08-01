@@ -272,22 +272,37 @@ function X({ className }: { className?: string }) {
   return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
 }
 
-function CreateUserModal({ onClose, onCreate }: { onClose: () => void; onCreate: (d: { email: string; password: string; full_name?: string }) => Promise<void> }) {
+function CreateUserModal({ onClose, onCreate }: { onClose: () => void; onCreate: (d: { email: string; password: string; full_name?: string; is_worker?: boolean }) => Promise<void> }) {
   const [form, setForm] = useState({ email: "", password: "", full_name: "" });
+  const [isWorker, setIsWorker] = useState(false);
+  // Fecha só quando o clique começa E termina no fundo — assim selecionar texto
+  // dentro do formulário não fecha o modal.
+  const downOnBackdrop = React.useRef(false);
   const [busy, setBusy] = useState(false); const [err, setErr] = useState<string|null>(null);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setErr(null);
-    try { await onCreate({ email: form.email, password: form.password, full_name: form.full_name || undefined }); }
+    try { await onCreate({ email: form.email, password: form.password, full_name: form.full_name || undefined, is_worker: isWorker }); }
     catch (e) { setErr(e instanceof Error ? e.message : "Falha"); }
     finally { setBusy(false); }
   };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <form onSubmit={submit} onClick={(e)=>e.stopPropagation()} className="w-full max-w-md space-y-3 rounded-2xl border border-border bg-card p-6">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onMouseDown={(e) => { downOnBackdrop.current = e.target === e.currentTarget; }}
+      onMouseUp={(e) => { if (downOnBackdrop.current && e.target === e.currentTarget) onClose(); downOnBackdrop.current = false; }}
+    >
+      <form onSubmit={submit} onMouseDown={(e)=>e.stopPropagation()} className="w-full max-w-md space-y-3 rounded-2xl border border-border bg-card p-6">
         <h3 className="font-display text-lg font-semibold">Novo usuário</h3>
         <input required type="email" placeholder="email@exemplo.com" value={form.email} onChange={(e)=>setForm({...form, email: e.target.value})} className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"/>
         <input placeholder="Nome completo (opcional)" value={form.full_name} onChange={(e)=>setForm({...form, full_name: e.target.value})} className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"/>
         <input required type="password" placeholder="Senha (mín 8)" minLength={8} value={form.password} onChange={(e)=>setForm({...form, password: e.target.value})} className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"/>
+        <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-border bg-background p-3 text-sm">
+          <input type="checkbox" checked={isWorker} onChange={(e)=>setIsWorker(e.target.checked)} className="mt-0.5"/>
+          <span>
+            Cadastrar como <strong>trabalhador(a)</strong> da empresa
+            <span className="block text-xs text-muted-foreground">Desmarcado: é só uma conta de acesso, não aparece na aba Trabalhadores.</span>
+          </span>
+        </label>
         {err && <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive"><AlertCircle className="h-4 w-4"/>{err}</div>}
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="rounded-xl border border-border px-3 py-2 text-sm hover:bg-secondary">Cancelar</button>

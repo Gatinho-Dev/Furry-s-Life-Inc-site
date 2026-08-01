@@ -49,9 +49,12 @@ export function WorkersPanel() {
   const [msg, setMsg] = React.useState<string | null>(null);
   const [draft, setDraft] = React.useState<Record<string, Partial<WorkerRow>>>({});
 
-  const filtered = (rows ?? []).filter((r) =>
-    `${r.full_name ?? ""} ${r.email ?? ""} ${r.job_title ?? ""} ${r.department ?? ""}`.toLowerCase()
-      .includes(q.toLowerCase()));
+  const [showAll, setShowAll] = React.useState(false);
+  const filtered = (rows ?? [])
+    .filter((r) => showAll || r.is_worker)
+    .filter((r) =>
+      `${r.full_name ?? ""} ${r.email ?? ""} ${r.job_title ?? ""} ${r.department ?? ""}`.toLowerCase()
+        .includes(q.toLowerCase()));
 
   const field = (r: WorkerRow, k: keyof WorkerRow) => (draft[r.id]?.[k] ?? r[k]) as any;
   const set = (id: string, k: keyof WorkerRow, v: unknown) =>
@@ -67,6 +70,7 @@ export function WorkersPanel() {
         department: String(field(r, "department") ?? ""),
         salary_cents: Math.round(Number(field(r, "salary_cents")) || 0),
         salary_day: Math.round(Number(field(r, "salary_day")) || 5),
+        is_worker: Boolean(field(r, "is_worker")),
       } });
       setDraft((d) => { const n = { ...d }; delete n[r.id]; return n; });
       setMsg("Dados do trabalhador atualizados.");
@@ -80,6 +84,10 @@ export function WorkersPanel() {
       <div>
         <h2 className="font-display text-lg font-semibold">Trabalhadores</h2>
         <p className="text-sm text-muted-foreground">Cargo, setor e salário de cada pessoa da empresa. O salário é creditado no saldo LifePay.</p>
+        <label className="mt-2 inline-flex cursor-pointer items-center gap-2 text-sm">
+          <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
+          Mostrar também contas que não são de trabalhadores
+        </label>
       </div>
       <Toolbar q={q} setQ={setQ} onReload={load} />
       {err && <p className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">{err}</p>}
@@ -106,6 +114,11 @@ export function WorkersPanel() {
                   <input type="number" min={0} step="0.01" className={`${inputCls} mt-1`}
                     value={(Number(field(r, "salary_cents")) || 0) / 100}
                     onChange={(e) => set(r.id, "salary_cents", Math.round(Number(e.target.value) * 100))} />
+                </label>
+                <label className="flex items-center gap-2 text-xs text-muted-foreground sm:col-span-2 lg:col-span-1">
+                  <input type="checkbox" checked={Boolean(field(r, "is_worker"))}
+                    onChange={(e) => set(r.id, "is_worker", e.target.checked)} />
+                  É trabalhador(a)
                 </label>
                 <label className="text-xs text-muted-foreground">Dia do pagamento
                   <input type="number" min={1} max={28} className={`${inputCls} mt-1`}
@@ -135,7 +148,7 @@ export function WorkersPanel() {
               </div>
             </div>
           ))}
-          {!filtered.length && <p className="text-sm text-muted-foreground">Nenhum trabalhador encontrado.</p>}
+          {!filtered.length && <p className="text-sm text-muted-foreground">Nenhum trabalhador encontrado. Marque “É trabalhador(a)” em quem faz parte da equipe.</p>}
         </div>
       )}
     </section>
