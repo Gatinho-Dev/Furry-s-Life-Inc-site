@@ -24,8 +24,20 @@ export const LIFEPAY_CSS = `
   letter-spacing: -0.011em;
 }
 .lp-root *, .lp-root *::before, .lp-root *::after { box-sizing: border-box; }
-.lp-card { background: var(--lp-surface); border: 1px solid var(--lp-line); border-radius: 22px; box-shadow: 0 18px 40px -30px rgba(0,0,0,0.9); }
-.lp-card-2 { background: var(--lp-surface-2); border: 1px solid var(--lp-line); border-radius: 16px; }
+/* ---- Liquid Glass (superfícies translúcidas estilo Apple) ---- */
+.lp-card { position:relative; overflow:hidden; border-radius:26px;
+  background: linear-gradient(150deg, rgba(255,255,255,.09), rgba(255,255,255,.025) 46%, rgba(255,255,255,.06));
+  border: 1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(26px) saturate(190%);
+  box-shadow: 0 26px 60px -34px rgba(0,0,0,.95), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(255,255,255,.05); }
+.lp-card::after { content:""; position:absolute; inset:-45% -12% auto -12%; height:66%; pointer-events:none;
+  background: radial-gradient(60% 100% at 50% 0%, rgba(255,255,255,.16), transparent 70%); filter: blur(14px); }
+.lp-card-2 { border-radius:18px;
+  background: linear-gradient(155deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.11);
+  backdrop-filter: blur(18px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+
 .lp-muted { color: var(--lp-fg-2); }
 .lp-accent { color: var(--lp-accent); }
 .lp-btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:14px; padding:.75rem 1.15rem;
