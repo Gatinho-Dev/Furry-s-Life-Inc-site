@@ -229,3 +229,36 @@ export const FACE_STEPS = [
   "Afaste um pouco o rosto",
   "Olhe para a frente novamente",
 ] as const;
+
+/* ------------------------------------------------------------------ *
+ * v3.1 — captura multi-escala                                         *
+ * A maior causa de "não reconhece" é o rosto ficar mais perto/longe   *
+ * ou mais centralizado do que no cadastro. Gerando o descritor em     *
+ * três recortes (mais fechado, padrão e mais aberto) tanto no cadastro *
+ * quanto na verificação, sempre existe uma escala compatível.          *
+ * ------------------------------------------------------------------ */
+export const FACE_SCALES = [0.9, 1, 1.12] as const;
+
+function scaleBox(box: { x: number; y: number; w: number; h: number }, k: number) {
+  const cx = box.x + box.w / 2;
+  const cy = box.y + box.h / 2;
+  const w = box.w * k;
+  const h = box.h * k;
+  return { x: cx - w / 2, y: cy - h / 2, w, h };
+}
+
+/** Descritores do mesmo frame em várias escalas (ordem = FACE_SCALES). */
+export function frameToDescriptors(
+  source: HTMLVideoElement | HTMLCanvasElement,
+  box: { x: number; y: number; w: number; h: number },
+  canvas: HTMLCanvasElement,
+): { vectors: number[][]; energy: number } {
+  const vectors: number[][] = [];
+  let energy = 0;
+  for (const k of FACE_SCALES) {
+    const r = frameToDescriptor(source, scaleBox(box, k), canvas);
+    vectors.push(r.vector);
+    energy = Math.max(energy, r.energy);
+  }
+  return { vectors, energy };
+}

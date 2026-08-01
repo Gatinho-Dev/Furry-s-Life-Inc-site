@@ -26,6 +26,8 @@ export type WorkerRow = {
   lifepay_email: string | null;
   has_pin: boolean;
   last_access_at: string | null;
+  /** true = pessoa da equipe (aparece em Trabalhadores). false = só tem conta. */
+  is_worker: boolean;
 };
 
 export const staffListWorkers = createServerFn({ method: "GET" })
@@ -40,7 +42,7 @@ export const staffListWorkers = createServerFn({ method: "GET" })
       db.from("user_subsidiary_access").select("user_id, subsidiary"),
       db.from("user_subsidiary_roles").select("user_id, subsidiary, sub_role"),
       db.from("lifepay_accounts")
-        .select("user_id, email, status, job_title, department, salary_cents, salary_day, pin_hash, last_access_at"),
+        .select("user_id, email, status, job_title, department, salary_cents, salary_day, pin_hash, last_access_at, is_worker"),
     ]);
 
     const roleOf = new Map<string, string>();
@@ -70,6 +72,7 @@ export const staffListWorkers = createServerFn({ method: "GET" })
         lifepay_email: acc?.email ?? null,
         has_pin: !!acc?.pin_hash,
         last_access_at: acc?.last_access_at ?? null,
+        is_worker: acc?.is_worker === true,
       };
     });
   });
@@ -83,6 +86,7 @@ export const staffUpdateWorker = createServerFn({ method: "POST" })
     department?: string;
     salary_cents?: number;
     salary_day?: number;
+    is_worker?: boolean;
   }) => {
     if (!d?.user_id) throw new Error("Usuário inválido.");
     if (d.salary_cents !== undefined && (!Number.isInteger(d.salary_cents) || d.salary_cents < 0))
@@ -105,6 +109,7 @@ export const staffUpdateWorker = createServerFn({ method: "POST" })
     if (data.department !== undefined) patch.department = data.department.trim() || null;
     if (data.salary_cents !== undefined) patch.salary_cents = data.salary_cents;
     if (data.salary_day !== undefined) patch.salary_day = data.salary_day;
+    if (data.is_worker !== undefined) patch.is_worker = data.is_worker === true;
     if (Object.keys(patch).length) {
       await db.from("lifepay_accounts").update(patch).eq("user_id", data.user_id);
     }

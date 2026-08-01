@@ -463,6 +463,7 @@ export type Database = {
           first_access_done: boolean
           full_name: string | null
           is_admin: boolean
+          is_worker: boolean
           job_title: string | null
           last_access_at: string | null
           must_change_password: boolean
@@ -490,6 +491,7 @@ export type Database = {
           first_access_done?: boolean
           full_name?: string | null
           is_admin?: boolean
+          is_worker?: boolean
           job_title?: string | null
           last_access_at?: string | null
           must_change_password?: boolean
@@ -517,6 +519,7 @@ export type Database = {
           first_access_done?: boolean
           full_name?: string | null
           is_admin?: boolean
+          is_worker?: boolean
           job_title?: string | null
           last_access_at?: string | null
           must_change_password?: boolean
@@ -1540,6 +1543,7 @@ export type Database = {
           first_access_done: boolean
           full_name: string | null
           is_admin: boolean
+          is_worker: boolean
           job_title: string | null
           last_access_at: string | null
           must_change_password: boolean

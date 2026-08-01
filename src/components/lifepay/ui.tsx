@@ -16,7 +16,11 @@ export const LIFEPAY_CSS = `
   --lp-accent-2: #14B894;
   --lp-danger: #FF6B6B;
   --lp-warn: #FFC65C;
-  background: var(--lp-bg);
+  background:
+    radial-gradient(1100px 620px at 12% -8%, color-mix(in srgb, var(--lp-accent) 20%, transparent), transparent 62%),
+    radial-gradient(900px 560px at 92% 4%, color-mix(in srgb, var(--lp-accent) 11%, transparent), transparent 58%),
+    linear-gradient(180deg, var(--lp-bg-2), var(--lp-bg) 55%);
+  background-attachment: fixed;
   color: var(--lp-fg);
   min-height: 100vh;
   font-family: "SF Pro Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -24,20 +28,38 @@ export const LIFEPAY_CSS = `
   letter-spacing: -0.011em;
 }
 .lp-root *, .lp-root *::before, .lp-root *::after { box-sizing: border-box; }
-.lp-card { background: var(--lp-surface); border: 1px solid var(--lp-line); border-radius: 22px; box-shadow: 0 18px 40px -30px rgba(0,0,0,0.9); }
-.lp-card-2 { background: var(--lp-surface-2); border: 1px solid var(--lp-line); border-radius: 16px; }
+/* ---- Liquid Glass (superfícies translúcidas estilo Apple) ---- */
+.lp-card { position:relative; overflow:hidden; border-radius:26px;
+  background: linear-gradient(150deg, rgba(255,255,255,.09), rgba(255,255,255,.025) 46%, rgba(255,255,255,.06));
+  border: 1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(26px) saturate(190%);
+  box-shadow: 0 26px 60px -34px rgba(0,0,0,.95), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(255,255,255,.05); }
+.lp-card::after { content:""; position:absolute; inset:-45% -12% auto -12%; height:66%; pointer-events:none;
+  background: radial-gradient(60% 100% at 50% 0%, rgba(255,255,255,.16), transparent 70%); filter: blur(14px); }
+.lp-card-2 { border-radius:18px;
+  background: linear-gradient(155deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.11);
+  backdrop-filter: blur(18px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+
 .lp-muted { color: var(--lp-fg-2); }
 .lp-accent { color: var(--lp-accent); }
-.lp-btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:14px; padding:.75rem 1.15rem;
-  font-size:.875rem; font-weight:600; transition: all .18s ease; border:1px solid transparent; cursor:pointer; }
+.lp-btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:999px; padding:.75rem 1.2rem;
+  font-size:.875rem; font-weight:600; border:1px solid transparent; cursor:pointer;
+  transition: transform .22s cubic-bezier(.2,.9,.2,1), background .22s ease, box-shadow .22s ease, border-color .22s ease; }
 .lp-btn:disabled { opacity:.55; cursor:not-allowed; }
-.lp-btn-primary { background: var(--lp-accent); color:#04211B; }
-.lp-btn-primary:hover:not(:disabled) { background: var(--lp-accent-2); }
-.lp-btn-ghost { background: transparent; border-color: var(--lp-line-2); color: var(--lp-fg); }
-.lp-btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,.05); }
-.lp-btn-soft { background: var(--lp-surface-2); color: var(--lp-fg); border-color: var(--lp-line); }
-.lp-btn-soft:hover:not(:disabled) { background: #232830; }
-.lp-btn-danger { background: rgba(255,107,107,.12); color: var(--lp-danger); border-color: rgba(255,107,107,.35); }
+.lp-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.lp-btn-primary { color:#04211B; background: linear-gradient(160deg, var(--lp-accent), var(--lp-accent-2));
+  border-color: rgba(255,255,255,.24);
+  box-shadow: 0 18px 36px -20px color-mix(in srgb, var(--lp-accent) 80%, transparent), inset 0 1px 0 rgba(255,255,255,.45); }
+.lp-btn-ghost { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: var(--lp-fg);
+  backdrop-filter: blur(16px) saturate(170%); }
+.lp-btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,.12); }
+.lp-btn-soft { background: rgba(255,255,255,.09); color: var(--lp-fg); border-color: rgba(255,255,255,.14);
+  backdrop-filter: blur(16px) saturate(170%); }
+.lp-btn-soft:hover:not(:disabled) { background: rgba(255,255,255,.15); }
+.lp-btn-danger { background: rgba(255,107,107,.14); color: var(--lp-danger); border-color: rgba(255,107,107,.38);
+  backdrop-filter: blur(14px); }
 .lp-input { width:100%; background: var(--lp-bg-2); border:1px solid var(--lp-line-2); border-radius:14px;
   padding:.8rem 1rem; font-size:.9rem; color: var(--lp-fg); outline:none; transition: border-color .15s ease, box-shadow .15s ease; }
 .lp-input::placeholder { color:#69727B; }

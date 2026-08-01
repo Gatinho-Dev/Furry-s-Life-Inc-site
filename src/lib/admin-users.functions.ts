@@ -9,10 +9,15 @@ async function assertCeoOrAdmin(ctx: { supabase: any; userId: string }) {
 
 export const adminCreateUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { email: string; password: string; full_name?: string }) => {
+  .inputValidator((d: { email: string; password: string; full_name?: string; is_worker?: boolean }) => {
     if (!d?.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) throw new Error("Email inválido.");
     if (!d?.password || d.password.length < 8) throw new Error("Senha precisa ter ≥ 8 caracteres.");
-    return { email: d.email.trim().toLowerCase(), password: d.password, full_name: d.full_name?.trim() || null };
+    return {
+      email: d.email.trim().toLowerCase(),
+      password: d.password,
+      full_name: d.full_name?.trim() || null,
+      is_worker: d.is_worker === true,
+    };
   })
   .handler(async ({ data, context }) => {
     await assertCeoOrAdmin(context);
@@ -24,6 +29,12 @@ export const adminCreateUser = createServerFn({ method: "POST" })
       user_metadata: { full_name: data.full_name },
     });
     if (error) throw new Error(error.message);
+    // Só marca como trabalhador(a) quando pedido — contas comuns ficam de fora
+    // da aba Trabalhadores.
+    if (created.user?.id) {
+      await (supabaseAdmin as any).from("lifepay_accounts")
+        .update({ is_worker: data.is_worker }).eq("user_id", created.user.id);
+    }
     return { id: created.user?.id, email: created.user?.email };
   });
 
