@@ -762,19 +762,157 @@ function Wallet2() {
 
 function ReceiveTab({ account, keys, setTab }: Ctx) {
   const { copied, copy } = useCopy();
+  const createReq = useServerFn(lifepayCreatePaymentRequest);
+  const listReq = useServerFn(lifepayListPaymentRequests);
+  const cancelReq = useServerFn(lifepayCancelPaymentRequest);
+
   const active = keys.filter((k) => k.status === "active");
+  const [amountText, setAmountText] = useState("");
+  const [minutes, setMinutes] = useState(5);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [charge, setCharge] = useState<{ token: string; amount: number; expires_at: string; note: string | null } | null>(null);
+  const [qr, setQr] = useState<string | null>(null);
+  const [left, setLeft] = useState(0);
+  const [history, setHistory] = useState<PaymentRequest[]>([]);
+
+  const amount = parseBRLToCents(amountText);
+  const link = charge ? `${window.location.origin}/lifepay/pagar/${charge.token}` : "";
+
+  const loadHistory = useCallback(async () => {
+    try { setHistory(await listReq({})); } catch { /* ignora */ }
+  }, [listReq]);
+
+  useEffect(() => { void loadHistory(); }, [loadHistory]);
+
+  useEffect(() => {
+    if (!charge) return;
+    const tick = () => setLeft(Math.max(0, Math.floor((new Date(charge.expires_at).getTime() - Date.now()) / 1000)));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [charge]);
+
+  // Avisa quando a cobrança em tela for paga.
+  useEffect(() => {
+    if (!charge) return;
+    const id = setInterval(async () => {
+      const rows = await listReq({}).catch(() => [] as PaymentRequest[]);
+      setHistory(rows);
+      const mine = rows.find((r) => r.token === charge.token);
+      if (mine?.status === "paid") {
+        sfx("money");
+        setErr(null);
+        setCharge(null);
+        setQr(null);
+        alert(`Pagamento recebido: ${formatBRL(mine.amount)}`);
+      }
+    }, 5000);
+    return () => clearInterval(id);
+  }, [charge, listReq]);
+
+  const generate = async () => {
+    setErr(null);
+    if (!Number.isFinite(amount) || amount <= 0) { setErr("Informe um valor maior que zero."); sfx("error"); return; }
+    setBusy(true);
+    try {
+      const res = await createReq({ data: { amount, minutes, note } });
+      setCharge({ token: res.token, amount: res.amount, expires_at: res.expires_at, note: res.note });
+      const QR = await import("qrcode");
+      const url = `${window.location.origin}/lifepay/pagar/${res.token}`;
+      setQr(await QR.toDataURL(url, { width: 520, margin: 1, color: { dark: "#04211B", light: "#FFFFFF" } }));
+      sfx("success");
+      void loadHistory();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Não foi possível criar o link."); sfx("error");
+    } finally { setBusy(false); }
+  };
+
+  const share = async () => {
+    sfx("tap");
+    if (navigator.share) { try { await navigator.share({ title: "Cobrança LifePay", text: `Pagamento de ${formatBRL(charge!.amount)}`, url: link }); return; } catch { /* segue */ } }
+    copy(link, "link");
+  };
+
   return (
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Receber</h1>
-        <p className="mt-1 text-sm lp-muted">Compartilhe uma das suas chaves para receber valores.</p>
+        <p className="mt-1 text-sm lp-muted">Gere um link de cobrança com valor definido e QR Code para pagamento imediato.</p>
       </div>
+
       {active.length === 0 ? (
         <LpEmpty icon={<KeyRound className="h-5 w-5 lp-accent" />} title="Nenhuma chave ativa"
           hint="Ative ou crie uma chave para poder receber."
           action={<button onClick={() => setTab("keys")} className="lp-btn lp-btn-primary">Gerenciar chaves</button>} />
+      ) : charge ? (
+        <div className="lp-card animate-scale-in space-y-4 p-6 text-center">
+          <div>
+            <div className="text-[11px] uppercase tracking-wider lp-muted">Cobrança gerada</div>
+            <div className="mt-1 text-3xl font-bold tracking-tight">{formatBRL(charge.amount)}</div>
+            {charge.note && <p className="mt-1 text-sm lp-muted">{charge.note}</p>}
+          </div>
+
+          {qr && (
+            <div className="mx-auto w-fit rounded-3xl bg-white p-3 shadow-2xl">
+              <img src={qr} alt={`QR Code de cobrança de ${formatBRL(charge.amount)}`} className="h-52 w-52" />
+            </div>
+          )}
+
+          <div className={`lp-card-2 mx-auto flex w-fit items-center gap-2 px-4 py-2 text-sm ${left <= 30 ? "text-[color:var(--lp-warn)]" : ""}`}>
+            <Timer className="h-4 w-4" />
+            {left > 0
+              ? <>Válido por {String(Math.floor(left / 60)).padStart(2, "0")}:{String(left % 60).padStart(2, "0")}</>
+              : <>Link expirado</>}
+          </div>
+
+          <div className="lp-card-2 truncate p-3 font-mono text-[11px]">{link}</div>
+
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => copy(link, "link")} className="lp-btn lp-btn-soft flex-1">
+              {copied === "link" ? <><Check className="h-4 w-4" /> Copiado</> : <><Copy className="h-4 w-4" /> Copiar link</>}
+            </button>
+            <button onClick={() => void share()} className="lp-btn lp-btn-primary flex-1"><Share2 className="h-4 w-4" /> Compartilhar</button>
+          </div>
+          <button onClick={() => { sfx("close"); setCharge(null); setQr(null); setAmountText(""); setNote(""); }} className="lp-btn lp-btn-ghost w-full">
+            Nova cobrança
+          </button>
+          <p className="text-[11px] lp-muted">Você será avisado assim que o pagamento for concluído.</p>
+        </div>
       ) : (
+        <div className="lp-card space-y-4 p-6">
+          <div>
+            <label className="lp-label">Valor a receber</label>
+            <input value={amountText} onChange={(e) => setAmountText(e.target.value)} inputMode="decimal"
+              placeholder="R$ 0,00" className="lp-input text-lg font-semibold" />
+            {Number.isFinite(amount) && amount > 0 && <p className="mt-1 text-xs lp-muted">{formatBRL(amount)}</p>}
+          </div>
+
+          <div>
+            <label className="lp-label">Validade do link · {minutes} min</label>
+            <input type="range" min={1} max={10} step={1} value={minutes}
+              onChange={(e) => { setMinutes(Number(e.target.value)); sfx("tap"); }}
+              className="w-full accent-[color:var(--lp-accent)]" />
+            <div className="flex justify-between text-[10px] lp-muted"><span>1 min</span><span>10 min</span></div>
+          </div>
+
+          <div>
+            <label className="lp-label">Descrição (opcional)</label>
+            <input value={note} onChange={(e) => setNote(e.target.value.slice(0, 120))} className="lp-input" placeholder="Ex.: almoço" />
+          </div>
+
+          {err && <LpAlert>{err}</LpAlert>}
+
+          <button onClick={() => void generate()} disabled={busy} className="lp-btn lp-btn-primary w-full py-3">
+            {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando...</> : <><QrCode className="h-4 w-4" /> Gerar cobrança</>}
+          </button>
+        </div>
+      )}
+
+      {active.length > 0 && (
         <div className="space-y-3">
+          <h2 className="text-sm font-semibold lp-muted">Suas chaves</h2>
           {active.map((k) => (
             <div key={k.id} className="lp-card flex items-center justify-between gap-3 p-5">
               <div className="min-w-0">
@@ -788,12 +926,39 @@ function ReceiveTab({ account, keys, setTab }: Ctx) {
           ))}
         </div>
       )}
+
+      {history.length > 0 && (
+        <div className="lp-card p-5">
+          <h2 className="mb-3 text-sm font-semibold">Cobranças recentes</h2>
+          <ul className="divide-y lp-divide text-sm">
+            {history.map((r) => (
+              <li key={r.id} className="flex items-center justify-between gap-3 py-2.5">
+                <div className="min-w-0">
+                  <div className="font-medium">{formatBRL(r.amount)}</div>
+                  <div className="text-[11px] lp-muted">{fmtDate(r.created_at)}{r.note ? ` · ${r.note}` : ""}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`lp-chip ${r.status === "paid" ? "lp-chip-ok" : r.status === "pending" ? "" : "lp-chip-bad"}`}>
+                    {r.status === "paid" ? "Paga" : r.status === "pending" ? "Aguardando" : r.status === "expired" ? "Expirada" : "Cancelada"}
+                  </span>
+                  {r.status === "pending" && (
+                    <button onClick={() => { sfx("close"); void cancelReq({ data: { id: r.id } }).then(loadHistory); }}
+                      className="lp-btn lp-btn-danger px-3 py-1.5 text-xs">Cancelar</button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="lp-card-2 p-4 text-xs lp-muted">
         Titular: {account.full_name ?? account.display_name}. Quem transferir para você verá apenas o seu nome de exibição.
       </div>
     </div>
   );
 }
+
 
 /* ================================================================== *
  * Chaves                                                              *
