@@ -825,6 +825,81 @@ export type Database = {
         }
         Relationships: []
       }
+      lifepay_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          kind: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lifepay_payment_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          expires_at: string
+          id: string
+          note: string | null
+          paid_at: string | null
+          paid_by: string | null
+          status: string
+          token: string
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          expires_at: string
+          id?: string
+          note?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          status?: string
+          token: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          note?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          status?: string
+          token?: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lifepay_purchases: {
         Row: {
           amount: number
@@ -998,6 +1073,75 @@ export type Database = {
           transports?: string[] | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      mail_messages: {
+        Row: {
+          attachments: Json
+          cc_addresses: string[]
+          created_at: string
+          direction: string
+          folder: string
+          from_address: string
+          from_name: string | null
+          html_body: string | null
+          id: string
+          is_read: boolean
+          is_starred: boolean
+          mailbox_address: string
+          provider_message_id: string | null
+          received_at: string
+          snippet: string
+          subject: string
+          text_body: string | null
+          to_addresses: string[]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          attachments?: Json
+          cc_addresses?: string[]
+          created_at?: string
+          direction?: string
+          folder?: string
+          from_address: string
+          from_name?: string | null
+          html_body?: string | null
+          id?: string
+          is_read?: boolean
+          is_starred?: boolean
+          mailbox_address: string
+          provider_message_id?: string | null
+          received_at?: string
+          snippet?: string
+          subject?: string
+          text_body?: string | null
+          to_addresses?: string[]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          attachments?: Json
+          cc_addresses?: string[]
+          created_at?: string
+          direction?: string
+          folder?: string
+          from_address?: string
+          from_name?: string | null
+          html_body?: string | null
+          id?: string
+          is_read?: boolean
+          is_starred?: boolean
+          mailbox_address?: string
+          provider_message_id?: string | null
+          received_at?: string
+          snippet?: string
+          subject?: string
+          text_body?: string | null
+          to_addresses?: string[]
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
