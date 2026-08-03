@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as LifeServerRouteImport } from './routes/life-server'
 import { Route as LifepayRouteImport } from './routes/lifepay'
+import { Route as MailRouteImport } from './routes/mail'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -61,6 +62,11 @@ const LifeServerRoute = LifeServerRouteImport.update({
 const LifepayRoute = LifepayRouteImport.update({
   id: '/lifepay',
   path: '/lifepay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MailRoute = MailRouteImport.update({
+  id: '/mail',
+  path: '/mail',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -218,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
   '/lifepay': typeof LifepayRouteWithChildren
+  '/mail': typeof MailRoute
   '/mcp': typeof McpRoute
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -252,6 +259,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
+  '/mail': typeof MailRoute
   '/mcp': typeof McpRoute
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -287,6 +295,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
   '/lifepay': typeof LifepayRouteWithChildren
+  '/mail': typeof MailRoute
   '/mcp': typeof McpRoute
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -324,6 +333,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/life-server'
     | '/lifepay'
+    | '/mail'
     | '/mcp'
     | '/news'
     | '/sitemap.xml'
@@ -358,6 +368,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/life-server'
+    | '/mail'
     | '/mcp'
     | '/news'
     | '/sitemap.xml'
@@ -392,6 +403,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/life-server'
     | '/lifepay'
+    | '/mail'
     | '/mcp'
     | '/news'
     | '/sitemap.xml'
@@ -428,6 +440,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   LifeServerRoute: typeof LifeServerRoute
   LifepayRoute: typeof LifepayRouteWithChildren
+  MailRoute: typeof MailRoute
   McpRoute: typeof McpRoute
   NewsRoute: typeof NewsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -478,6 +491,13 @@ declare module '@tanstack/react-router' {
       path: '/lifepay'
       fullPath: '/lifepay'
       preLoaderRoute: typeof LifepayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mail': {
+      id: '/mail'
+      path: '/mail'
+      fullPath: '/mail'
+      preLoaderRoute: typeof MailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -726,6 +746,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   LifeServerRoute: LifeServerRoute,
   LifepayRoute: LifepayRouteWithChildren,
+  MailRoute: MailRoute,
   McpRoute: McpRoute,
   NewsRoute: NewsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
