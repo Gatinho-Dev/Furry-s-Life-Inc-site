@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as LifeServerRouteImport } from './routes/life-server'
 import { Route as LifepayRouteImport } from './routes/lifepay'
+import { Route as MailRouteImport } from './routes/mail'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -38,6 +39,8 @@ import { Route as StaffIndexRouteImport } from './routes/staff.index'
 import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as LifepayPagarTokenRouteImport } from './routes/lifepay.pagar.$token'
+import { Route as ApiPublicEmailInboundRouteImport } from './routes/api/public/email/inbound'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -60,6 +63,11 @@ const LifeServerRoute = LifeServerRouteImport.update({
 const LifepayRoute = LifepayRouteImport.update({
   id: '/lifepay',
   path: '/lifepay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MailRoute = MailRouteImport.update({
+  id: '/mail',
+  path: '/mail',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -190,6 +198,16 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LifepayPagarTokenRoute = LifepayPagarTokenRouteImport.update({
+  id: '/pagar/$token',
+  path: '/pagar/$token',
+  getParentRoute: () => LifepayRoute,
+} as any)
+const ApiPublicEmailInboundRoute = ApiPublicEmailInboundRouteImport.update({
+  id: '/api/public/email/inbound',
+  path: '/api/public/email/inbound',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -212,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
   '/lifepay': typeof LifepayRouteWithChildren
+  '/mail': typeof MailRoute
   '/mcp': typeof McpRoute
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -237,6 +256,8 @@ export interface FileRoutesByFullPath {
   '/staff/': typeof StaffIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
+  '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -245,6 +266,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
+  '/mail': typeof MailRoute
   '/mcp': typeof McpRoute
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -269,6 +291,8 @@ export interface FileRoutesByTo {
   '/staff': typeof StaffIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
+  '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -279,6 +303,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/life-server': typeof LifeServerRoute
   '/lifepay': typeof LifepayRouteWithChildren
+  '/mail': typeof MailRoute
   '/mcp': typeof McpRoute
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -304,6 +329,8 @@ export interface FileRoutesById {
   '/staff/': typeof StaffIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
+  '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -315,6 +342,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/life-server'
     | '/lifepay'
+    | '/mail'
     | '/mcp'
     | '/news'
     | '/sitemap.xml'
@@ -340,6 +368,8 @@ export interface FileRouteTypes {
     | '/staff/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/lifepay/pagar/$token'
+    | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -348,6 +378,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/life-server'
+    | '/mail'
     | '/mcp'
     | '/news'
     | '/sitemap.xml'
@@ -372,6 +403,8 @@ export interface FileRouteTypes {
     | '/staff'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/lifepay/pagar/$token'
+    | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -381,6 +414,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/life-server'
     | '/lifepay'
+    | '/mail'
     | '/mcp'
     | '/news'
     | '/sitemap.xml'
@@ -406,6 +440,8 @@ export interface FileRouteTypes {
     | '/staff/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/lifepay/pagar/$token'
+    | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -416,6 +452,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   LifeServerRoute: typeof LifeServerRoute
   LifepayRoute: typeof LifepayRouteWithChildren
+  MailRoute: typeof MailRoute
   McpRoute: typeof McpRoute
   NewsRoute: typeof NewsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -432,6 +469,7 @@ export interface RootRouteChildren {
   CondIndexRoute: typeof CondIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicEmailInboundRoute: typeof ApiPublicEmailInboundRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -465,6 +503,13 @@ declare module '@tanstack/react-router' {
       path: '/lifepay'
       fullPath: '/lifepay'
       preLoaderRoute: typeof LifepayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mail': {
+      id: '/mail'
+      path: '/mail'
+      fullPath: '/mail'
+      preLoaderRoute: typeof MailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -642,6 +687,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lifepay/pagar/$token': {
+      id: '/lifepay/pagar/$token'
+      path: '/pagar/$token'
+      fullPath: '/lifepay/pagar/$token'
+      preLoaderRoute: typeof LifepayPagarTokenRouteImport
+      parentRoute: typeof LifepayRoute
+    }
+    '/api/public/email/inbound': {
+      id: '/api/public/email/inbound'
+      path: '/api/public/email/inbound'
+      fullPath: '/api/public/email/inbound'
+      preLoaderRoute: typeof ApiPublicEmailInboundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -674,6 +733,7 @@ interface LifepayRouteChildren {
   LifepayStaffRoute: typeof LifepayStaffRoute
   LifepayTermosRoute: typeof LifepayTermosRoute
   LifepayIndexRoute: typeof LifepayIndexRoute
+  LifepayPagarTokenRoute: typeof LifepayPagarTokenRoute
 }
 
 const LifepayRouteChildren: LifepayRouteChildren = {
@@ -684,6 +744,7 @@ const LifepayRouteChildren: LifepayRouteChildren = {
   LifepayStaffRoute: LifepayStaffRoute,
   LifepayTermosRoute: LifepayTermosRoute,
   LifepayIndexRoute: LifepayIndexRoute,
+  LifepayPagarTokenRoute: LifepayPagarTokenRoute,
 }
 
 const LifepayRouteWithChildren =
@@ -706,6 +767,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   LifeServerRoute: LifeServerRoute,
   LifepayRoute: LifepayRouteWithChildren,
+  MailRoute: MailRoute,
   McpRoute: McpRoute,
   NewsRoute: NewsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
@@ -723,6 +785,7 @@ const rootRouteChildren: RootRouteChildren = {
   CondIndexRoute: CondIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicEmailInboundRoute: ApiPublicEmailInboundRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
