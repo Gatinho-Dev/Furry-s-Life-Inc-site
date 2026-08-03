@@ -4,8 +4,13 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   Home, Send, ArrowDownLeft, KeyRound, Receipt, User, ShieldCheck, LifeBuoy,
   Eye, EyeOff, Copy, Check, Loader2, LogOut, Plus, Trash2, Power, RefreshCw,
-  ArrowUpRight, Share2, Printer, CreditCard, AlertTriangle, FileText,
+  ArrowUpRight, Share2, Printer, CreditCard, AlertTriangle, FileText, Timer, QrCode,
 } from "lucide-react";
+import { sfx } from "@/lib/sfx";
+import {
+  lifepayCreatePaymentRequest, lifepayListPaymentRequests, lifepayCancelPaymentRequest,
+  type PaymentRequest as LpPaymentRequest,
+} from "@/lib/lifepay-pay.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { CardsTab, InvoicesTab } from "@/components/lifepay/cards-invoices";
 import { FaceIdCard, FaceIdConfirm, useFaceId } from "@/components/lifepay/faceid";
