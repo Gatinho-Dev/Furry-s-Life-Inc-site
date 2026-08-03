@@ -780,7 +780,7 @@ function ReceiveTab({ account, keys, setTab }: Ctx) {
   const [charge, setCharge] = useState<{ token: string; amount: number; expires_at: string; note: string | null } | null>(null);
   const [qr, setQr] = useState<string | null>(null);
   const [left, setLeft] = useState(0);
-  const [history, setHistory] = useState<PaymentRequest[]>([]);
+  const [history, setHistory] = useState<LpPaymentRequest[]>([]);
 
   const amount = parseBRLToCents(amountText);
   const link = charge ? `${window.location.origin}/lifepay/pagar/${charge.token}` : "";
@@ -803,7 +803,7 @@ function ReceiveTab({ account, keys, setTab }: Ctx) {
   useEffect(() => {
     if (!charge) return;
     const id = setInterval(async () => {
-      const rows = await listReq({}).catch(() => [] as PaymentRequest[]);
+      const rows = await listReq({}).catch(() => [] as LpPaymentRequest[]);
       setHistory(rows);
       const mine = rows.find((r) => r.token === charge.token);
       if (mine?.status === "paid") {
