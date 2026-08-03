@@ -522,6 +522,7 @@ function SendTab({ account, userId, names, txs, refresh }: Ctx) {
         installments: source === "credit" ? installments : 1,
       });
 
+      sfx("money");
       setResult(tx); setConfirmOpen(false); setDir(1); setStep("done"); setSecret("");
       await refresh();
     } catch (e) {
