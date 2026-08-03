@@ -39,6 +39,7 @@ import { Route as StaffIndexRouteImport } from './routes/staff.index'
 import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as LifepayPagarTokenRouteImport } from './routes/lifepay.pagar.$token'
 import { Route as ApiPublicEmailInboundRouteImport } from './routes/api/public/email/inbound'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -197,6 +198,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LifepayPagarTokenRoute = LifepayPagarTokenRouteImport.update({
+  id: '/pagar/$token',
+  path: '/pagar/$token',
+  getParentRoute: () => LifepayRoute,
+} as any)
 const ApiPublicEmailInboundRoute = ApiPublicEmailInboundRouteImport.update({
   id: '/api/public/email/inbound',
   path: '/api/public/email/inbound',
@@ -250,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/staff/': typeof StaffIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -284,6 +291,7 @@ export interface FileRoutesByTo {
   '/staff': typeof StaffIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -321,6 +329,7 @@ export interface FileRoutesById {
   '/staff/': typeof StaffIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -359,6 +368,7 @@ export interface FileRouteTypes {
     | '/staff/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/lifepay/pagar/$token'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -393,6 +403,7 @@ export interface FileRouteTypes {
     | '/staff'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/lifepay/pagar/$token'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -429,6 +440,7 @@ export interface FileRouteTypes {
     | '/staff/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/lifepay/pagar/$token'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -675,6 +687,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lifepay/pagar/$token': {
+      id: '/lifepay/pagar/$token'
+      path: '/pagar/$token'
+      fullPath: '/lifepay/pagar/$token'
+      preLoaderRoute: typeof LifepayPagarTokenRouteImport
+      parentRoute: typeof LifepayRoute
+    }
     '/api/public/email/inbound': {
       id: '/api/public/email/inbound'
       path: '/api/public/email/inbound'
@@ -714,6 +733,7 @@ interface LifepayRouteChildren {
   LifepayStaffRoute: typeof LifepayStaffRoute
   LifepayTermosRoute: typeof LifepayTermosRoute
   LifepayIndexRoute: typeof LifepayIndexRoute
+  LifepayPagarTokenRoute: typeof LifepayPagarTokenRoute
 }
 
 const LifepayRouteChildren: LifepayRouteChildren = {
@@ -724,6 +744,7 @@ const LifepayRouteChildren: LifepayRouteChildren = {
   LifepayStaffRoute: LifepayStaffRoute,
   LifepayTermosRoute: LifepayTermosRoute,
   LifepayIndexRoute: LifepayIndexRoute,
+  LifepayPagarTokenRoute: LifepayPagarTokenRoute,
 }
 
 const LifepayRouteWithChildren =
