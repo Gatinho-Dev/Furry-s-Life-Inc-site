@@ -1,7 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Mail as MailIcon } from "lucide-react";
 import symbol from "@/assets/fli-symbol.png.asset.json";
 import { DISCORD_URL } from "@/lib/site-data";
+
 
 function DiscordIcon({ className }: { className?: string }) {
   return (
