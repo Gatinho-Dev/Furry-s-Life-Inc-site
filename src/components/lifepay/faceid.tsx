@@ -266,7 +266,11 @@ function ScannerOverlay({
         <canvas ref={canvasRef} className="hidden" />
 
         <h3 className="mt-5 text-lg font-semibold">
-          {mode === "enroll" ? "Configurar o Face ID" : "Confirmar com Face ID"}
+          {status === "ok" || status === "fail" || status === "saving"
+            ? (mode === "enroll" ? "Configurar o Face ID" : "Confirmar com Face ID")
+            : mode === "enroll"
+              ? FACE_ENROLL_STEPS[Math.min(stepIdx, FACE_ENROLL_STEPS.length - 1)].title
+              : "Confirmar com Face ID"}
         </h3>
         <p className="mx-auto mt-1 max-w-[19rem] text-sm" style={{ color: "var(--lp-fg-2)" }}>
           {error ? error
@@ -277,6 +281,7 @@ function ScannerOverlay({
               ? `${hint} · etapa ${Math.min(stepIdx + 1, totalNeeded)} de ${totalNeeded}`
               : hint}
         </p>
+
 
         {status === "fail" && (
           <button onClick={() => { setFailMsg(null); setProgress(0); setStepIdx(0); setStatus("scanning"); }}
