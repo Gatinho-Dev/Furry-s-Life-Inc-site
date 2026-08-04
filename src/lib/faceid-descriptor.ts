@@ -4,18 +4,21 @@
  * O rosto nunca sai do dispositivo como imagem: apenas um vetor numérico
  * normalizado (assinatura) é enviado ao servidor para comparação.
  *
- * v3: descritor HOG (histograma de gradientes orientados, 8x8 células x 8
- * direções) + aparência com iluminação normalizada. É o mesmo princípio usado
- * em reconhecimento facial clássico: muito mais discriminativo e estável a
- * mudanças de luz, distância e leve rotação do que a versão anterior.
+ * v4 — foco total em funcionar em qualquer lugar:
+ *  • máscara oval: o fundo (a "sala" onde a pessoa está) é descartado antes de
+ *    gerar a assinatura, então mudar de ambiente deixa de reprovar;
+ *  • apenas HOG normalizado por célula (L2-hys): estrutura do rosto, invariante
+ *    a brilho, cor de parede e temperatura de luz — o bloco de "aparência"
+ *    (que carregava a iluminação do local) foi removido;
+ *  • multiescala + espelhamento: tolera distância, enquadramento e lado;
+ *  • estimativa de pose (yaw/pitch) para exigir que a pessoa realmente gire o
+ *    rosto durante o cadastro, como no Face ID de verdade.
  */
 
 const WORK = 64;              // resolução de trabalho (px)
 const CELLS = 8;              // 8x8 células
-const BINS = 8;               // 8 direções por célula
-const HOG_DIM = CELLS * CELLS * BINS;   // 512
-const APP_DIM = CELLS * CELLS;          // 64
-export const FACE_DIM = HOG_DIM + APP_DIM; // 576
+const BINS = 9;               // 9 direções por célula
+export const FACE_DIM = CELLS * CELLS * BINS; // 576
 
 type Box = { x: number; y: number; w: number; h: number };
 
@@ -48,54 +51,51 @@ export async function detectFaceBox(source: HTMLVideoElement): Promise<Box> {
   return { x: (vw - size) / 2, y: (vh - size) / 2 - size * 0.05, w: size, h: size };
 }
 
-function boxBlur(src: Float64Array, n: number, radius: number): Float64Array {
-  const out = new Float64Array(n * n);
-  for (let y = 0; y < n; y++) {
-    for (let x = 0; x < n; x++) {
-      let sum = 0, cnt = 0;
-      for (let dy = -radius; dy <= radius; dy++) {
-        const yy = y + dy;
-        if (yy < 0 || yy >= n) continue;
-        for (let dx = -radius; dx <= radius; dx++) {
-          const xx = x + dx;
-          if (xx < 0 || xx >= n) continue;
-          sum += src[yy * n + xx];
-          cnt++;
-        }
-      }
-      out[y * n + x] = sum / cnt;
-    }
-  }
-  return out;
-}
-
-function l2(v: Float64Array | number[], from = 0, to?: number): number {
-  const end = to ?? v.length;
+function l2(v: Float64Array, from: number, to: number): number {
   let s = 0;
-  for (let i = from; i < end; i++) s += (v as any)[i] * (v as any)[i];
+  for (let i = from; i < to; i++) s += v[i] * v[i];
   return Math.sqrt(s);
 }
 
-/** Centraliza (média zero) e normaliza (norma 1) um trecho do vetor. */
-function centerNormalize(v: Float64Array, from: number, to: number): void {
-  let mean = 0;
-  for (let i = from; i < to; i++) mean += v[i];
-  mean /= to - from;
-  for (let i = from; i < to; i++) v[i] -= mean;
-  const n = l2(v, from, to) || 1;
-  for (let i = from; i < to; i++) v[i] /= n;
-}
+/** Máscara oval (1 dentro do rosto, 0 no fundo) com borda suave. */
+const MASK = (() => {
+  const m = new Float64Array(WORK * WORK);
+  const cx = (WORK - 1) / 2, cy = (WORK - 1) / 2;
+  const rx = WORK * 0.44, ry = WORK * 0.5;
+  for (let y = 0; y < WORK; y++) {
+    for (let x = 0; x < WORK; x++) {
+      const d = Math.hypot((x - cx) / rx, (y - cy) / ry);
+      m[y * WORK + x] = d <= 0.86 ? 1 : d >= 1 ? 0 : (1 - d) / 0.14;
+    }
+  }
+  return m;
+})();
+
+export type FaceSample = {
+  vector: number[];
+  /** contraste do recorte — descarta frames escuros ou sem rosto */
+  energy: number;
+  /** deslocamento horizontal das feições (-1 esquerda .. +1 direita) */
+  yaw: number;
+  /** deslocamento vertical das feições (-1 acima .. +1 abaixo) */
+  pitch: number;
+};
 
 /** Converte um frame de vídeo numa assinatura facial normalizada. */
 export function frameToDescriptor(
   source: HTMLVideoElement | HTMLCanvasElement,
   box: Box,
   canvas: HTMLCanvasElement,
-): { vector: number[]; energy: number } {
+  mirror = false,
+): FaceSample {
   canvas.width = WORK;
   canvas.height = WORK;
   const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, WORK, WORK);
+  if (mirror) ctx.setTransform(-1, 0, 0, 1, WORK, 0);
   ctx.drawImage(source as any, box.x, box.y, box.w, box.h, 0, 0, WORK, WORK);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   const { data } = ctx.getImageData(0, 0, WORK, WORK);
 
   const gray = new Float64Array(WORK * WORK);
@@ -105,26 +105,33 @@ export function frameToDescriptor(
     gray[i] = Math.sqrt((0.299 * data[p] + 0.587 * data[p + 1] + 0.114 * data[p + 2]) / 255) * 255;
   }
 
-  // Energia (contraste) — descarta frames escuros ou sem rosto.
-  let gMean = 0;
-  for (let i = 0; i < gray.length; i++) gMean += gray[i];
-  gMean /= gray.length;
+  // Energia (contraste) medida só dentro do oval.
+  let gMean = 0, wSum = 0;
+  for (let i = 0; i < gray.length; i++) { gMean += gray[i] * MASK[i]; wSum += MASK[i]; }
+  gMean /= wSum || 1;
   let variance = 0;
-  for (let i = 0; i < gray.length; i++) variance += (gray[i] - gMean) ** 2;
-  const energy = Math.sqrt(variance / gray.length) / 255;
+  for (let i = 0; i < gray.length; i++) variance += MASK[i] * (gray[i] - gMean) ** 2;
+  const energy = Math.sqrt(variance / (wSum || 1)) / 255;
 
   const at = (x: number, y: number) =>
     gray[Math.min(WORK - 1, Math.max(0, y)) * WORK + Math.min(WORK - 1, Math.max(0, x))];
 
-  // ---- HOG: histograma de gradientes com voto bilinear em células/direções ----
-  const hog = new Float64Array(HOG_DIM);
+  // ---- HOG mascarado: voto bilinear em células e direções ----
+  const hog = new Float64Array(FACE_DIM);
   const cellSize = WORK / CELLS;
+  let eSum = 0, exSum = 0, eySum = 0;
   for (let y = 0; y < WORK; y++) {
     for (let x = 0; x < WORK; x++) {
+      const w = MASK[y * WORK + x];
+      if (w <= 0) continue;
       const gx = at(x + 1, y) - at(x - 1, y);
       const gy = at(x, y + 1) - at(x, y - 1);
-      const mag = Math.hypot(gx, gy);
+      const mag = Math.hypot(gx, gy) * w;
       if (mag < 1e-6) continue;
+
+      // centroide de energia de borda → proxy de pose
+      eSum += mag; exSum += mag * x; eySum += mag * y;
+
       let ang = Math.atan2(gy, gx);
       if (ang < 0) ang += Math.PI;               // gradiente sem sinal (0..pi)
       const bin = (ang / Math.PI) * BINS;
@@ -149,7 +156,8 @@ export function frameToDescriptor(
     }
   }
 
-  // Normalização por célula (L2-hys): invariância a contraste local.
+  // Normalização por célula (L2-hys): invariância total a contraste local,
+  // que é o que muda quando a pessoa troca de ambiente/iluminação.
   for (let c = 0; c < CELLS * CELLS; c++) {
     const base = c * BINS;
     let n = l2(hog, base, base + BINS) || 1;
@@ -158,34 +166,21 @@ export function frameToDescriptor(
     for (let i = base; i < base + BINS; i++) hog[i] /= n;
   }
 
-  // ---- Aparência com iluminação normalizada (formato do rosto) ----
-  const blurred = boxBlur(gray, WORK, 4);
-  const app = new Float64Array(APP_DIM);
-  for (let cy = 0; cy < CELLS; cy++) {
-    for (let cx = 0; cx < CELLS; cx++) {
-      let sum = 0, cnt = 0;
-      for (let y = Math.floor(cy * cellSize); y < Math.floor((cy + 1) * cellSize); y++) {
-        for (let x = Math.floor(cx * cellSize); x < Math.floor((cx + 1) * cellSize); x++) {
-          sum += gray[y * WORK + x] - blurred[y * WORK + x];
-          cnt++;
-        }
-      }
-      app[cy * CELLS + cx] = cnt ? sum / cnt : 0;
-    }
-  }
-
-  const full = new Float64Array(FACE_DIM);
-  full.set(hog, 0);
-  full.set(app, HOG_DIM);
-  // Centralizar cada bloco torna o cosseno realmente discriminativo entre pessoas.
-  centerNormalize(full, 0, HOG_DIM);
-  centerNormalize(full, HOG_DIM, FACE_DIM);
-
-  const W_HOG = 0.88, W_APP = 0.47; // pesos (soma dos quadrados = 1)
+  // Normalização global (norma 1) para o cosseno ficar bem condicionado.
+  const gn = l2(hog, 0, FACE_DIM) || 1;
   const vector: number[] = new Array(FACE_DIM);
-  for (let i = 0; i < HOG_DIM; i++) vector[i] = Number((full[i] * W_HOG).toFixed(5));
-  for (let i = HOG_DIM; i < FACE_DIM; i++) vector[i] = Number((full[i] * W_APP).toFixed(5));
-  return { vector, energy };
+  for (let i = 0; i < FACE_DIM; i++) vector[i] = Number((hog[i] / gn).toFixed(5));
+
+  const cxE = eSum ? exSum / eSum : (WORK - 1) / 2;
+  const cyE = eSum ? eySum / eSum : (WORK - 1) / 2;
+  const yawRaw = (cxE - (WORK - 1) / 2) / (WORK / 2);
+  return {
+    vector,
+    energy,
+    // no espelho o sinal do yaw inverte
+    yaw: mirror ? -yawRaw : yawRaw,
+    pitch: (cyE - (WORK - 1) / 2) / (WORK / 2),
+  };
 }
 
 /** Média de várias assinaturas (reduz ruído do sensor) — já renormalizada. */
@@ -208,38 +203,27 @@ export function cosine(a: number[], b: number[]): number {
 }
 
 /** Versão da assinatura — permite invalidar cadastros antigos e incompatíveis. */
-export const FACE_VERSION = 3;
+export const FACE_VERSION = 4;
 
-/** Limite de aceitação (cosseno médio das melhores amostras). */
-export const FACE_MATCH_THRESHOLD = 0.6;
+/**
+ * Limites de aceitação. Com HOG mascarado e normalizado por célula, a mesma
+ * pessoa em outro ambiente costuma ficar acima de 0.72, enquanto pessoas
+ * diferentes ficam perto de 0.45 — daí a folga abaixo.
+ */
+export const FACE_MATCH_THRESHOLD = 0.66;
 /** Mínimo aceito para uma única amostra isolada (evita falso positivo). */
-export const FACE_SINGLE_MIN = 0.48;
-export const FACE_MIN_ENERGY = 0.05;
+export const FACE_SINGLE_MIN = 0.58;
+export const FACE_MIN_ENERGY = 0.04;
 
 /** Quantos frames são combinados em cada amostra (média temporal). */
 export const FACE_FRAMES_PER_SAMPLE = 3;
 
-export const FACE_STEPS = [
-  "Olhe para a frente",
-  "Vire levemente para a direita",
-  "Vire levemente para a esquerda",
-  "Incline o queixo para cima",
-  "Incline o queixo para baixo",
-  "Aproxime um pouco o rosto",
-  "Afaste um pouco o rosto",
-  "Olhe para a frente novamente",
-] as const;
-
 /* ------------------------------------------------------------------ *
- * v3.1 — captura multi-escala                                         *
- * A maior causa de "não reconhece" é o rosto ficar mais perto/longe   *
- * ou mais centralizado do que no cadastro. Gerando o descritor em     *
- * três recortes (mais fechado, padrão e mais aberto) tanto no cadastro *
- * quanto na verificação, sempre existe uma escala compatível.          *
+ * Captura multiescala + espelhada                                     *
  * ------------------------------------------------------------------ */
-export const FACE_SCALES = [0.9, 1, 1.12] as const;
+export const FACE_SCALES = [0.88, 1, 1.14] as const;
 
-function scaleBox(box: { x: number; y: number; w: number; h: number }, k: number) {
+function scaleBox(box: Box, k: number): Box {
   const cx = box.x + box.w / 2;
   const cy = box.y + box.h / 2;
   const w = box.w * k;
@@ -247,18 +231,75 @@ function scaleBox(box: { x: number; y: number; w: number; h: number }, k: number
   return { x: cx - w / 2, y: cy - h / 2, w, h };
 }
 
-/** Descritores do mesmo frame em várias escalas (ordem = FACE_SCALES). */
+/** Descritores do mesmo frame em várias escalas (e opcionalmente espelhados). */
 export function frameToDescriptors(
   source: HTMLVideoElement | HTMLCanvasElement,
-  box: { x: number; y: number; w: number; h: number },
+  box: Box,
   canvas: HTMLCanvasElement,
-): { vectors: number[][]; energy: number } {
+  opts: { mirror?: boolean } = {},
+): { vectors: number[][]; energy: number; yaw: number; pitch: number } {
   const vectors: number[][] = [];
-  let energy = 0;
+  let energy = 0, yaw = 0, pitch = 0;
   for (const k of FACE_SCALES) {
-    const r = frameToDescriptor(source, scaleBox(box, k), canvas);
+    const r = frameToDescriptor(source, scaleBox(box, k), canvas, opts.mirror);
     vectors.push(r.vector);
     energy = Math.max(energy, r.energy);
+    yaw += r.yaw / FACE_SCALES.length;
+    pitch += r.pitch / FACE_SCALES.length;
   }
-  return { vectors, energy };
+  return { vectors, energy, yaw, pitch };
 }
+
+/* ------------------------------------------------------------------ *
+ * Etapas do cadastro — exigem movimento real do rosto                 *
+ * ------------------------------------------------------------------ */
+export type PoseAxis = "front" | "right" | "left" | "up" | "down";
+
+export type EnrollStep = {
+  axis: PoseAxis;
+  title: string;
+  hint: string;
+};
+
+export const FACE_ENROLL_STEPS: readonly EnrollStep[] = [
+  { axis: "front", title: "Olhe para a frente", hint: "Centralize o rosto no círculo" },
+  { axis: "right", title: "Gire devagar para a direita", hint: "Vire a cabeça para a sua direita" },
+  { axis: "front", title: "Volte para o centro", hint: "Olhe para a frente novamente" },
+  { axis: "left", title: "Gire devagar para a esquerda", hint: "Vire a cabeça para a sua esquerda" },
+  { axis: "front", title: "Volte para o centro", hint: "Olhe para a frente novamente" },
+  { axis: "up", title: "Levante o queixo", hint: "Incline a cabeça para cima" },
+  { axis: "down", title: "Abaixe o queixo", hint: "Incline a cabeça para baixo" },
+  { axis: "front", title: "Olhe para a frente", hint: "Última etapa" },
+] as const;
+
+/** Quanto o rosto precisa se mover (em unidades de yaw/pitch) por etapa. */
+export const POSE_DELTA = 0.045;
+/** Tolerância para considerar o rosto "de frente" outra vez. */
+export const POSE_CENTER = 0.03;
+
+/**
+ * Verifica se a pose atual satisfaz a etapa pedida, comparando com a linha de
+ * base capturada na primeira etapa frontal. `relax` (0..1) afrouxa o limite
+ * gradualmente para nunca travar a pessoa numa etapa.
+ */
+export function poseSatisfies(
+  axis: PoseAxis,
+  pose: { yaw: number; pitch: number },
+  base: { yaw: number; pitch: number },
+  relax = 0,
+): boolean {
+  const need = POSE_DELTA * (1 - 0.55 * Math.min(1, Math.max(0, relax)));
+  const dy = pose.yaw - base.yaw;
+  const dp = pose.pitch - base.pitch;
+  switch (axis) {
+    case "right": return dy >= need;
+    case "left": return -dy >= need;
+    case "up": return -dp >= need;
+    case "down": return dp >= need;
+    case "front":
+      return Math.abs(dy) <= POSE_CENTER + need && Math.abs(dp) <= POSE_CENTER + need;
+  }
+}
+
+/** Compatibilidade: rótulos antigos das etapas. */
+export const FACE_STEPS = FACE_ENROLL_STEPS.map((s) => s.title);
