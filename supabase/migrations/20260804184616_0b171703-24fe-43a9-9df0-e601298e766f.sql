@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "lifepay accounts: self update display_name only" ON public.lifepay_accounts;

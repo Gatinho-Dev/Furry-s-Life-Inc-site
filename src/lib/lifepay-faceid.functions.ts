@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
-  FACE_DIM, FACE_MATCH_THRESHOLD, FACE_SINGLE_MIN, cosine, averageDescriptors,
+  FACE_DIM, FACE_VERSION, FACE_MATCH_THRESHOLD, FACE_SINGLE_MIN,
+  cosine, averageDescriptors,
 } from "@/lib/faceid-descriptor";
 
 
@@ -19,6 +20,28 @@ export type FaceIdStatus = {
   stale: boolean;
 };
 
+/** Formato gravado no banco: { v, s } — versões antigas gravavam só o array. */
+type StoredFace = { v: number; s: number[][] };
+
+function readStored(raw: unknown): StoredFace | null {
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const o = raw as { v?: unknown; s?: unknown };
+    const v = Number(o.v);
+    const s = Array.isArray(o.s) ? o.s : [];
+    const clean = s.filter((x): x is number[] => Array.isArray(x) && x.length === FACE_DIM);
+    if (v === FACE_VERSION && clean.length) return { v, s: clean };
+    return null;
+  }
+  return null; // array puro = cadastro legado (incompatível)
+}
+
+function countStored(raw: unknown): number {
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const s = (raw as { s?: unknown }).s;
+    return Array.isArray(s) ? s.length : 0;
+  }
+  return Array.isArray(raw) ? raw.length : 0;
+}
 
 function validVectors(v: unknown): number[][] {
   if (!Array.isArray(v) || v.length < 2) throw new Error("Escaneamento incompleto. Refaça o cadastro do Face ID.");
@@ -42,14 +65,13 @@ export const lifepayFaceStatus = createServerFn({ method: "GET" })
       .eq("user_id", context.userId)
       .maybeSingle();
     if (!data) return { enrolled: false, device_label: null, created_at: null, last_used_at: null, samples: 0, stale: false };
-    const samples: unknown[] = Array.isArray(data.samples) ? data.samples : [];
     return {
       enrolled: true,
       device_label: data.device_label,
       created_at: data.created_at,
       last_used_at: data.last_used_at,
-      samples: samples.length,
-      stale: !samples.some((s) => Array.isArray(s) && s.length === FACE_DIM),
+      samples: countStored(data.samples),
+      stale: !readStored(data.samples),
     };
 
   });
@@ -64,11 +86,14 @@ export const lifepayFaceEnroll = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     // Guarda as amostras + o centroide (média): melhora muito o reconhecimento.
-    const samples = [...data.samples, averageDescriptors(data.samples)];
+    const stored: StoredFace = {
+      v: FACE_VERSION,
+      s: [...data.samples, averageDescriptors(data.samples)],
+    };
     const { error } = await db.from("lifepay_faceid").upsert(
       {
         user_id: context.userId,
-        samples,
+        samples: stored,
         device_label: data.label.trim() || "Face ID do LifePay",
         last_used_at: null,
       },
@@ -97,11 +122,11 @@ export const lifepayFaceVerify = createServerFn({ method: "POST" })
       .from("lifepay_faceid").select("id, samples").eq("user_id", context.userId).maybeSingle();
     if (!row) throw new Error("Nenhum Face ID cadastrado neste perfil.");
 
-    const all: number[][] = Array.isArray(row.samples) ? row.samples : [];
-    const stored = all.filter((s) => Array.isArray(s) && s.length === FACE_DIM);
-    if (!stored.length) {
+    const enrolled = readStored(row.samples);
+    if (!enrolled) {
       throw new Error("Seu Face ID foi cadastrado numa versão anterior. Refaça o escaneamento em Segurança.");
     }
+    const stored = enrolled.s;
 
     // Compara também o centroide das capturas (menos ruído) e usa a média das
     // 3 melhores similaridades, exigindo um mínimo em cada uma delas.

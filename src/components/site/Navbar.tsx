@@ -1,7 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Mail as MailIcon } from "lucide-react";
 import symbol from "@/assets/fli-symbol.png.asset.json";
 import { DISCORD_URL } from "@/lib/site-data";
+
 
 function DiscordIcon({ className }: { className?: string }) {
   return (
@@ -75,10 +77,17 @@ export function Navbar() {
               <DiscordIcon className="h-4 w-4 text-[color:var(--color-discord,#5865F2)]" />
               Discord
             </a>
+            <Link to="/mail"
+              className="glass-button inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium"
+              title="Abrir a caixa de entrada do seu e-mail do domínio (requer login)">
+              <MailIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">E-mail</span>
+            </Link>
             <Link to="/staff"
               className="glass-button rounded-full px-3.5 py-1.5 text-[13px] font-medium">
               Painel de Staff
             </Link>
+
           </div>
         </nav>
       </div>

@@ -80,11 +80,12 @@ function MailPage() {
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getSession();
-      if (!data.session) { nav({ to: "/staff" }); return; }
+      if (!data.session) { nav({ to: "/auth", search: { redirect: "/mail" } }); return; }
       setReady(true);
       await load("inbox", "");
     })();
   }, [nav, load]);
+
 
   useEffect(() => { if (ready) void load(folder, search); }, [folder, ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
