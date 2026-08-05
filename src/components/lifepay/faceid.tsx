@@ -47,29 +47,36 @@ function GlassStyles() {
 /* --------------------------------------------------------------- *
  * Anel de traços (estilo Apple Face ID)                            *
  * --------------------------------------------------------------- */
-function TickRing({ progress, active }: { progress: number; active: boolean }) {
+function TickRing({
+  progress, active, sectors,
+}: { progress: number; active: boolean; sectors?: boolean[] }) {
   const total = 60;
   const filled = Math.round(progress * total);
   return (
     <svg viewBox="0 0 200 200" className={`absolute inset-0 h-full w-full ${active ? "fid-ring" : ""}`}>
       {Array.from({ length: total }).map((_, i) => {
-        const on = i < filled;
+        const sectorCount = sectors?.length ?? 0;
+        // No cadastro por rotação cada traço pertence a um setor do anel.
+        const on = sectorCount
+          ? !!sectors![Math.floor((i / total) * sectorCount) % sectorCount]
+          : i < filled;
         const angle = (i / total) * Math.PI * 2 - Math.PI / 2;
-        const r1 = 82, r2 = 95;
+        const r1 = on ? 79 : 82, r2 = 95;
         return (
           <line
             key={i}
             x1={100 + Math.cos(angle) * r1} y1={100 + Math.sin(angle) * r1}
             x2={100 + Math.cos(angle) * r2} y2={100 + Math.sin(angle) * r2}
             stroke={on ? "var(--lp-accent)" : "rgba(255,255,255,.28)"}
-            strokeWidth={on ? 4 : 3} strokeLinecap="round"
-            style={{ transition: "stroke .25s ease, stroke-width .25s ease" }}
+            strokeWidth={on ? 4.5 : 3} strokeLinecap="round"
+            style={{ transition: "stroke .3s ease, stroke-width .3s ease, x1 .3s ease, y1 .3s ease" }}
           />
         );
       })}
     </svg>
   );
 }
+
 
 /* --------------------------------------------------------------- *
  * Motor de câmera + escaneamento                                   *
