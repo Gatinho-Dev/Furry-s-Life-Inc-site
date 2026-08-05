@@ -116,10 +116,32 @@ export const mailDelete = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const SENDER_DOMAIN = "notify.furrys.life";
+const FROM_DOMAIN = "furrys.life";
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function bodyToHtml(subject: string, body: string, fromName: string, fromAddress: string): string {
+  const paragraphs = body
+    .split(/\n{2,}/)
+    .map((p) => `<p style="margin:0 0 14px;line-height:1.6">${escapeHtml(p).replace(/\n/g, "<br/>")}</p>`)
+    .join("");
+  return `<!doctype html><html><body style="background:#ffffff;margin:0;padding:24px;font-family:-apple-system,Segoe UI,Arial,sans-serif;color:#16181c">
+<div style="max-width:600px;margin:0 auto">
+<h1 style="font-size:18px;margin:0 0 16px">${escapeHtml(subject)}</h1>
+${paragraphs}
+<hr style="border:none;border-top:1px solid #e6e8eb;margin:24px 0 12px"/>
+<p style="font-size:12px;color:#8a8f98;margin:0">Enviado por ${escapeHtml(fromName || fromAddress)} · ${escapeHtml(fromAddress)}</p>
+</div></body></html>`;
+}
+
 /**
- * Envia uma mensagem. Endereços internos (@furrys.life e demais contas do site)
- * são entregues direto na caixa de entrada do destinatário; endereços externos
- * saem pelo domínio de envio quando ele está configurado.
+ * Envia uma mensagem. Endereços internos (contas do site) são entregues direto
+ * na caixa de entrada do destinatário; endereços externos (Gmail, Outlook, etc.)
+ * saem de verdade pelo domínio de envio da empresa, com o e-mail do usuário
+ * como Reply-To.
  */
 export const mailSend = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -137,6 +159,7 @@ export const mailSend = createServerFn({ method: "POST" })
     const address = myAddress(context);
 
     const { data: me } = await db.from("profiles").select("full_name").eq("id", context.userId).maybeSingle();
+    const fromName: string = me?.full_name ?? address.split("@")[0];
     const snippet = data.body.replace(/\s+/g, " ").slice(0, 160);
 
     // cópia em "Enviados"
@@ -155,7 +178,7 @@ export const mailSend = createServerFn({ method: "POST" })
 
     // entrega interna quando o destinatário tem conta no site
     const { data: dest } = await db.from("profiles").select("id, email").ilike("email", data.to).maybeSingle();
-    let delivered: "internal" | "external" | "queued" = "external";
+    let delivered: "internal" | "external" | "queued" | "failed" = "external";
     if (dest?.id) {
       await db.from("mail_messages").insert({
         mailbox_address: data.to,
@@ -172,5 +195,35 @@ export const mailSend = createServerFn({ method: "POST" })
       delivered = "internal";
     }
 
+    // envio real para fora (Gmail, Outlook, etc.)
+    const external = !dest?.id;
+    if (external) {
+      const messageId = crypto.randomUUID();
+      const { error } = await db.rpc("enqueue_email", {
+        queue_name: "transactional_emails",
+        payload: {
+          message_id: messageId,
+          to: data.to,
+          from: `${fromName} <${address.split("@")[0]}@${FROM_DOMAIN}>`,
+          sender_domain: SENDER_DOMAIN,
+          reply_to: address,
+          subject: data.subject,
+          html: bodyToHtml(data.subject, data.body, fromName, address),
+          text: data.body,
+          purpose: "transactional",
+          label: "webmail",
+          idempotency_key: messageId,
+          queued_at: new Date().toISOString(),
+        },
+      });
+      if (error) {
+        console.error("Falha ao enfileirar e-mail externo", error);
+        delivered = "failed";
+      } else {
+        delivered = "queued";
+      }
+    }
+
     return { ok: true, delivered };
   });
+
