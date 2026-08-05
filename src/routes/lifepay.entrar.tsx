@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, Loader2, Lock, Mail, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail, ArrowLeft, ScanFace } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { LifePayTheme, LifePayMark, LpAlert, DISCLOSURE } from "@/components/lifepay/ui";
+import { FaceIdLogin } from "@/components/lifepay/faceid";
 
 export const Route = createFileRoute("/lifepay/entrar")({
   head: () => ({
