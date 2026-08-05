@@ -266,7 +266,8 @@ function ScannerOverlay({
         </button>
 
         <div className="relative mx-auto mt-2 h-56 w-56">
-          <TickRing progress={status === "ok" ? 1 : progress} active={status === "scanning"} />
+          <TickRing progress={status === "ok" ? 1 : progress} active={status === "scanning"}
+            sectors={mode === "enroll" && status === "scanning" ? sectors : undefined} />
           <div className="absolute inset-[18%] overflow-hidden rounded-full border"
             style={{ borderColor: "rgba(255,255,255,.22)", background: "rgba(255,255,255,.04)" }}>
             <video ref={videoRef} playsInline muted autoPlay
@@ -290,7 +291,7 @@ function ScannerOverlay({
           {status === "ok" || status === "fail" || status === "saving"
             ? (mode === "enroll" ? "Configurar o Face ID" : "Confirmar com Face ID")
             : mode === "enroll"
-              ? FACE_ENROLL_STEPS[Math.min(stepIdx, FACE_ENROLL_STEPS.length - 1)].title
+              ? "Mova a cabeça para completar o círculo"
               : "Confirmar com Face ID"}
         </h3>
         <p className="mx-auto mt-1 max-w-[19rem] text-sm" style={{ color: "var(--lp-fg-2)" }}>
@@ -299,13 +300,14 @@ function ScannerOverlay({
             : status === "saving" ? "Processando..."
             : status === "fail" ? (failMsg ?? "Falha na verificação.")
             : mode === "enroll"
-              ? `${hint} · etapa ${Math.min(stepIdx + 1, totalNeeded)} de ${totalNeeded}`
+              ? `${hint} · volta ${Math.min(pass + 1, FACE_ENROLL_PASSES)} de ${FACE_ENROLL_PASSES}`
               : hint}
         </p>
 
 
         {status === "fail" && (
-          <button onClick={() => { setFailMsg(null); setProgress(0); setStepIdx(0); setStatus("scanning"); }}
+          <button onClick={reset}
+
             className="fid-btn fid-btn-accent mt-5 w-full px-5 py-3 text-sm font-semibold">
             Tentar novamente
           </button>
