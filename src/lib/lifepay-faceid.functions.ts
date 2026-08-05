@@ -165,3 +165,57 @@ export const lifepayFaceRemove = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+/* ------------------------------------------------------------------ *
+ * Entrar no LifePay com Face ID (em vez da senha)                     *
+ * ------------------------------------------------------------------ *
+ * Recebe o e-mail + a assinatura facial capturada na hora. Se o rosto
+ * bate com o cadastro daquele usuário, devolvemos um token de sessão
+ * de uso único (magic link) que o cliente troca por uma sessão real.
+ */
+export const lifepayFaceLogin = createServerFn({ method: "POST" })
+  .inputValidator((d: { email: string; samples: number[][] }) => {
+    const email = (d?.email ?? "").toString().trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error("Informe um e-mail válido.");
+    return { email, samples: validVectors(d?.samples) };
+  })
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const generic = "Rosto não reconhecido para este e-mail.";
+
+    const { data: profile } = await db
+      .from("profiles").select("id").ilike("email", data.email).maybeSingle();
+    if (!profile?.id) throw new Error(generic);
+
+    const { data: row } = await db
+      .from("lifepay_faceid").select("id, samples").eq("user_id", profile.id).maybeSingle();
+    const enrolled = row ? readStored(row.samples) : null;
+    if (!enrolled) throw new Error("Este e-mail não tem Face ID configurado. Entre com a senha.");
+
+    const probes = [...data.samples, averageDescriptors(data.samples)];
+    const perProbe = probes
+      .map((probe) => enrolled.s.reduce((m, ref) => Math.max(m, cosine(probe, ref)), -1))
+      .sort((a, b) => b - a);
+    const top = perProbe.slice(0, Math.min(3, perProbe.length));
+    const best = top.reduce((s, v) => s + v, 0) / top.length;
+    // Login exige margem maior que uma confirmação dentro do app.
+    const ok = best >= FACE_MATCH_THRESHOLD + 0.02 && top.every((v) => v >= FACE_SINGLE_MIN);
+
+    await db.from("lifepay_audit_logs").insert({
+      actor_id: profile.id, actor_kind: "user",
+      action: ok ? "faceid_login" : "faceid_login_failed",
+      target_user: profile.id, auth_method: "faceid",
+    });
+    if (!ok) throw new Error(generic);
+
+    const { data: link, error } = await db.auth.admin.generateLink({
+      type: "magiclink",
+      email: data.email,
+    });
+    if (error || !link?.properties?.hashed_token) throw new Error("Não foi possível iniciar a sessão.");
+
+    await db.from("lifepay_faceid").update({ last_used_at: new Date().toISOString() }).eq("id", row.id);
+    return { ok: true, token_hash: link.properties.hashed_token as string, email: data.email };
+  });
+
