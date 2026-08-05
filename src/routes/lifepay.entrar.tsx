@@ -71,6 +71,13 @@ function LifePayLogin() {
       setErr("Muitas tentativas. Aguarde para tentar novamente.");
       return;
     }
+    if (mode === "face") {
+      if (!email.trim()) { setErr("Informe seu e-mail para usar o Face ID."); return; }
+      if (keep) localStorage.removeItem("lp_session_only");
+      else { localStorage.setItem("lp_session_only", "1"); sessionStorage.setItem("lp_session_alive", "1"); }
+      setFaceOpen(true);
+      return;
+    }
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
