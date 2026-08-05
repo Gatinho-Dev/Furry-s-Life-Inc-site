@@ -303,7 +303,13 @@ function Compose({ to, onClose, onSent }: { to: string; onClose: () => void; onS
       const res = await send({ data: { to: dest, subject, body } });
       sfx("mail");
       if (res.delivered === "internal") { onSent(); onClose(); }
-      else { setInfo("Mensagem registrada em Enviados. A entrega externa depende do domínio de envio configurado."); onSent(); }
+      else if (res.delivered === "failed") {
+        setErr("Não foi possível colocar a mensagem na fila de envio externo. Ela ficou salva em Enviados.");
+        onSent();
+      } else {
+        setInfo("Mensagem enviada. A entrega para caixas externas (Gmail, Outlook…) acontece em alguns segundos.");
+        onSent();
+      }
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Não foi possível enviar."); sfx("error");
     } finally { setBusy(false); }
