@@ -35,6 +35,8 @@ function LifePayLogin() {
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [keep, setKeep] = useState(true);
+  const [mode, setMode] = useState<"password" | "face">("face");
+  const [faceOpen, setFaceOpen] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
