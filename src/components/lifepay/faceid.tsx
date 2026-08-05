@@ -374,6 +374,27 @@ export function FaceIdConfirm({
   return <ScannerOverlay mode="verify" open={open} onClose={onCancel} onDone={done} />;
 }
 
+/**
+ * Login no LifePay usando o Face ID em vez da senha. Verifica o rosto no
+ * servidor e troca o token de uso único por uma sessão real.
+ */
+export function FaceIdLogin({
+  open, email, onCancel, onSuccess,
+}: { open: boolean; email: string; onCancel: () => void; onSuccess: () => void }) {
+  const loginFn = useServerFn(lifepayFaceLogin);
+  const done = React.useCallback(async (samples: number[][]) => {
+    const res = await loginFn({ data: { email, samples } });
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { error } = await supabase.auth.verifyOtp({
+      type: "email",
+      token_hash: res.token_hash,
+    });
+    if (error) throw new Error("Não foi possível iniciar a sessão. Tente pela senha.");
+    onSuccess();
+  }, [loginFn, email, onSuccess]);
+  return <ScannerOverlay mode="verify" open={open} onClose={onCancel} onDone={done} />;
+}
+
 /* --------------------------------------------------------------- *
  * Card na aba Segurança                                            *
  * --------------------------------------------------------------- */
