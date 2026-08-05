@@ -3,13 +3,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { ScanFace, Loader2, Trash2, Check, X } from "lucide-react";
 import { LpAlert } from "@/components/lifepay/ui";
 import {
-  lifepayFaceStatus, lifepayFaceEnroll, lifepayFaceVerify, lifepayFaceRemove,
+  lifepayFaceStatus, lifepayFaceEnroll, lifepayFaceVerify, lifepayFaceRemove, lifepayFaceLogin,
   type FaceIdStatus,
 } from "@/lib/lifepay-faceid.functions";
 import {
   detectFaceBox, frameToDescriptors, averageDescriptors,
-  FACE_ENROLL_STEPS, FACE_MIN_ENERGY, FACE_FRAMES_PER_SAMPLE, FACE_SCALES,
-  poseSatisfies,
+  FACE_MIN_ENERGY, FACE_FRAMES_PER_SAMPLE, FACE_SCALES,
+  FACE_SECTORS, FACE_ENROLL_PASSES, poseSector, rotationHint,
 } from "@/lib/faceid-descriptor";
 
 
@@ -47,29 +47,36 @@ function GlassStyles() {
 /* --------------------------------------------------------------- *
  * Anel de traços (estilo Apple Face ID)                            *
  * --------------------------------------------------------------- */
-function TickRing({ progress, active }: { progress: number; active: boolean }) {
+function TickRing({
+  progress, active, sectors,
+}: { progress: number; active: boolean; sectors?: boolean[] }) {
   const total = 60;
   const filled = Math.round(progress * total);
   return (
     <svg viewBox="0 0 200 200" className={`absolute inset-0 h-full w-full ${active ? "fid-ring" : ""}`}>
       {Array.from({ length: total }).map((_, i) => {
-        const on = i < filled;
+        const sectorCount = sectors?.length ?? 0;
+        // No cadastro por rotação cada traço pertence a um setor do anel.
+        const on = sectorCount
+          ? !!sectors![Math.floor((i / total) * sectorCount) % sectorCount]
+          : i < filled;
         const angle = (i / total) * Math.PI * 2 - Math.PI / 2;
-        const r1 = 82, r2 = 95;
+        const r1 = on ? 79 : 82, r2 = 95;
         return (
           <line
             key={i}
             x1={100 + Math.cos(angle) * r1} y1={100 + Math.sin(angle) * r1}
             x2={100 + Math.cos(angle) * r2} y2={100 + Math.sin(angle) * r2}
             stroke={on ? "var(--lp-accent)" : "rgba(255,255,255,.28)"}
-            strokeWidth={on ? 4 : 3} strokeLinecap="round"
-            style={{ transition: "stroke .25s ease, stroke-width .25s ease" }}
+            strokeWidth={on ? 4.5 : 3} strokeLinecap="round"
+            style={{ transition: "stroke .3s ease, stroke-width .3s ease, x1 .3s ease, y1 .3s ease" }}
           />
         );
       })}
     </svg>
   );
 }
+
 
 /* --------------------------------------------------------------- *
  * Motor de câmera + escaneamento                                   *
@@ -151,53 +158,67 @@ function ScannerOverlay({
 }) {
   const { videoRef, canvasRef, ready, error, capture } = useScanner(mode, open);
   const [progress, setProgress] = React.useState(0);
-  const [stepIdx, setStepIdx] = React.useState(0);
+  const [pass, setPass] = React.useState(0);
+  const [sectors, setSectors] = React.useState<boolean[]>(() => Array(FACE_SECTORS).fill(false));
   const [hint, setHint] = React.useState("Posicione o rosto dentro do círculo");
   const [status, setStatus] = React.useState<"scanning" | "saving" | "ok" | "fail">("scanning");
   const [failMsg, setFailMsg] = React.useState<string | null>(null);
 
-  const totalNeeded = mode === "enroll" ? FACE_ENROLL_STEPS.length : 4;
+  const reset = React.useCallback(() => {
+    setProgress(0); setPass(0); setSectors(Array(FACE_SECTORS).fill(false));
+    setStatus("scanning"); setFailMsg(null);
+  }, []);
 
-  React.useEffect(() => {
-    if (!open) { setProgress(0); setStepIdx(0); setStatus("scanning"); setFailMsg(null); }
-  }, [open]);
+  React.useEffect(() => { if (!open) reset(); }, [open, reset]);
 
   React.useEffect(() => {
     if (!open || !ready || status !== "scanning") return;
     let stop = false;
     const samples: number[][] = [];
 
+    /**
+     * Cadastro por rotação: a pessoa gira a cabeça em círculo e cada setor do
+     * anel acende quando o rosto realmente aponta para aquela direção.
+     * São FACE_ENROLL_PASSES voltas completas, como no Face ID da Apple.
+     */
     const runEnroll = async () => {
       let base: { yaw: number; pitch: number } | null = null;
-      for (let s = 0; s < FACE_ENROLL_STEPS.length && !stop; s++) {
-        const step = FACE_ENROLL_STEPS[s];
-        setStepIdx(s);
-        setHint(step.hint);
-        const startedAt = Date.now();
-        // Espera a pessoa realmente colocar o rosto na pose pedida.
-        for (;;) {
+      const startedAt = Date.now();
+      for (let p = 0; p < FACE_ENROLL_PASSES && !stop; p++) {
+        setPass(p);
+        const done = Array<boolean>(FACE_SECTORS).fill(false);
+        setSectors([...done]);
+        let filled = 0;
+        setHint(p === 0 ? "Gire a cabeça lentamente em círculo" : "Repita o giro para concluir");
+        while (filled < FACE_SECTORS && !stop) {
+          await new Promise((r) => setTimeout(r, 110));
           if (stop) return;
-          await new Promise((r) => setTimeout(r, 180));
-          const g = await capture();
+          const g = await capture(p % 2 === 1);
           if (!g) { setHint("Rosto não detectado — melhore a iluminação"); continue; }
-          if (!base) base = g.pose;                        // linha de base frontal
-          const elapsed = Date.now() - startedAt;
-          const relax = Math.min(1, Math.max(0, (elapsed - 6000) / 9000));
-          if (s > 0 && !poseSatisfies(step.axis, g.pose, base, relax)) {
-            setHint(step.hint);
-            continue;
+          if (!base) { base = g.pose; samples.push(...g.vectors); }  // linha de base frontal
+          const relax = Math.min(1, Math.max(0, (Date.now() - startedAt - 12000) / 15000));
+          const sec = poseSector(g.pose, base, relax);
+          if (sec === null) { setHint(rotationHint(p, filled)); continue; }
+          if (!done[sec]) {
+            done[sec] = true;
+            filled++;
+            setSectors([...done]);
+            samples.push(...g.vectors);        // uma amostra por direção do rosto
           }
-          samples.push(...g.vectors);
-          break;
+          setProgress((p + filled / FACE_SECTORS) / FACE_ENROLL_PASSES);
+          setHint(rotationHint(p, filled));
         }
-        setProgress((s + 1) / FACE_ENROLL_STEPS.length);
       }
+      setHint("Volte ao centro...");
+      const center = await capture();
+      if (center) samples.push(...center.vectors);
     };
 
     const runVerify = async () => {
       let groups = 0;
       let misses = 0;
-      while (!stop && groups < totalNeeded) {
+      const needed = 4;
+      while (!stop && groups < needed) {
         await new Promise((r) => setTimeout(r, 160));
         if (stop) return;
         // alterna captura normal e espelhada: tolera o lado do rosto e a câmera
@@ -209,8 +230,7 @@ function ScannerOverlay({
         }
         samples.push(...g.vectors);
         groups++;
-        setStepIdx(groups);
-        setProgress(groups / totalNeeded);
+        setProgress(groups / needed);
         setHint("Analisando...");
       }
     };
@@ -230,7 +250,8 @@ function ScannerOverlay({
     };
     void loop();
     return () => { stop = true; };
-  }, [open, ready, status, mode, totalNeeded, capture, onDone, onClose]);
+  }, [open, ready, status, mode, capture, onDone, onClose]);
+
 
 
   if (!open) return null;
@@ -245,7 +266,8 @@ function ScannerOverlay({
         </button>
 
         <div className="relative mx-auto mt-2 h-56 w-56">
-          <TickRing progress={status === "ok" ? 1 : progress} active={status === "scanning"} />
+          <TickRing progress={status === "ok" ? 1 : progress} active={status === "scanning"}
+            sectors={mode === "enroll" && status === "scanning" ? sectors : undefined} />
           <div className="absolute inset-[18%] overflow-hidden rounded-full border"
             style={{ borderColor: "rgba(255,255,255,.22)", background: "rgba(255,255,255,.04)" }}>
             <video ref={videoRef} playsInline muted autoPlay
@@ -269,7 +291,7 @@ function ScannerOverlay({
           {status === "ok" || status === "fail" || status === "saving"
             ? (mode === "enroll" ? "Configurar o Face ID" : "Confirmar com Face ID")
             : mode === "enroll"
-              ? FACE_ENROLL_STEPS[Math.min(stepIdx, FACE_ENROLL_STEPS.length - 1)].title
+              ? "Mova a cabeça para completar o círculo"
               : "Confirmar com Face ID"}
         </h3>
         <p className="mx-auto mt-1 max-w-[19rem] text-sm" style={{ color: "var(--lp-fg-2)" }}>
@@ -278,13 +300,14 @@ function ScannerOverlay({
             : status === "saving" ? "Processando..."
             : status === "fail" ? (failMsg ?? "Falha na verificação.")
             : mode === "enroll"
-              ? `${hint} · etapa ${Math.min(stepIdx + 1, totalNeeded)} de ${totalNeeded}`
+              ? `${hint} · volta ${Math.min(pass + 1, FACE_ENROLL_PASSES)} de ${FACE_ENROLL_PASSES}`
               : hint}
         </p>
 
 
         {status === "fail" && (
-          <button onClick={() => { setFailMsg(null); setProgress(0); setStepIdx(0); setStatus("scanning"); }}
+          <button onClick={reset}
+
             className="fid-btn fid-btn-accent mt-5 w-full px-5 py-3 text-sm font-semibold">
             Tentar novamente
           </button>
@@ -348,6 +371,27 @@ export function FaceIdConfirm({
     await face.verify(samples, purpose);
     onSuccess();
   }, [face, purpose, onSuccess]);
+  return <ScannerOverlay mode="verify" open={open} onClose={onCancel} onDone={done} />;
+}
+
+/**
+ * Login no LifePay usando o Face ID em vez da senha. Verifica o rosto no
+ * servidor e troca o token de uso único por uma sessão real.
+ */
+export function FaceIdLogin({
+  open, email, onCancel, onSuccess,
+}: { open: boolean; email: string; onCancel: () => void; onSuccess: () => void }) {
+  const loginFn = useServerFn(lifepayFaceLogin);
+  const done = React.useCallback(async (samples: number[][]) => {
+    const res = await loginFn({ data: { email, samples } });
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { error } = await supabase.auth.verifyOtp({
+      type: "email",
+      token_hash: res.token_hash,
+    });
+    if (error) throw new Error("Não foi possível iniciar a sessão. Tente pela senha.");
+    onSuccess();
+  }, [loginFn, email, onSuccess]);
   return <ScannerOverlay mode="verify" open={open} onClose={onCancel} onDone={done} />;
 }
 
