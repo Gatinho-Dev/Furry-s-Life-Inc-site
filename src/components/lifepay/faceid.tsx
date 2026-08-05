@@ -8,8 +8,8 @@ import {
 } from "@/lib/lifepay-faceid.functions";
 import {
   detectFaceBox, frameToDescriptors, averageDescriptors,
-  FACE_ENROLL_STEPS, FACE_MIN_ENERGY, FACE_FRAMES_PER_SAMPLE, FACE_SCALES,
-  poseSatisfies,
+  FACE_MIN_ENERGY, FACE_FRAMES_PER_SAMPLE, FACE_SCALES,
+  FACE_SECTORS, FACE_ENROLL_PASSES, poseSector, rotationHint,
 } from "@/lib/faceid-descriptor";
 
 
