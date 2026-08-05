@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ScanFace, Loader2, Trash2, Check, X } from "lucide-react";
 import { LpAlert } from "@/components/lifepay/ui";
 import {
-  lifepayFaceStatus, lifepayFaceEnroll, lifepayFaceVerify, lifepayFaceRemove,
+  lifepayFaceStatus, lifepayFaceEnroll, lifepayFaceVerify, lifepayFaceRemove, lifepayFaceLogin,
   type FaceIdStatus,
 } from "@/lib/lifepay-faceid.functions";
 import {
