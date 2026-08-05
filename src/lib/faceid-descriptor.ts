@@ -251,55 +251,51 @@ export function frameToDescriptors(
 }
 
 /* ------------------------------------------------------------------ *
- * Etapas do cadastro — exigem movimento real do rosto                 *
- * ------------------------------------------------------------------ */
-export type PoseAxis = "front" | "right" | "left" | "up" | "down";
+ * Cadastro por rotação (igual ao Face ID da Apple)                    *
+ * ------------------------------------------------------------------ *
+ * Em vez de etapas discretas ("olhe para a direita"), o cadastro pede
+ * para a pessoa GIRAR o rosto descrevendo um círculo. O anel é dividido
+ * em setores; cada setor só acende quando a pose do rosto aponta para
+ * aquela direção com deslocamento suficiente. Duas voltas completas.
+ */
 
-export type EnrollStep = {
-  axis: PoseAxis;
-  title: string;
-  hint: string;
-};
-
-export const FACE_ENROLL_STEPS: readonly EnrollStep[] = [
-  { axis: "front", title: "Olhe para a frente", hint: "Centralize o rosto no círculo" },
-  { axis: "right", title: "Gire devagar para a direita", hint: "Vire a cabeça para a sua direita" },
-  { axis: "front", title: "Volte para o centro", hint: "Olhe para a frente novamente" },
-  { axis: "left", title: "Gire devagar para a esquerda", hint: "Vire a cabeça para a sua esquerda" },
-  { axis: "front", title: "Volte para o centro", hint: "Olhe para a frente novamente" },
-  { axis: "up", title: "Levante o queixo", hint: "Incline a cabeça para cima" },
-  { axis: "down", title: "Abaixe o queixo", hint: "Incline a cabeça para baixo" },
-  { axis: "front", title: "Olhe para a frente", hint: "Última etapa" },
-] as const;
-
-/** Quanto o rosto precisa se mover (em unidades de yaw/pitch) por etapa. */
-export const POSE_DELTA = 0.045;
-/** Tolerância para considerar o rosto "de frente" outra vez. */
+/** Quantidade de setores do anel que precisam ser preenchidos. */
+export const FACE_SECTORS = 12;
+/** Deslocamento mínimo (yaw/pitch) para considerar que o rosto girou. */
+export const POSE_RADIUS = 0.03;
+/** Tolerância para considerar o rosto centralizado (linha de base). */
 export const POSE_CENTER = 0.03;
+/** Voltas necessárias no cadastro. */
+export const FACE_ENROLL_PASSES = 2;
+
+export type Pose = { yaw: number; pitch: number };
 
 /**
- * Verifica se a pose atual satisfaz a etapa pedida, comparando com a linha de
- * base capturada na primeira etapa frontal. `relax` (0..1) afrouxa o limite
- * gradualmente para nunca travar a pessoa numa etapa.
+ * Converte a pose atual (relativa à linha de base frontal) no setor do anel
+ * correspondente. Devolve `null` quando o rosto ainda está de frente.
+ * `relax` (0..1) reduz o raio exigido para nunca travar a pessoa.
  */
-export function poseSatisfies(
-  axis: PoseAxis,
-  pose: { yaw: number; pitch: number },
-  base: { yaw: number; pitch: number },
-  relax = 0,
-): boolean {
-  const need = POSE_DELTA * (1 - 0.55 * Math.min(1, Math.max(0, relax)));
+export function poseSector(pose: Pose, base: Pose, relax = 0): number | null {
   const dy = pose.yaw - base.yaw;
   const dp = pose.pitch - base.pitch;
-  switch (axis) {
-    case "right": return dy >= need;
-    case "left": return -dy >= need;
-    case "up": return -dp >= need;
-    case "down": return dp >= need;
-    case "front":
-      return Math.abs(dy) <= POSE_CENTER + need && Math.abs(dp) <= POSE_CENTER + need;
-  }
+  const need = POSE_RADIUS * (1 - 0.6 * Math.min(1, Math.max(0, relax)));
+  const r = Math.hypot(dy, dp);
+  if (r < need) return null;
+  // ângulo 0 = direita, crescendo no sentido horário (pitch positivo = para baixo)
+  let a = Math.atan2(dp, dy);
+  if (a < 0) a += Math.PI * 2;
+  return Math.floor((a / (Math.PI * 2)) * FACE_SECTORS) % FACE_SECTORS;
 }
 
-/** Compatibilidade: rótulos antigos das etapas. */
-export const FACE_STEPS = FACE_ENROLL_STEPS.map((s) => s.title);
+/** Rosto está centralizado (usado para capturar a linha de base). */
+export function poseIsCentered(pose: Pose, base: Pose): boolean {
+  return Math.abs(pose.yaw - base.yaw) <= POSE_CENTER && Math.abs(pose.pitch - base.pitch) <= POSE_CENTER;
+}
+
+/** Texto de orientação conforme o progresso da volta. */
+export function rotationHint(pass: number, filled: number): string {
+  if (filled === 0) return "Gire a cabeça lentamente em círculo";
+  if (filled < FACE_SECTORS) return "Continue girando devagar até fechar o círculo";
+  return pass === 0 ? "Ótimo. Agora repita o giro uma vez" : "Quase pronto...";
+}
+
