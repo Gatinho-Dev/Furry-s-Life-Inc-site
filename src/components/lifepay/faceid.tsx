@@ -158,53 +158,67 @@ function ScannerOverlay({
 }) {
   const { videoRef, canvasRef, ready, error, capture } = useScanner(mode, open);
   const [progress, setProgress] = React.useState(0);
-  const [stepIdx, setStepIdx] = React.useState(0);
+  const [pass, setPass] = React.useState(0);
+  const [sectors, setSectors] = React.useState<boolean[]>(() => Array(FACE_SECTORS).fill(false));
   const [hint, setHint] = React.useState("Posicione o rosto dentro do círculo");
   const [status, setStatus] = React.useState<"scanning" | "saving" | "ok" | "fail">("scanning");
   const [failMsg, setFailMsg] = React.useState<string | null>(null);
 
-  const totalNeeded = mode === "enroll" ? FACE_ENROLL_STEPS.length : 4;
+  const reset = React.useCallback(() => {
+    setProgress(0); setPass(0); setSectors(Array(FACE_SECTORS).fill(false));
+    setStatus("scanning"); setFailMsg(null);
+  }, []);
 
-  React.useEffect(() => {
-    if (!open) { setProgress(0); setStepIdx(0); setStatus("scanning"); setFailMsg(null); }
-  }, [open]);
+  React.useEffect(() => { if (!open) reset(); }, [open, reset]);
 
   React.useEffect(() => {
     if (!open || !ready || status !== "scanning") return;
     let stop = false;
     const samples: number[][] = [];
 
+    /**
+     * Cadastro por rotação: a pessoa gira a cabeça em círculo e cada setor do
+     * anel acende quando o rosto realmente aponta para aquela direção.
+     * São FACE_ENROLL_PASSES voltas completas, como no Face ID da Apple.
+     */
     const runEnroll = async () => {
       let base: { yaw: number; pitch: number } | null = null;
-      for (let s = 0; s < FACE_ENROLL_STEPS.length && !stop; s++) {
-        const step = FACE_ENROLL_STEPS[s];
-        setStepIdx(s);
-        setHint(step.hint);
-        const startedAt = Date.now();
-        // Espera a pessoa realmente colocar o rosto na pose pedida.
-        for (;;) {
+      const startedAt = Date.now();
+      for (let p = 0; p < FACE_ENROLL_PASSES && !stop; p++) {
+        setPass(p);
+        const done = Array<boolean>(FACE_SECTORS).fill(false);
+        setSectors([...done]);
+        let filled = 0;
+        setHint(p === 0 ? "Gire a cabeça lentamente em círculo" : "Repita o giro para concluir");
+        while (filled < FACE_SECTORS && !stop) {
+          await new Promise((r) => setTimeout(r, 110));
           if (stop) return;
-          await new Promise((r) => setTimeout(r, 180));
-          const g = await capture();
+          const g = await capture(p % 2 === 1);
           if (!g) { setHint("Rosto não detectado — melhore a iluminação"); continue; }
-          if (!base) base = g.pose;                        // linha de base frontal
-          const elapsed = Date.now() - startedAt;
-          const relax = Math.min(1, Math.max(0, (elapsed - 6000) / 9000));
-          if (s > 0 && !poseSatisfies(step.axis, g.pose, base, relax)) {
-            setHint(step.hint);
-            continue;
+          if (!base) { base = g.pose; samples.push(...g.vectors); }  // linha de base frontal
+          const relax = Math.min(1, Math.max(0, (Date.now() - startedAt - 12000) / 15000));
+          const sec = poseSector(g.pose, base, relax);
+          if (sec === null) { setHint(rotationHint(p, filled)); continue; }
+          if (!done[sec]) {
+            done[sec] = true;
+            filled++;
+            setSectors([...done]);
+            samples.push(...g.vectors);        // uma amostra por direção do rosto
           }
-          samples.push(...g.vectors);
-          break;
+          setProgress((p + filled / FACE_SECTORS) / FACE_ENROLL_PASSES);
+          setHint(rotationHint(p, filled));
         }
-        setProgress((s + 1) / FACE_ENROLL_STEPS.length);
       }
+      setHint("Volte ao centro...");
+      const center = await capture();
+      if (center) samples.push(...center.vectors);
     };
 
     const runVerify = async () => {
       let groups = 0;
       let misses = 0;
-      while (!stop && groups < totalNeeded) {
+      const needed = 4;
+      while (!stop && groups < needed) {
         await new Promise((r) => setTimeout(r, 160));
         if (stop) return;
         // alterna captura normal e espelhada: tolera o lado do rosto e a câmera
@@ -216,8 +230,7 @@ function ScannerOverlay({
         }
         samples.push(...g.vectors);
         groups++;
-        setStepIdx(groups);
-        setProgress(groups / totalNeeded);
+        setProgress(groups / needed);
         setHint("Analisando...");
       }
     };
@@ -237,7 +250,8 @@ function ScannerOverlay({
     };
     void loop();
     return () => { stop = true; };
-  }, [open, ready, status, mode, totalNeeded, capture, onDone, onClose]);
+  }, [open, ready, status, mode, capture, onDone, onClose]);
+
 
 
   if (!open) return null;
