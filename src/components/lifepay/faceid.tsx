@@ -119,6 +119,25 @@ function useScanner(mode: Mode, open: boolean) {
     };
   }, [open, mode]);
 
+  /** Caixa do rosto com cache curto — evita rodar o detector a cada frame. */
+  const boxRef = React.useRef<{ at: number; box: Awaited<ReturnType<typeof detectFaceBox>> } | null>(null);
+  const getBox = React.useCallback(async (video: HTMLVideoElement, maxAge = 350) => {
+    const now = Date.now();
+    if (boxRef.current && now - boxRef.current.at < maxAge) return boxRef.current.box;
+    const box = await detectFaceBox(video);
+    boxRef.current = { at: now, box };
+    return box;
+  }, []);
+
+  /** Leitura de pose barata (1 frame, 1 escala) — roda a ~20 fps. */
+  const readPose = React.useCallback(async () => {
+    const video = videoRef.current;
+    const canvas = poseCanvasRef.current;
+    if (!video || !canvas || video.readyState < 2) return null;
+    const box = await getBox(video);
+    return framePose(video, box, canvas);
+  }, [getBox]);
+
   /**
    * Uma amostra = média temporal de vários frames, em 3 escalas de recorte.
    * Devolve um vetor por escala + a pose média (para exigir o giro do rosto).
@@ -130,23 +149,24 @@ function useScanner(mode: Mode, open: boolean) {
     const perScale: number[][][] = FACE_SCALES.map(() => []);
     let yaw = 0, pitch = 0, used = 0;
     for (let i = 0; i < FACE_FRAMES_PER_SAMPLE; i++) {
-      const box = await detectFaceBox(video);
+      const box = await getBox(video, 120);
       const r = frameToDescriptors(video, box, canvas, { mirror });
       if (r.energy >= FACE_MIN_ENERGY) {
         r.vectors.forEach((v, s) => perScale[s].push(v));
         yaw += r.yaw; pitch += r.pitch; used++;
       }
-      if (i < FACE_FRAMES_PER_SAMPLE - 1) await new Promise((r2) => setTimeout(r2, 90));
+      if (i < FACE_FRAMES_PER_SAMPLE - 1) await new Promise((r2) => setTimeout(r2, 60));
     }
     if (perScale[0].length < 2 || !used) return null;
     return {
       vectors: perScale.map((frames) => averageDescriptors(frames)),
       pose: { yaw: yaw / used, pitch: pitch / used },
     };
-  }, []);
+  }, [getBox]);
 
 
-  return { videoRef, canvasRef, ready, error, capture };
+  return { videoRef, canvasRef, poseCanvasRef, ready, error, capture, readPose };
+
 }
 
 function ScannerOverlay({
