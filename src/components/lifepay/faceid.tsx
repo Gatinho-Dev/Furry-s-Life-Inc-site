@@ -179,17 +179,18 @@ function ScannerOverlay({
   onClose: () => void;
   onDone: (samples: number[][]) => Promise<void>;
 }) {
-  const { videoRef, canvasRef, ready, error, capture } = useScanner(mode, open);
+  const { videoRef, canvasRef, poseCanvasRef, ready, error, capture, readPose } = useScanner(mode, open);
   const [progress, setProgress] = React.useState(0);
   const [pass, setPass] = React.useState(0);
   const [sectors, setSectors] = React.useState<boolean[]>(() => Array(FACE_SECTORS).fill(false));
+  const [aim, setAim] = React.useState<{ angle: number; strength: number } | null>(null);
   const [hint, setHint] = React.useState("Posicione o rosto dentro do círculo");
   const [status, setStatus] = React.useState<"scanning" | "saving" | "ok" | "fail">("scanning");
   const [failMsg, setFailMsg] = React.useState<string | null>(null);
 
   const reset = React.useCallback(() => {
     setProgress(0); setPass(0); setSectors(Array(FACE_SECTORS).fill(false));
-    setStatus("scanning"); setFailMsg(null);
+    setAim(null); setStatus("scanning"); setFailMsg(null);
   }, []);
 
   React.useEffect(() => { if (!open) reset(); }, [open, reset]);
@@ -200,13 +201,29 @@ function ScannerOverlay({
     const samples: number[][] = [];
 
     /**
-     * Cadastro por rotação: a pessoa gira a cabeça em círculo e cada setor do
-     * anel acende quando o rosto realmente aponta para aquela direção.
-     * São FACE_ENROLL_PASSES voltas completas, como no Face ID da Apple.
+     * Cadastro por rotação, igual ao Face ID da Apple: a pose é lida a ~20 fps
+     * (leitura barata) e o setor do anel acende exatamente para onde o rosto
+     * está apontando. O rastreador aprende a amplitude do movimento da pessoa,
+     * então não existe mais "não identifica para onde estou olhando".
      */
     const runEnroll = async () => {
-      let base: { yaw: number; pitch: number } | null = null;
-      const startedAt = Date.now();
+      const tracker = createPoseTracker({ smooth: 0.45 });
+
+      // 1) linha de base: pessoa de frente, parada por um instante
+      setHint("Olhe para a frente e fique parado");
+      let calibrated = 0;
+      while (calibrated < 8 && !stop) {
+        const r = await readPose();
+        if (!r) { setHint("Rosto não detectado — melhore a iluminação"); await wait(90); continue; }
+        tracker.push(r);
+        calibrated++;
+        await wait(70);
+      }
+      if (stop) return;
+      const front = await capture();
+      if (front) samples.push(...front.vectors);
+
+      // 2) voltas completas
       for (let p = 0; p < FACE_ENROLL_PASSES && !stop; p++) {
         setPass(p);
         const done = Array<boolean>(FACE_SECTORS).fill(false);
@@ -214,28 +231,33 @@ function ScannerOverlay({
         let filled = 0;
         setHint(p === 0 ? "Gire a cabeça lentamente em círculo" : "Repita o giro para concluir");
         while (filled < FACE_SECTORS && !stop) {
-          await new Promise((r) => setTimeout(r, 110));
+          await wait(55);
           if (stop) return;
-          const g = await capture(p % 2 === 1);
-          if (!g) { setHint("Rosto não detectado — melhore a iluminação"); continue; }
-          if (!base) { base = g.pose; samples.push(...g.vectors); }  // linha de base frontal
-          const relax = Math.min(1, Math.max(0, (Date.now() - startedAt - 12000) / 15000));
-          const sec = poseSector(g.pose, base, relax);
-          if (sec === null) { setHint(rotationHint(p, filled)); continue; }
-          if (!done[sec]) {
-            done[sec] = true;
-            filled++;
+          const r = await readPose();
+          if (!r) { setAim(null); setHint("Rosto não detectado — melhore a iluminação"); continue; }
+          const tick = tracker.push(r);
+          setAim({ angle: tick.angle, strength: Math.min(1, tick.magnitude / (tick.need || 1)) });
+          if (tick.sector === null) { setHint(rotationHint(p, filled)); continue; }
+
+          // preenche o setor apontado (e o vizinho, como no Face ID real)
+          const marks = [tick.sector, (tick.sector + FACE_SECTORS) % FACE_SECTORS];
+          let novo = false;
+          for (const s of marks) if (!done[s]) { done[s] = true; filled++; novo = true; }
+          if (novo) {
             setSectors([...done]);
-            samples.push(...g.vectors);        // uma amostra por direção do rosto
+            const g = await capture(p % 2 === 1);
+            if (g) samples.push(...g.vectors);   // uma amostra por direção do rosto
           }
           setProgress((p + filled / FACE_SECTORS) / FACE_ENROLL_PASSES);
           setHint(rotationHint(p, filled));
         }
       }
+      setAim(null);
       setHint("Volte ao centro...");
       const center = await capture();
       if (center) samples.push(...center.vectors);
     };
+
 
     const runVerify = async () => {
       let groups = 0;
