@@ -49,34 +49,39 @@ function GlassStyles() {
  * Anel de traços (estilo Apple Face ID)                            *
  * --------------------------------------------------------------- */
 function TickRing({
-  progress, active, sectors,
-}: { progress: number; active: boolean; sectors?: boolean[] }) {
+  progress, active, sectors, aim,
+}: { progress: number; active: boolean; sectors?: boolean[]; aim?: { angle: number; strength: number } | null }) {
   const total = 60;
   const filled = Math.round(progress * total);
+  const sectorCount = sectors?.length ?? 0;
+  // setor apontado agora (para destacar o traço, como no Face ID da Apple)
+  const aimSector = aim && sectorCount
+    ? Math.floor((aim.angle / (Math.PI * 2)) * sectorCount) % sectorCount
+    : null;
   return (
     <svg viewBox="0 0 200 200" className={`absolute inset-0 h-full w-full ${active ? "fid-ring" : ""}`}>
       {Array.from({ length: total }).map((_, i) => {
-        const sectorCount = sectors?.length ?? 0;
-        // No cadastro por rotação cada traço pertence a um setor do anel.
-        const on = sectorCount
-          ? !!sectors![Math.floor((i / total) * sectorCount) % sectorCount]
-          : i < filled;
+        const sec = sectorCount ? Math.floor((i / total) * sectorCount) % sectorCount : -1;
+        const on = sectorCount ? !!sectors![sec] : i < filled;
+        const aiming = aimSector !== null && sec === aimSector;
         const angle = (i / total) * Math.PI * 2 - Math.PI / 2;
-        const r1 = on ? 79 : 82, r2 = 95;
+        const r1 = on || aiming ? 78 : 82, r2 = 95;
         return (
           <line
             key={i}
             x1={100 + Math.cos(angle) * r1} y1={100 + Math.sin(angle) * r1}
             x2={100 + Math.cos(angle) * r2} y2={100 + Math.sin(angle) * r2}
-            stroke={on ? "var(--lp-accent)" : "rgba(255,255,255,.28)"}
-            strokeWidth={on ? 4.5 : 3} strokeLinecap="round"
-            style={{ transition: "stroke .3s ease, stroke-width .3s ease, x1 .3s ease, y1 .3s ease" }}
+            stroke={on ? "var(--lp-accent)" : aiming ? "rgba(255,255,255,.85)" : "rgba(255,255,255,.28)"}
+            strokeWidth={on || aiming ? 4.5 : 3} strokeLinecap="round"
+            opacity={aiming && !on ? 0.9 : 1}
+            style={{ transition: "stroke .25s cubic-bezier(.2,.9,.2,1), stroke-width .25s ease, x1 .25s ease, y1 .25s ease, opacity .2s ease" }}
           />
         );
       })}
     </svg>
   );
 }
+
 
 
 /* --------------------------------------------------------------- *
