@@ -7,10 +7,11 @@ import {
   type FaceIdStatus,
 } from "@/lib/lifepay-faceid.functions";
 import {
-  detectFaceBox, frameToDescriptors, averageDescriptors,
+  detectFaceBox, frameToDescriptors, averageDescriptors, framePose, createPoseTracker,
   FACE_MIN_ENERGY, FACE_FRAMES_PER_SAMPLE, FACE_SCALES,
-  FACE_SECTORS, FACE_ENROLL_PASSES, poseSector, rotationHint,
+  FACE_SECTORS, FACE_ENROLL_PASSES, rotationHint,
 } from "@/lib/faceid-descriptor";
+
 
 
 
@@ -48,28 +49,32 @@ function GlassStyles() {
  * Anel de traços (estilo Apple Face ID)                            *
  * --------------------------------------------------------------- */
 function TickRing({
-  progress, active, sectors,
-}: { progress: number; active: boolean; sectors?: boolean[] }) {
+  progress, active, sectors, aim,
+}: { progress: number; active: boolean; sectors?: boolean[]; aim?: { angle: number; strength: number } | null }) {
   const total = 60;
   const filled = Math.round(progress * total);
+  const sectorCount = sectors?.length ?? 0;
+  // setor apontado agora (para destacar o traço, como no Face ID da Apple)
+  const aimSector = aim && sectorCount
+    ? Math.floor((aim.angle / (Math.PI * 2)) * sectorCount) % sectorCount
+    : null;
   return (
     <svg viewBox="0 0 200 200" className={`absolute inset-0 h-full w-full ${active ? "fid-ring" : ""}`}>
       {Array.from({ length: total }).map((_, i) => {
-        const sectorCount = sectors?.length ?? 0;
-        // No cadastro por rotação cada traço pertence a um setor do anel.
-        const on = sectorCount
-          ? !!sectors![Math.floor((i / total) * sectorCount) % sectorCount]
-          : i < filled;
+        const sec = sectorCount ? Math.floor((i / total) * sectorCount) % sectorCount : -1;
+        const on = sectorCount ? !!sectors![sec] : i < filled;
+        const aiming = aimSector !== null && sec === aimSector;
         const angle = (i / total) * Math.PI * 2 - Math.PI / 2;
-        const r1 = on ? 79 : 82, r2 = 95;
+        const r1 = on || aiming ? 78 : 82, r2 = 95;
         return (
           <line
             key={i}
             x1={100 + Math.cos(angle) * r1} y1={100 + Math.sin(angle) * r1}
             x2={100 + Math.cos(angle) * r2} y2={100 + Math.sin(angle) * r2}
-            stroke={on ? "var(--lp-accent)" : "rgba(255,255,255,.28)"}
-            strokeWidth={on ? 4.5 : 3} strokeLinecap="round"
-            style={{ transition: "stroke .3s ease, stroke-width .3s ease, x1 .3s ease, y1 .3s ease" }}
+            stroke={on ? "var(--lp-accent)" : aiming ? "rgba(255,255,255,.85)" : "rgba(255,255,255,.28)"}
+            strokeWidth={on || aiming ? 4.5 : 3} strokeLinecap="round"
+            opacity={aiming && !on ? 0.9 : 1}
+            style={{ transition: "stroke .25s cubic-bezier(.2,.9,.2,1), stroke-width .25s ease, x1 .25s ease, y1 .25s ease, opacity .2s ease" }}
           />
         );
       })}
@@ -78,14 +83,20 @@ function TickRing({
 }
 
 
+
 /* --------------------------------------------------------------- *
  * Motor de câmera + escaneamento                                   *
  * --------------------------------------------------------------- */
 type Mode = "enroll" | "verify";
 
+const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+
 function useScanner(mode: Mode, open: boolean) {
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const poseCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
+
   const streamRef = React.useRef<MediaStream | null>(null);
   const [ready, setReady] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -118,6 +129,25 @@ function useScanner(mode: Mode, open: boolean) {
     };
   }, [open, mode]);
 
+  /** Caixa do rosto com cache curto — evita rodar o detector a cada frame. */
+  const boxRef = React.useRef<{ at: number; box: Awaited<ReturnType<typeof detectFaceBox>> } | null>(null);
+  const getBox = React.useCallback(async (video: HTMLVideoElement, maxAge = 350) => {
+    const now = Date.now();
+    if (boxRef.current && now - boxRef.current.at < maxAge) return boxRef.current.box;
+    const box = await detectFaceBox(video);
+    boxRef.current = { at: now, box };
+    return box;
+  }, []);
+
+  /** Leitura de pose barata (1 frame, 1 escala) — roda a ~20 fps. */
+  const readPose = React.useCallback(async () => {
+    const video = videoRef.current;
+    const canvas = poseCanvasRef.current;
+    if (!video || !canvas || video.readyState < 2) return null;
+    const box = await getBox(video);
+    return framePose(video, box, canvas);
+  }, [getBox]);
+
   /**
    * Uma amostra = média temporal de vários frames, em 3 escalas de recorte.
    * Devolve um vetor por escala + a pose média (para exigir o giro do rosto).
@@ -129,23 +159,24 @@ function useScanner(mode: Mode, open: boolean) {
     const perScale: number[][][] = FACE_SCALES.map(() => []);
     let yaw = 0, pitch = 0, used = 0;
     for (let i = 0; i < FACE_FRAMES_PER_SAMPLE; i++) {
-      const box = await detectFaceBox(video);
+      const box = await getBox(video, 120);
       const r = frameToDescriptors(video, box, canvas, { mirror });
       if (r.energy >= FACE_MIN_ENERGY) {
         r.vectors.forEach((v, s) => perScale[s].push(v));
         yaw += r.yaw; pitch += r.pitch; used++;
       }
-      if (i < FACE_FRAMES_PER_SAMPLE - 1) await new Promise((r2) => setTimeout(r2, 90));
+      if (i < FACE_FRAMES_PER_SAMPLE - 1) await new Promise((r2) => setTimeout(r2, 60));
     }
     if (perScale[0].length < 2 || !used) return null;
     return {
       vectors: perScale.map((frames) => averageDescriptors(frames)),
       pose: { yaw: yaw / used, pitch: pitch / used },
     };
-  }, []);
+  }, [getBox]);
 
 
-  return { videoRef, canvasRef, ready, error, capture };
+  return { videoRef, canvasRef, poseCanvasRef, ready, error, capture, readPose };
+
 }
 
 function ScannerOverlay({
@@ -156,17 +187,18 @@ function ScannerOverlay({
   onClose: () => void;
   onDone: (samples: number[][]) => Promise<void>;
 }) {
-  const { videoRef, canvasRef, ready, error, capture } = useScanner(mode, open);
+  const { videoRef, canvasRef, poseCanvasRef, ready, error, capture, readPose } = useScanner(mode, open);
   const [progress, setProgress] = React.useState(0);
   const [pass, setPass] = React.useState(0);
   const [sectors, setSectors] = React.useState<boolean[]>(() => Array(FACE_SECTORS).fill(false));
+  const [aim, setAim] = React.useState<{ angle: number; strength: number } | null>(null);
   const [hint, setHint] = React.useState("Posicione o rosto dentro do círculo");
   const [status, setStatus] = React.useState<"scanning" | "saving" | "ok" | "fail">("scanning");
   const [failMsg, setFailMsg] = React.useState<string | null>(null);
 
   const reset = React.useCallback(() => {
     setProgress(0); setPass(0); setSectors(Array(FACE_SECTORS).fill(false));
-    setStatus("scanning"); setFailMsg(null);
+    setAim(null); setStatus("scanning"); setFailMsg(null);
   }, []);
 
   React.useEffect(() => { if (!open) reset(); }, [open, reset]);
@@ -177,13 +209,29 @@ function ScannerOverlay({
     const samples: number[][] = [];
 
     /**
-     * Cadastro por rotação: a pessoa gira a cabeça em círculo e cada setor do
-     * anel acende quando o rosto realmente aponta para aquela direção.
-     * São FACE_ENROLL_PASSES voltas completas, como no Face ID da Apple.
+     * Cadastro por rotação, igual ao Face ID da Apple: a pose é lida a ~20 fps
+     * (leitura barata) e o setor do anel acende exatamente para onde o rosto
+     * está apontando. O rastreador aprende a amplitude do movimento da pessoa,
+     * então não existe mais "não identifica para onde estou olhando".
      */
     const runEnroll = async () => {
-      let base: { yaw: number; pitch: number } | null = null;
-      const startedAt = Date.now();
+      const tracker = createPoseTracker({ smooth: 0.45 });
+
+      // 1) linha de base: pessoa de frente, parada por um instante
+      setHint("Olhe para a frente e fique parado");
+      let calibrated = 0;
+      while (calibrated < 8 && !stop) {
+        const r = await readPose();
+        if (!r) { setHint("Rosto não detectado — melhore a iluminação"); await wait(90); continue; }
+        tracker.push(r);
+        calibrated++;
+        await wait(70);
+      }
+      if (stop) return;
+      const front = await capture();
+      if (front) samples.push(...front.vectors);
+
+      // 2) voltas completas
       for (let p = 0; p < FACE_ENROLL_PASSES && !stop; p++) {
         setPass(p);
         const done = Array<boolean>(FACE_SECTORS).fill(false);
@@ -191,28 +239,36 @@ function ScannerOverlay({
         let filled = 0;
         setHint(p === 0 ? "Gire a cabeça lentamente em círculo" : "Repita o giro para concluir");
         while (filled < FACE_SECTORS && !stop) {
-          await new Promise((r) => setTimeout(r, 110));
+          await wait(55);
           if (stop) return;
-          const g = await capture(p % 2 === 1);
-          if (!g) { setHint("Rosto não detectado — melhore a iluminação"); continue; }
-          if (!base) { base = g.pose; samples.push(...g.vectors); }  // linha de base frontal
-          const relax = Math.min(1, Math.max(0, (Date.now() - startedAt - 12000) / 15000));
-          const sec = poseSector(g.pose, base, relax);
-          if (sec === null) { setHint(rotationHint(p, filled)); continue; }
-          if (!done[sec]) {
-            done[sec] = true;
-            filled++;
+          const r = await readPose();
+          if (!r) { setAim(null); setHint("Rosto não detectado — melhore a iluminação"); continue; }
+          const tick = tracker.push(r);
+          setAim({ angle: tick.angle, strength: Math.min(1, tick.magnitude / (tick.need || 1)) });
+          if (tick.sector === null) { setHint(rotationHint(p, filled)); continue; }
+
+          // preenche o setor apontado (e o vizinho, como no Face ID real)
+          const marks = [tick.sector];
+          // com giro amplo, também fecha o vizinho para não deixar buraco no anel
+          if (tick.magnitude > tick.need * 1.6) marks.push((tick.sector + 1) % FACE_SECTORS);
+
+          let novo = false;
+          for (const s of marks) if (!done[s]) { done[s] = true; filled++; novo = true; }
+          if (novo) {
             setSectors([...done]);
-            samples.push(...g.vectors);        // uma amostra por direção do rosto
+            const g = await capture(p % 2 === 1);
+            if (g) samples.push(...g.vectors);   // uma amostra por direção do rosto
           }
           setProgress((p + filled / FACE_SECTORS) / FACE_ENROLL_PASSES);
           setHint(rotationHint(p, filled));
         }
       }
+      setAim(null);
       setHint("Volte ao centro...");
       const center = await capture();
       if (center) samples.push(...center.vectors);
     };
+
 
     const runVerify = async () => {
       let groups = 0;
@@ -267,7 +323,9 @@ function ScannerOverlay({
 
         <div className="relative mx-auto mt-2 h-56 w-56">
           <TickRing progress={status === "ok" ? 1 : progress} active={status === "scanning"}
+            aim={mode === "enroll" && status === "scanning" ? aim : null}
             sectors={mode === "enroll" && status === "scanning" ? sectors : undefined} />
+
           <div className="absolute inset-[18%] overflow-hidden rounded-full border"
             style={{ borderColor: "rgba(255,255,255,.22)", background: "rgba(255,255,255,.04)" }}>
             <video ref={videoRef} playsInline muted autoPlay
@@ -286,6 +344,8 @@ function ScannerOverlay({
           </div>
         </div>
         <canvas ref={canvasRef} className="hidden" />
+        <canvas ref={poseCanvasRef} className="hidden" />
+
 
         <h3 className="mt-5 text-lg font-semibold">
           {status === "ok" || status === "fail" || status === "saving"

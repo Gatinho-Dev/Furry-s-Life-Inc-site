@@ -106,7 +106,35 @@ export const LIFEPAY_CSS = `
 }
 .lp-mode-banner { border-radius: 999px; padding:.25rem .75rem; font-size:.68rem; font-weight:700; letter-spacing:.08em;
   text-transform:uppercase; color:#04211B; background: linear-gradient(120deg, var(--lp-accent), var(--lp-accent-2)); }
+
+/* ---- Acabamento Apple: brilho de vidro, foco e movimento com mola ---- */
+.lp-root h1, .lp-root h2, .lp-root h3 { letter-spacing:-.022em; text-wrap:balance; }
+.lp-root p { text-wrap:pretty; }
+.lp-root :where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--lp-accent) 75%, transparent); outline-offset: 2px; }
+
+/* reflexo líquido que atravessa o vidro ao passar o mouse */
+.lp-card { transition: transform .5s cubic-bezier(.22,1,.36,1), box-shadow .5s cubic-bezier(.22,1,.36,1),
+  border-color .4s ease; }
+.lp-card::before { content:""; position:absolute; inset:0; pointer-events:none; opacity:0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.16) 48%, transparent 66%);
+  transform: translateX(-30%); transition: opacity .5s ease, transform 1.1s cubic-bezier(.22,1,.36,1); }
+.lp-card:hover::before { opacity:1; transform: translateX(30%); }
+.lp-card:hover { border-color: rgba(255,255,255,.2);
+  box-shadow: 0 34px 74px -36px rgba(0,0,0,.95), inset 0 1px 0 rgba(255,255,255,.24); }
+
+.lp-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 24px 48px -22px color-mix(in srgb, var(--lp-accent) 90%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.55); }
+
+@keyframes lp-spring { 0%{opacity:0;transform:translateY(12px) scale(.985)} 62%{opacity:1;transform:translateY(0) scale(1.005)} 100%{opacity:1;transform:none} }
+.lp-spring { animation: lp-spring .58s cubic-bezier(.22,1,.36,1) both; }
+@keyframes lp-shimmer { 0%{background-position:-140% 0} 100%{background-position:240% 0} }
+.lp-skeleton { border-radius:14px; background: linear-gradient(100deg, rgba(255,255,255,.05) 30%, rgba(255,255,255,.13) 50%, rgba(255,255,255,.05) 70%);
+  background-size: 220% 100%; animation: lp-shimmer 1.5s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .lp-spring, .lp-skeleton { animation:none } .lp-card:hover::before { opacity:0 } }
 `;
+
 
 export type LifePayMode = "standard" | "premium" | "corporate";
 
