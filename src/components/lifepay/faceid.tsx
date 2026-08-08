@@ -87,6 +87,8 @@ type Mode = "enroll" | "verify";
 function useScanner(mode: Mode, open: boolean) {
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const poseCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
+
   const streamRef = React.useRef<MediaStream | null>(null);
   const [ready, setReady] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
