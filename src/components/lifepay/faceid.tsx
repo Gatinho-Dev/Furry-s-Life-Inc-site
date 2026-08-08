@@ -248,7 +248,10 @@ function ScannerOverlay({
           if (tick.sector === null) { setHint(rotationHint(p, filled)); continue; }
 
           // preenche o setor apontado (e o vizinho, como no Face ID real)
-          const marks = [tick.sector, (tick.sector + FACE_SECTORS) % FACE_SECTORS];
+          const marks = [tick.sector];
+          // com giro amplo, também fecha o vizinho para não deixar buraco no anel
+          if (tick.magnitude > tick.need * 1.6) marks.push((tick.sector + 1) % FACE_SECTORS);
+
           let novo = false;
           for (const s of marks) if (!done[s]) { done[s] = true; filled++; novo = true; }
           if (novo) {
