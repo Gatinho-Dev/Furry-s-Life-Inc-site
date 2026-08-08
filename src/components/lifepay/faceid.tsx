@@ -7,10 +7,11 @@ import {
   type FaceIdStatus,
 } from "@/lib/lifepay-faceid.functions";
 import {
-  detectFaceBox, frameToDescriptors, averageDescriptors,
+  detectFaceBox, frameToDescriptors, averageDescriptors, framePose, createPoseTracker,
   FACE_MIN_ENERGY, FACE_FRAMES_PER_SAMPLE, FACE_SCALES,
-  FACE_SECTORS, FACE_ENROLL_PASSES, poseSector, rotationHint,
+  FACE_SECTORS, FACE_ENROLL_PASSES, rotationHint,
 } from "@/lib/faceid-descriptor";
+
 
 
 
