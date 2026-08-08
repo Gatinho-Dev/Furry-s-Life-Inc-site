@@ -320,7 +320,9 @@ function ScannerOverlay({
 
         <div className="relative mx-auto mt-2 h-56 w-56">
           <TickRing progress={status === "ok" ? 1 : progress} active={status === "scanning"}
+            aim={mode === "enroll" && status === "scanning" ? aim : null}
             sectors={mode === "enroll" && status === "scanning" ? sectors : undefined} />
+
           <div className="absolute inset-[18%] overflow-hidden rounded-full border"
             style={{ borderColor: "rgba(255,255,255,.22)", background: "rgba(255,255,255,.04)" }}>
             <video ref={videoRef} playsInline muted autoPlay
