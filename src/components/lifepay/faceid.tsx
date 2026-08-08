@@ -84,6 +84,9 @@ function TickRing({
  * --------------------------------------------------------------- */
 type Mode = "enroll" | "verify";
 
+const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+
 function useScanner(mode: Mode, open: boolean) {
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
