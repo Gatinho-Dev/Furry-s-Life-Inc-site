@@ -251,51 +251,165 @@ export function frameToDescriptors(
 }
 
 /* ------------------------------------------------------------------ *
- * Cadastro por rotação (igual ao Face ID da Apple)                    *
+ * Pose do rosto (para o cadastro por rotação, igual ao Face ID)        *
  * ------------------------------------------------------------------ *
- * Em vez de etapas discretas ("olhe para a direita"), o cadastro pede
- * para a pessoa GIRAR o rosto descrevendo um círculo. O anel é dividido
- * em setores; cada setor só acende quando a pose do rosto aponta para
- * aquela direção com deslocamento suficiente. Duas voltas completas.
+ * v5 — a pose deixou de depender só do centroide de bordas (ruidoso).
+ * Agora combinamos:
+ *   • centroide das feições ESCURAS (olhos, narinas, boca, sobrancelhas),
+ *     que é muito mais estável e acompanha o giro da cabeça;
+ *   • centroide de energia de borda (mantido com peso menor).
+ * Além disso o rastreador é ADAPTATIVO: em vez de exigir um deslocamento
+ * fixo, ele aprende a amplitude do movimento da pessoa, então funciona
+ * tanto para quem gira muito quanto para quem gira pouco.
  */
+
+const POSE_WORK = 48;
+
+const POSE_MASK = (() => {
+  const m = new Float64Array(POSE_WORK * POSE_WORK);
+  const c = (POSE_WORK - 1) / 2;
+  const rx = POSE_WORK * 0.44, ry = POSE_WORK * 0.5;
+  for (let y = 0; y < POSE_WORK; y++) {
+    for (let x = 0; x < POSE_WORK; x++) {
+      const d = Math.hypot((x - c) / rx, (y - c) / ry);
+      m[y * POSE_WORK + x] = d <= 0.9 ? 1 : d >= 1 ? 0 : (1 - d) / 0.1;
+    }
+  }
+  return m;
+})();
+
+export type PoseReading = { yaw: number; pitch: number; energy: number };
+
+/** Leitura de pose rápida (1 frame, 1 escala) — usada para guiar o anel. */
+export function framePose(
+  source: HTMLVideoElement | HTMLCanvasElement,
+  box: Box,
+  canvas: HTMLCanvasElement,
+  mirror = false,
+): PoseReading | null {
+  canvas.width = POSE_WORK;
+  canvas.height = POSE_WORK;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return null;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, POSE_WORK, POSE_WORK);
+  if (mirror) ctx.setTransform(-1, 0, 0, 1, POSE_WORK, 0);
+  ctx.drawImage(source as any, box.x, box.y, box.w, box.h, 0, 0, POSE_WORK, POSE_WORK);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const { data } = ctx.getImageData(0, 0, POSE_WORK, POSE_WORK);
+
+  const gray = new Float64Array(POSE_WORK * POSE_WORK);
+  let mean = 0, wSum = 0;
+  for (let i = 0; i < gray.length; i++) {
+    const p = i * 4;
+    gray[i] = 0.299 * data[p] + 0.587 * data[p + 1] + 0.114 * data[p + 2];
+    mean += gray[i] * POSE_MASK[i];
+    wSum += POSE_MASK[i];
+  }
+  mean /= wSum || 1;
+  let variance = 0;
+  for (let i = 0; i < gray.length; i++) variance += POSE_MASK[i] * (gray[i] - mean) ** 2;
+  const energy = Math.sqrt(variance / (wSum || 1)) / 255;
+  if (energy < FACE_MIN_ENERGY * 0.7) return null;
+
+  const at = (x: number, y: number) =>
+    gray[Math.min(POSE_WORK - 1, Math.max(0, y)) * POSE_WORK + Math.min(POSE_WORK - 1, Math.max(0, x))];
+
+  const half = (POSE_WORK - 1) / 2;
+  // --- centroide das feições escuras (relativo à média local do rosto) ---
+  let dSum = 0, dx = 0, dy = 0;
+  // --- centroide de energia de borda ---
+  let eSum = 0, ex = 0, ey = 0;
+  for (let y = 0; y < POSE_WORK; y++) {
+    for (let x = 0; x < POSE_WORK; x++) {
+      const w = POSE_MASK[y * POSE_WORK + x];
+      if (w <= 0) continue;
+      const g = gray[y * POSE_WORK + x];
+      const dark = Math.max(0, (mean - g) / (mean || 1));
+      const wd = w * dark * dark;
+      dSum += wd; dx += wd * x; dy += wd * y;
+
+      const gx = at(x + 1, y) - at(x - 1, y);
+      const gy = at(x, y + 1) - at(x, y - 1);
+      const mag = Math.hypot(gx, gy) * w;
+      eSum += mag; ex += mag * x; ey += mag * y;
+    }
+  }
+  const dcx = dSum ? dx / dSum : half, dcy = dSum ? dy / dSum : half;
+  const ecx = eSum ? ex / eSum : half, ecy = eSum ? ey / eSum : half;
+
+  // As feições escuras pesam 3x mais que as bordas (bem menos ruído).
+  const cx = (dcx * 3 + ecx) / 4;
+  const cy = (dcy * 3 + ecy) / 4;
+  const yawRaw = (cx - half) / half;
+  return { yaw: mirror ? -yawRaw : yawRaw, pitch: (cy - half) / half, energy };
+}
 
 /** Quantidade de setores do anel que precisam ser preenchidos. */
 export const FACE_SECTORS = 12;
-/** Deslocamento mínimo (yaw/pitch) para considerar que o rosto girou. */
-export const POSE_RADIUS = 0.03;
-/** Tolerância para considerar o rosto centralizado (linha de base). */
-export const POSE_CENTER = 0.03;
+/** Deslocamento mínimo absoluto (piso de segurança). */
+export const POSE_RADIUS = 0.012;
 /** Voltas necessárias no cadastro. */
 export const FACE_ENROLL_PASSES = 2;
 
 export type Pose = { yaw: number; pitch: number };
 
-/**
- * Converte a pose atual (relativa à linha de base frontal) no setor do anel
- * correspondente. Devolve `null` quando o rosto ainda está de frente.
- * `relax` (0..1) reduz o raio exigido para nunca travar a pessoa.
- */
-export function poseSector(pose: Pose, base: Pose, relax = 0): number | null {
-  const dy = pose.yaw - base.yaw;
-  const dp = pose.pitch - base.pitch;
-  const need = POSE_RADIUS * (1 - 0.6 * Math.min(1, Math.max(0, relax)));
-  const r = Math.hypot(dy, dp);
-  if (r < need) return null;
-  // ângulo 0 = direita, crescendo no sentido horário (pitch positivo = para baixo)
-  let a = Math.atan2(dp, dy);
-  if (a < 0) a += Math.PI * 2;
-  return Math.floor((a / (Math.PI * 2)) * FACE_SECTORS) % FACE_SECTORS;
-}
+export type PoseTick = {
+  /** setor do anel apontado agora, ou null se o rosto está de frente */
+  sector: number | null;
+  /** deslocamento atual em relação ao centro */
+  magnitude: number;
+  /** deslocamento necessário no momento (adaptativo) */
+  need: number;
+  /** ângulo em radianos (0 = direita, sentido horário) */
+  angle: number;
+  /** true enquanto a linha de base frontal ainda está sendo aprendida */
+  calibrating: boolean;
+};
 
-/** Rosto está centralizado (usado para capturar a linha de base). */
-export function poseIsCentered(pose: Pose, base: Pose): boolean {
-  return Math.abs(pose.yaw - base.yaw) <= POSE_CENTER && Math.abs(pose.pitch - base.pitch) <= POSE_CENTER;
+/**
+ * Rastreador de pose com suavização (EMA), linha de base auto-calibrada e
+ * amplitude adaptativa. Isso resolve o "não identifica para onde estou
+ * olhando": o limite passa a ser uma fração da amplitude real do movimento.
+ */
+export function createPoseTracker(opts: { smooth?: number } = {}) {
+  const alpha = opts.smooth ?? 0.4;
+  let sy = 0, sp = 0, started = false;
+  let baseY = 0, baseP = 0, baseN = 0;
+  let maxR = 0;
+
+  return {
+    reset() { started = false; baseN = 0; baseY = 0; baseP = 0; maxR = 0; },
+    push(r: PoseReading): PoseTick {
+      if (!started) { sy = r.yaw; sp = r.pitch; started = true; }
+      else { sy += (r.yaw - sy) * alpha; sp += (r.pitch - sp) * alpha; }
+
+      // primeiras leituras = linha de base frontal
+      if (baseN < 6) { baseY += sy; baseP += sp; baseN++; }
+      const by = baseY / Math.max(1, baseN);
+      const bp = baseP / Math.max(1, baseN);
+
+      const dy = sy - by, dp = sp - bp;
+      const magnitude = Math.hypot(dy, dp);
+      maxR = Math.max(maxR * 0.997, magnitude);
+      const need = Math.max(POSE_RADIUS, maxR * 0.4);
+
+      let angle = Math.atan2(dp, dy);
+      if (angle < 0) angle += Math.PI * 2;
+      const sector = magnitude >= need
+        ? Math.floor((angle / (Math.PI * 2)) * FACE_SECTORS) % FACE_SECTORS
+        : null;
+      return { sector, magnitude, need, angle, calibrating: baseN < 6 };
+    },
+  };
 }
 
 /** Texto de orientação conforme o progresso da volta. */
 export function rotationHint(pass: number, filled: number): string {
   if (filled === 0) return "Gire a cabeça lentamente em círculo";
-  if (filled < FACE_SECTORS) return "Continue girando devagar até fechar o círculo";
+  if (filled < FACE_SECTORS - 2) return "Continue girando devagar, acompanhando o anel";
+  if (filled < FACE_SECTORS) return "Falta pouco para fechar o círculo";
   return pass === 0 ? "Ótimo. Agora repita o giro uma vez" : "Quase pronto...";
 }
+
 
