@@ -341,6 +341,8 @@ function ScannerOverlay({
           </div>
         </div>
         <canvas ref={canvasRef} className="hidden" />
+        <canvas ref={poseCanvasRef} className="hidden" />
+
 
         <h3 className="mt-5 text-lg font-semibold">
           {status === "ok" || status === "fail" || status === "saving"
