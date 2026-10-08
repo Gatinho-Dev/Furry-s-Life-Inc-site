@@ -34,7 +34,7 @@ function Launcher() {
           <h1 className="mt-3 font-display text-4xl font-bold md:text-6xl">Life Workspace</h1>
           <p className="mt-3 text-lg text-muted-foreground">Seu espaço de trabalho digital.</p>
         </div>
-        <Link to="/workspace/drive" className="group mt-12 flex items-center gap-6 rounded-3xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl md:p-9">
+        <Link to="/workspace/drive" search={{ folder: undefined }} className="group mt-12 flex items-center gap-6 rounded-3xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl md:p-9">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><drive.icon className="h-8 w-8" /></div>
           <div className="flex-1">
             <h2 className="font-display text-2xl font-bold">{drive.name}</h2>
