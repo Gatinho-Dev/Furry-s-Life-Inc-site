@@ -40,6 +40,7 @@ import { Route as LifepayTermosRouteImport } from './routes/lifepay.termos'
 import { Route as StaffIndexRouteImport } from './routes/staff.index'
 import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
 import { Route as WorkspaceIndexRouteImport } from './routes/workspace.index'
+import { Route as WorkspaceDriveRouteImport } from './routes/workspace.drive'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as LifepayPagarTokenRouteImport } from './routes/lifepay.pagar.$token'
@@ -205,6 +206,11 @@ const WorkspaceIndexRoute = WorkspaceIndexRouteImport.update({
   path: '/',
   getParentRoute: () => WorkspaceRoute,
 } as any)
+const WorkspaceDriveRoute = WorkspaceDriveRouteImport.update({
+  id: '/drive',
+  path: '/drive',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   id: '/.lovable/oauth/consent',
   path: '/.lovable/oauth/consent',
@@ -268,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/lifepay/staff': typeof LifepayStaffRoute
   '/lifepay/termos': typeof LifepayTermosRoute
   '/staff/dashboard': typeof StaffDashboardRoute
+  '/workspace/drive': typeof WorkspaceDriveRoute
   '/agency/': typeof AgencyIndexRoute
   '/aircare/': typeof AircareIndexRoute
   '/college/': typeof CollegeIndexRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/lifepay/staff': typeof LifepayStaffRoute
   '/lifepay/termos': typeof LifepayTermosRoute
   '/staff/dashboard': typeof StaffDashboardRoute
+  '/workspace/drive': typeof WorkspaceDriveRoute
   '/agency': typeof AgencyIndexRoute
   '/aircare': typeof AircareIndexRoute
   '/college': typeof CollegeIndexRoute
@@ -346,6 +354,7 @@ export interface FileRoutesById {
   '/lifepay/staff': typeof LifepayStaffRoute
   '/lifepay/termos': typeof LifepayTermosRoute
   '/staff/dashboard': typeof StaffDashboardRoute
+  '/workspace/drive': typeof WorkspaceDriveRoute
   '/agency/': typeof AgencyIndexRoute
   '/aircare/': typeof AircareIndexRoute
   '/college/': typeof CollegeIndexRoute
@@ -388,6 +397,7 @@ export interface FileRouteTypes {
     | '/lifepay/staff'
     | '/lifepay/termos'
     | '/staff/dashboard'
+    | '/workspace/drive'
     | '/agency/'
     | '/aircare/'
     | '/college/'
@@ -425,6 +435,7 @@ export interface FileRouteTypes {
     | '/lifepay/staff'
     | '/lifepay/termos'
     | '/staff/dashboard'
+    | '/workspace/drive'
     | '/agency'
     | '/aircare'
     | '/college'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/lifepay/staff'
     | '/lifepay/termos'
     | '/staff/dashboard'
+    | '/workspace/drive'
     | '/agency/'
     | '/aircare/'
     | '/college/'
@@ -730,6 +742,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceIndexRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/workspace/drive': {
+      id: '/workspace/drive'
+      path: '/drive'
+      fullPath: '/workspace/drive'
+      preLoaderRoute: typeof WorkspaceDriveRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/.lovable/oauth/consent': {
       id: '/.lovable/oauth/consent'
       path: '/.lovable/oauth/consent'
@@ -820,10 +839,12 @@ const StaffRouteChildren: StaffRouteChildren = {
 const StaffRouteWithChildren = StaffRoute._addFileChildren(StaffRouteChildren)
 
 interface WorkspaceRouteChildren {
+  WorkspaceDriveRoute: typeof WorkspaceDriveRoute
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute
 }
 
 const WorkspaceRouteChildren: WorkspaceRouteChildren = {
+  WorkspaceDriveRoute: WorkspaceDriveRoute,
   WorkspaceIndexRoute: WorkspaceIndexRoute,
 }
 
