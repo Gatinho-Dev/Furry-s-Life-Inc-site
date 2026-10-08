@@ -1850,6 +1850,7 @@ export type Database = {
         Returns: boolean
       }
       drive_file_permission: { Args: { _file: string }; Returns: string }
+      drive_find_user: { Args: { _email: string }; Returns: string }
       drive_folder_permission: { Args: { _folder: string }; Returns: string }
       drive_object_readable: { Args: { _path: string }; Returns: boolean }
       email_queue_dispatch: { Args: never; Returns: undefined }
