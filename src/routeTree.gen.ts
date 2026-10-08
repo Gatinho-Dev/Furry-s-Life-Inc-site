@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DriveRouteImport } from './routes/drive'
 import { Route as LifeServerRouteImport } from './routes/life-server'
 import { Route as LifepayRouteImport } from './routes/lifepay'
 import { Route as MailRouteImport } from './routes/mail'
@@ -18,6 +19,7 @@ import { Route as McpRouteImport } from './routes/mcp'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StaffRouteImport } from './routes/staff'
+import { Route as WorkspaceRouteImport } from './routes/workspace'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AgencyIndexRouteImport } from './routes/agency.index'
@@ -37,6 +39,8 @@ import { Route as LifepayStaffRouteImport } from './routes/lifepay.staff'
 import { Route as LifepayTermosRouteImport } from './routes/lifepay.termos'
 import { Route as StaffIndexRouteImport } from './routes/staff.index'
 import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
+import { Route as WorkspaceIndexRouteImport } from './routes/workspace.index'
+import { Route as WorkspaceDriveRouteImport } from './routes/workspace.drive'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as LifepayPagarTokenRouteImport } from './routes/lifepay.pagar.$token'
@@ -53,6 +57,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DriveRoute = DriveRouteImport.update({
+  id: '/drive',
+  path: '/drive',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LifeServerRoute = LifeServerRouteImport.update({
@@ -88,6 +97,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const StaffRoute = StaffRouteImport.update({
   id: '/staff',
   path: '/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkspaceRoute = WorkspaceRouteImport.update({
+  id: '/workspace',
+  path: '/workspace',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Char91DotmcpChar93ListToolsRoute =
@@ -187,6 +201,16 @@ const StaffDashboardRoute = StaffDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => StaffRoute,
 } as any)
+const WorkspaceIndexRoute = WorkspaceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspaceDriveRoute = WorkspaceDriveRouteImport.update({
+  id: '/drive',
+  path: '/drive',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   id: '/.lovable/oauth/consent',
   path: '/.lovable/oauth/consent',
@@ -228,6 +252,7 @@ const LovableEmailQueueProcessRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/drive': typeof DriveRoute
   '/life-server': typeof LifeServerRoute
   '/lifepay': typeof LifepayRouteWithChildren
   '/mail': typeof MailRoute
@@ -235,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRouteWithChildren
+  '/workspace': typeof WorkspaceRouteWithChildren
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/agency/staff': typeof AgencyStaffRoute
@@ -248,12 +274,14 @@ export interface FileRoutesByFullPath {
   '/lifepay/staff': typeof LifepayStaffRoute
   '/lifepay/termos': typeof LifepayTermosRoute
   '/staff/dashboard': typeof StaffDashboardRoute
+  '/workspace/drive': typeof WorkspaceDriveRoute
   '/agency/': typeof AgencyIndexRoute
   '/aircare/': typeof AircareIndexRoute
   '/college/': typeof CollegeIndexRoute
   '/cond/': typeof CondIndexRoute
   '/lifepay/': typeof LifepayIndexRoute
   '/staff/': typeof StaffIndexRoute
+  '/workspace/': typeof WorkspaceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
@@ -265,6 +293,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/drive': typeof DriveRoute
   '/life-server': typeof LifeServerRoute
   '/mail': typeof MailRoute
   '/mcp': typeof McpRoute
@@ -283,12 +312,14 @@ export interface FileRoutesByTo {
   '/lifepay/staff': typeof LifepayStaffRoute
   '/lifepay/termos': typeof LifepayTermosRoute
   '/staff/dashboard': typeof StaffDashboardRoute
+  '/workspace/drive': typeof WorkspaceDriveRoute
   '/agency': typeof AgencyIndexRoute
   '/aircare': typeof AircareIndexRoute
   '/college': typeof CollegeIndexRoute
   '/cond': typeof CondIndexRoute
   '/lifepay': typeof LifepayIndexRoute
   '/staff': typeof StaffIndexRoute
+  '/workspace': typeof WorkspaceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
@@ -301,6 +332,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/drive': typeof DriveRoute
   '/life-server': typeof LifeServerRoute
   '/lifepay': typeof LifepayRouteWithChildren
   '/mail': typeof MailRoute
@@ -308,6 +340,7 @@ export interface FileRoutesById {
   '/news': typeof NewsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRouteWithChildren
+  '/workspace': typeof WorkspaceRouteWithChildren
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/agency/staff': typeof AgencyStaffRoute
@@ -321,12 +354,14 @@ export interface FileRoutesById {
   '/lifepay/staff': typeof LifepayStaffRoute
   '/lifepay/termos': typeof LifepayTermosRoute
   '/staff/dashboard': typeof StaffDashboardRoute
+  '/workspace/drive': typeof WorkspaceDriveRoute
   '/agency/': typeof AgencyIndexRoute
   '/aircare/': typeof AircareIndexRoute
   '/college/': typeof CollegeIndexRoute
   '/cond/': typeof CondIndexRoute
   '/lifepay/': typeof LifepayIndexRoute
   '/staff/': typeof StaffIndexRoute
+  '/workspace/': typeof WorkspaceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
@@ -340,6 +375,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/drive'
     | '/life-server'
     | '/lifepay'
     | '/mail'
@@ -347,6 +383,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/sitemap.xml'
     | '/staff'
+    | '/workspace'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/agency/staff'
@@ -360,12 +397,14 @@ export interface FileRouteTypes {
     | '/lifepay/staff'
     | '/lifepay/termos'
     | '/staff/dashboard'
+    | '/workspace/drive'
     | '/agency/'
     | '/aircare/'
     | '/college/'
     | '/cond/'
     | '/lifepay/'
     | '/staff/'
+    | '/workspace/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/lifepay/pagar/$token'
@@ -377,6 +416,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/drive'
     | '/life-server'
     | '/mail'
     | '/mcp'
@@ -395,12 +435,14 @@ export interface FileRouteTypes {
     | '/lifepay/staff'
     | '/lifepay/termos'
     | '/staff/dashboard'
+    | '/workspace/drive'
     | '/agency'
     | '/aircare'
     | '/college'
     | '/cond'
     | '/lifepay'
     | '/staff'
+    | '/workspace'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/lifepay/pagar/$token'
@@ -412,6 +454,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/drive'
     | '/life-server'
     | '/lifepay'
     | '/mail'
@@ -419,6 +462,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/sitemap.xml'
     | '/staff'
+    | '/workspace'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/agency/staff'
@@ -432,12 +476,14 @@ export interface FileRouteTypes {
     | '/lifepay/staff'
     | '/lifepay/termos'
     | '/staff/dashboard'
+    | '/workspace/drive'
     | '/agency/'
     | '/aircare/'
     | '/college/'
     | '/cond/'
     | '/lifepay/'
     | '/staff/'
+    | '/workspace/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/lifepay/pagar/$token'
@@ -450,6 +496,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  DriveRoute: typeof DriveRoute
   LifeServerRoute: typeof LifeServerRoute
   LifepayRoute: typeof LifepayRouteWithChildren
   MailRoute: typeof MailRoute
@@ -457,6 +504,7 @@ export interface RootRouteChildren {
   NewsRoute: typeof NewsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffRoute: typeof StaffRouteWithChildren
+  WorkspaceRoute: typeof WorkspaceRouteWithChildren
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AgencyStaffRoute: typeof AgencyStaffRoute
@@ -489,6 +537,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/drive': {
+      id: '/drive'
+      path: '/drive'
+      fullPath: '/drive'
+      preLoaderRoute: typeof DriveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/life-server': {
@@ -538,6 +593,13 @@ declare module '@tanstack/react-router' {
       path: '/staff'
       fullPath: '/staff'
       preLoaderRoute: typeof StaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/workspace': {
+      id: '/workspace'
+      path: '/workspace'
+      fullPath: '/workspace'
+      preLoaderRoute: typeof WorkspaceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -673,6 +735,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaffDashboardRouteImport
       parentRoute: typeof StaffRoute
     }
+    '/workspace/': {
+      id: '/workspace/'
+      path: '/'
+      fullPath: '/workspace/'
+      preLoaderRoute: typeof WorkspaceIndexRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/workspace/drive': {
+      id: '/workspace/drive'
+      path: '/drive'
+      fullPath: '/workspace/drive'
+      preLoaderRoute: typeof WorkspaceDriveRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/.lovable/oauth/consent': {
       id: '/.lovable/oauth/consent'
       path: '/.lovable/oauth/consent'
@@ -762,9 +838,24 @@ const StaffRouteChildren: StaffRouteChildren = {
 
 const StaffRouteWithChildren = StaffRoute._addFileChildren(StaffRouteChildren)
 
+interface WorkspaceRouteChildren {
+  WorkspaceDriveRoute: typeof WorkspaceDriveRoute
+  WorkspaceIndexRoute: typeof WorkspaceIndexRoute
+}
+
+const WorkspaceRouteChildren: WorkspaceRouteChildren = {
+  WorkspaceDriveRoute: WorkspaceDriveRoute,
+  WorkspaceIndexRoute: WorkspaceIndexRoute,
+}
+
+const WorkspaceRouteWithChildren = WorkspaceRoute._addFileChildren(
+  WorkspaceRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  DriveRoute: DriveRoute,
   LifeServerRoute: LifeServerRoute,
   LifepayRoute: LifepayRouteWithChildren,
   MailRoute: MailRoute,
@@ -772,6 +863,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewsRoute: NewsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffRoute: StaffRouteWithChildren,
+  WorkspaceRoute: WorkspaceRouteWithChildren,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
