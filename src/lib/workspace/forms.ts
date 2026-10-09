@@ -127,3 +127,14 @@ export function toCSV(fields: Field[], rows: { created_at: string; answers: Answ
     ...qs.map((q) => { const v = r.answers[q.id]; return Array.isArray(v) ? v.join("; ") : v ?? ""; })].map((x) => esc(String(x))).join(","));
   return "\uFEFF" + [head, ...body].join("\n");
 }
+
+/** Estilo de fundo da página do formulário. */
+export function formBackground(s: FormSettings): Record<string, string> {
+  const c = themeColor(s.theme, s.accentHex);
+  switch (s.background) {
+    case "tint": return { background: `color-mix(in oklab, ${c} 10%, transparent)` };
+    case "gradient": return { background: `linear-gradient(160deg, color-mix(in oklab, ${c} 22%, transparent), transparent 70%)` };
+    case "dots": return { backgroundImage: `radial-gradient(color-mix(in oklab, ${c} 35%, transparent) 1px, transparent 1px)`, backgroundSize: "18px 18px" };
+    default: return {};
+  }
+}

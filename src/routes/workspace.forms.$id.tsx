@@ -7,7 +7,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 import { FormRenderer } from "@/components/workspace/FormRenderer";
-import { FIELD_TYPES, THEMES, hasOptions, newField, themeColor, toCSV, uid, type Answers, type Field, type FieldType, type FormRow } from "@/lib/workspace/forms";
+import { FIELD_TYPES, THEMES, formBackground, hasOptions, optionsFor, newField, themeColor, toCSV, uid, type Answers, type Field, type FieldType, type FormRow } from "@/lib/workspace/forms";
 
 export const Route = createFileRoute("/workspace/forms/$id")({
   head: () => ({
@@ -135,7 +135,7 @@ function Editor() {
       {preview && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-background px-4 py-8">
           <button onClick={() => setPreview(false)} className="fixed right-5 top-5 z-10 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm shadow"><X className="h-4 w-4" />Fechar pré-visualização</button>
-          <div className="mx-auto max-w-2xl"><FormRenderer title={form.title} description={form.description} fields={form.fields} settings={form.settings} onSubmit={async () => { toast.info("Pré-visualização: a resposta não foi salva"); }} /></div>
+          <div className="mx-auto max-w-2xl rounded-3xl p-4" style={formBackground(form.settings)}><FormRenderer title={form.title} description={form.description} fields={form.fields} settings={form.settings} onSubmit={async () => { toast.info("Pré-visualização: a resposta não foi salva"); }} /></div>
         </div>
       )}
       {modal === "share" && <ShareModal formId={form.id} onClose={() => setModal(null)} />}
@@ -158,7 +158,7 @@ function FieldCard({ f, i, all, active, accent, canEdit, onFocus, onChange, onDe
         <input value={f.label} disabled={!canEdit} onChange={(e) => onChange({ label: e.target.value })}
           className={`flex-1 rounded-xl bg-secondary/50 px-4 py-3 outline-none focus:bg-secondary ${f.type === "section" ? "font-display text-lg font-bold" : "text-[15px] font-medium"}`} />
         {active && canEdit && (
-          <select value={f.type} onChange={(e) => { const t = e.target.value as FieldType; onChange({ type: t, options: hasOptions(t) ? f.options ?? ["Opção 1"] : undefined, max: t === "scale" ? f.max ?? 5 : undefined }); }}
+          <select value={f.type} onChange={(e) => { const t = e.target.value as FieldType; onChange({ type: t, options: hasOptions(t) ? f.options ?? ["Opção 1"] : undefined, max: t === "scale" || t === "rating" ? f.max ?? 5 : undefined }); }}
             className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm sm:w-52">
             {FIELD_TYPES.map((t) => <option key={t.type} value={t.type}>{t.label}</option>)}
           </select>
@@ -180,6 +180,11 @@ function FieldCard({ f, i, all, active, accent, canEdit, onFocus, onChange, onDe
           </div>
         )}
         {f.type === "scale" && <div className="flex items-center gap-3">De 1 até <select disabled={!canEdit} value={f.max ?? 5} onChange={(e) => onChange({ max: +e.target.value })} className="rounded-lg border border-border bg-background px-2 py-1">{[3, 4, 5, 6, 7, 8, 9, 10].map((n) => <option key={n}>{n}</option>)}</select></div>}
+        {(f.type === "rating") && <div className="flex items-center gap-3">Estrelas: <select disabled={!canEdit} value={f.max ?? 5} onChange={(e) => onChange({ max: +e.target.value })} className="rounded-lg border border-border bg-background px-2 py-1">{[3, 4, 5, 6, 7, 8, 9, 10].map((n) => <option key={n}>{n}</option>)}</select></div>}
+        {(f.type === "scale" || f.type === "nps") && active && canEdit && <div className="mt-2 grid grid-cols-2 gap-2"><input value={f.minLabel ?? ""} onChange={(e) => onChange({ minLabel: e.target.value })} placeholder="Rótulo mínimo (ex.: Ruim)" className="rounded-lg border border-border bg-background px-2 py-1 text-xs" /><input value={f.maxLabel ?? ""} onChange={(e) => onChange({ maxLabel: e.target.value })} placeholder="Rótulo máximo (ex.: Ótimo)" className="rounded-lg border border-border bg-background px-2 py-1 text-xs" /></div>}
+        {["nps", "yesno", "phone", "url", "time"].includes(f.type) && <div className="w-1/2 border-b border-dashed border-border pb-1.5">{FIELD_TYPES.find((t) => t.type === f.type)?.label}</div>}
+        {active && canEdit && ["short", "long", "email", "phone", "url"].includes(f.type) && <div className="mt-3 grid grid-cols-3 gap-2 text-xs"><input value={f.placeholder ?? ""} onChange={(e) => onChange({ placeholder: e.target.value })} placeholder="Texto de exemplo" className="col-span-3 rounded-lg border border-border bg-background px-2 py-1 sm:col-span-1" />{["short", "long"].includes(f.type) && <><input type="number" min={0} value={f.minLength ?? ""} onChange={(e) => onChange({ minLength: e.target.value ? +e.target.value : undefined })} placeholder="Mín. caracteres" className="rounded-lg border border-border bg-background px-2 py-1" /><input type="number" min={0} value={f.maxLength ?? ""} onChange={(e) => onChange({ maxLength: e.target.value ? +e.target.value : undefined })} placeholder="Máx. caracteres" className="rounded-lg border border-border bg-background px-2 py-1" /></>}</div>}
+        {active && canEdit && hasOptions(f.type) && <label className="mt-3 flex items-center gap-2 text-xs"><input type="checkbox" checked={!!f.shuffle} onChange={(e) => onChange({ shuffle: e.target.checked })} />Embaralhar ordem das opções</label>}
         {["short", "email", "number", "date"].includes(f.type) && <div className="w-1/2 border-b border-dashed border-border pb-1.5">{FIELD_TYPES.find((t) => t.type === f.type)?.label}</div>}
         {f.type === "long" && <div className="w-3/4 border-b border-dashed border-border pb-1.5">Texto de resposta longa</div>}
       </div>
@@ -252,9 +257,9 @@ function Responses({ form, accent, canDelete, onToggle }: { form: FormRow; accen
       </div>
       {!rows.length ? <div className="rounded-3xl border border-dashed border-border bg-card py-14 text-center text-sm text-muted-foreground">Ainda não há respostas. Publique e compartilhe o link.</div>
         : view === "summary" ? stats.map(({ q, vals, counts }) => {
-          const opts = hasOptions(q.type) ? q.options ?? [] : q.type === "scale" ? Array.from({ length: q.max ?? 5 }, (_, i) => String(i + 1)) : null;
+          const opts = optionsFor(q);
           const max = Math.max(1, ...Object.values(counts));
-          const avg = q.type === "scale" || q.type === "number" ? vals.reduce((s, v) => s + Number(v), 0) / (vals.length || 1) : null;
+          const avg = ["scale", "number", "rating", "nps"].includes(q.type) ? vals.reduce((s, v) => s + Number(v), 0) / (vals.length || 1) : null;
           return (
             <div key={q.id} className="rounded-3xl border border-border bg-card p-6">
               <div className="font-medium">{q.label}</div><div className="text-xs text-muted-foreground">{vals.length} resposta(s){avg !== null && vals.length ? ` · média ${avg.toFixed(1)}` : ""}</div>
@@ -302,6 +307,33 @@ function SettingsTab({ form, canEdit, patch, publish, link }: { form: FormRow; c
         ))}</div>
       </div>
       <div className={row}>
+        <div className="font-semibold">Aparência</div>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2 text-sm">
+          <label className="space-y-1"><span className="text-xs text-muted-foreground">Cor personalizada</span>
+            <div className="flex gap-2"><input type="color" disabled={!canEdit} value={s.accentHex ?? "#4f46e5"} onChange={(e) => set({ theme: "custom", accentHex: e.target.value })} className="h-10 w-14 rounded-lg border border-border" />
+              <button disabled={!canEdit} onClick={() => set({ theme: "custom", accentHex: s.accentHex ?? "#4f46e5" })} className={`rounded-xl border px-3 text-xs ${s.theme === "custom" ? "border-primary bg-primary/5" : "border-border"}`}>Usar cor própria</button></div></label>
+          <Pick label="Fonte" value={s.font ?? "sans"} disabled={!canEdit} onChange={(v) => set({ font: v as typeof s.font })} opts={[["sans", "Moderna"], ["serif", "Clássica"], ["mono", "Técnica"], ["rounded", "Arredondada"]]} />
+          <Pick label="Fundo" value={s.background ?? "plain"} disabled={!canEdit} onChange={(v) => set({ background: v as typeof s.background })} opts={[["plain", "Liso"], ["tint", "Tom da cor"], ["gradient", "Degradê"], ["dots", "Pontilhado"]]} />
+          <Pick label="Cantos" value={s.radius ?? "round"} disabled={!canEdit} onChange={(v) => set({ radius: v as typeof s.radius })} opts={[["sharp", "Retos"], ["soft", "Suaves"], ["round", "Redondos"]]} />
+          <label className="space-y-1 sm:col-span-2"><span className="text-xs text-muted-foreground">Imagem de capa (link https)</span><input disabled={!canEdit} value={s.coverUrl ?? ""} onChange={(e) => set({ coverUrl: e.target.value })} placeholder="https://…/capa.jpg" className="w-full rounded-xl border border-border bg-background px-3 py-2" /></label>
+          <label className="space-y-1 sm:col-span-2"><span className="text-xs text-muted-foreground">Logotipo (link https)</span><input disabled={!canEdit} value={s.logoUrl ?? ""} onChange={(e) => set({ logoUrl: e.target.value })} placeholder="https://…/logo.png" className="w-full rounded-xl border border-border bg-background px-3 py-2" /></label>
+          <label className="space-y-1"><span className="text-xs text-muted-foreground">Texto do botão enviar</span><input disabled={!canEdit} value={s.submitLabel ?? ""} onChange={(e) => set({ submitLabel: e.target.value })} placeholder="Enviar" className="w-full rounded-xl border border-border bg-background px-3 py-2" /></label>
+          <div className="space-y-2 pt-5">
+            <label className="flex items-center justify-between">Barra de progresso<input type="checkbox" disabled={!canEdit} checked={!!s.showProgress} onChange={(e) => set({ showProgress: e.target.checked })} className="h-4 w-4" /></label>
+            <label className="flex items-center justify-between">Ocultar “Criado com Life Forms”<input type="checkbox" disabled={!canEdit} checked={!!s.hideBranding} onChange={(e) => set({ hideBranding: e.target.checked })} className="h-4 w-4" /></label>
+          </div>
+        </div>
+      </div>
+      <div className={row}>
+        <div className="font-semibold">Regras de coleta</div>
+        <div className="mt-3 grid gap-4 text-sm sm:grid-cols-2">
+          <label className="space-y-1"><span className="text-xs text-muted-foreground">Encerrar automaticamente em</span><input type="datetime-local" disabled={!canEdit} value={s.closesAt ?? ""} onChange={(e) => set({ closesAt: e.target.value || undefined })} className="w-full rounded-xl border border-border bg-background px-3 py-2" /></label>
+          <label className="space-y-1"><span className="text-xs text-muted-foreground">Limite de respostas</span><input type="number" min={1} disabled={!canEdit} value={s.maxResponses ?? ""} onChange={(e) => set({ maxResponses: e.target.value ? +e.target.value : undefined })} placeholder="Sem limite" className="w-full rounded-xl border border-border bg-background px-3 py-2" /></label>
+          <label className="space-y-1 sm:col-span-2"><span className="text-xs text-muted-foreground">Redirecionar após enviar (link https, opcional)</span><input disabled={!canEdit} value={s.redirectUrl ?? ""} onChange={(e) => set({ redirectUrl: e.target.value })} placeholder="https://furrys.life" className="w-full rounded-xl border border-border bg-background px-3 py-2" /></label>
+          <label className="flex items-center justify-between sm:col-span-2">Permitir “Enviar outra resposta”<input type="checkbox" disabled={!canEdit} checked={!!s.allowAnother} onChange={(e) => set({ allowAnother: e.target.checked })} className="h-4 w-4" /></label>
+        </div>
+      </div>
+      <div className={row}>
         <div className="font-semibold">Acesso</div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {([["public", "Link público", "Qualquer pessoa com o link pode responder"], ["private", "Privado", "Somente quem entrar com Furry ID"]] as const).map(([k, l, d]) => (
@@ -332,6 +364,10 @@ function SettingsTab({ form, canEdit, patch, publish, link }: { form: FormRow; c
       </div>
     </div>
   );
+}
+
+function Pick({ label, value, opts, onChange, disabled }: { label: string; value: string; opts: [string, string][]; onChange: (v: string) => void; disabled?: boolean }) {
+  return <label className="space-y-1"><span className="text-xs text-muted-foreground">{label}</span><select disabled={disabled} value={value} onChange={(e) => onChange(e.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2">{opts.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>;
 }
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
