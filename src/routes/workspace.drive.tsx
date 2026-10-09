@@ -60,7 +60,7 @@ type Upload = { id: string; name: string; progress: number; done: boolean; error
 
 function DrivePage() {
   const auth = useAuth();
-  const me = auth.user!.id;
+  const me = auth.user?.id ?? "";
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const [view, setView] = useState<View>("home");
