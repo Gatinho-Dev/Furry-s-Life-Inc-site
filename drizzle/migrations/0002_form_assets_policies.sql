@@ -1,0 +1,3 @@
+CREATE POLICY "form assets own read" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'form-assets' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "form assets own upload" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'form-assets' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "form assets own delete" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'form-assets' AND (storage.foldername(name))[1] = auth.uid()::text);
