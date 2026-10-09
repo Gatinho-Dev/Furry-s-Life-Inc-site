@@ -631,6 +631,156 @@ export type Database = {
         }
         Relationships: []
       }
+      form_collaborators: {
+        Row: {
+          created_at: string
+          email: string
+          form_id: string
+          id: string
+          permission: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          form_id: string
+          id?: string
+          permission?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          form_id?: string
+          id?: string
+          permission?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_collaborators_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_responses: {
+        Row: {
+          answers: Json
+          created_at: string
+          form_id: string
+          id: string
+          respondent_id: string | null
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          form_id: string
+          id?: string
+          respondent_id?: string | null
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          form_id?: string
+          id?: string
+          respondent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_responses_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          fields: Json
+          form_id: string
+          id: string
+          label: string | null
+          settings: Json
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          fields: Json
+          form_id: string
+          id?: string
+          label?: string | null
+          settings: Json
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          fields?: Json
+          form_id?: string
+          id?: string
+          label?: string | null
+          settings?: Json
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_versions_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forms: {
+        Row: {
+          created_at: string
+          description: string
+          fields: Json
+          id: string
+          owner_id: string
+          settings: Json
+          status: string
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          fields?: Json
+          id?: string
+          owner_id: string
+          settings?: Json
+          status?: string
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          fields?: Json
+          id?: string
+          owner_id?: string
+          settings?: Json
+          status?: string
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       lifepay_accounts: {
         Row: {
           account_type: string
@@ -1895,6 +2045,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      form_accepts: { Args: { _form: string }; Returns: boolean }
+      form_role: { Args: { _form: string }; Returns: string }
       has_lifepay_perm: {
         Args: { _perm: string; _user_id: string }
         Returns: boolean

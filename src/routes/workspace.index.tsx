@@ -34,14 +34,19 @@ function Launcher() {
           <h1 className="mt-3 font-display text-4xl font-bold md:text-6xl">Life Workspace</h1>
           <p className="mt-3 text-lg text-muted-foreground">Seu espaço de trabalho digital.</p>
         </div>
-        <Link to="/workspace/drive" search={{ folder: undefined }} className="group mt-12 flex items-center gap-6 rounded-3xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl md:p-9">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><drive.icon className="h-8 w-8" /></div>
-          <div className="flex-1">
-            <h2 className="font-display text-2xl font-bold">{drive.name}</h2>
-            <p className="mt-1 text-muted-foreground">{drive.description}</p>
-          </div>
-          <ArrowRight className="h-6 w-6 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
-        </Link>
+        <div className="mt-12 grid gap-4 md:grid-cols-2">
+          {[drive, forms].map((app) => {
+            const inner = (<>
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><app.icon className="h-7 w-7" /></div>
+              <div className="flex-1"><h2 className="font-display text-xl font-bold">{app.name}</h2><p className="mt-1 text-sm text-muted-foreground">{app.description}</p></div>
+              <ArrowRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+            </>);
+            const cls = "group flex items-center gap-5 rounded-3xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl";
+            return app.key === "drive"
+              ? <Link key={app.key} to="/workspace/drive" search={{ folder: undefined }} className={cls}>{inner}</Link>
+              : <Link key={app.key} to="/workspace/forms" className={cls}>{inner}</Link>;
+          })}
+        </div>
         <div className="mt-14">
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Em breve</div>
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
