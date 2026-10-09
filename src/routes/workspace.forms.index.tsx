@@ -45,7 +45,7 @@ function FormsHome() {
     setForms(data.filter((f: FormRow) => f.owner_id === (auth.user?.id ?? "") || mine.has(f.id))
       .map((f: FormRow & { form_responses: { count: number }[] }) => ({ ...f, count: f.form_responses?.[0]?.count ?? 0 })));
   };
-  useEffect(() => { load(); }, []); // eslint-disable-line
+  useEffect(() => { if (auth.user) load(); }, [auth.user?.id]); // eslint-disable-line
 
   const create = async (title: string, fields: Field[], theme: string, description = "") => {
     const { data, error } = await db.from("forms").insert({ owner_id: (auth.user?.id ?? ""), title, description, fields, settings: { theme, accepting: true } }).select("id").single();
