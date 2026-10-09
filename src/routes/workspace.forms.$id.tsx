@@ -47,8 +47,8 @@ function Editor() {
       const { data, error } = await db.from("forms").select("*").eq("id", id).maybeSingle();
       if (error || !data) { toast.error("Formulário não encontrado"); return; }
       setForm(data);
-      if (data.owner_id === auth.user!.id) setRole("owner");
-      else { const { data: c } = await db.from("form_collaborators").select("permission").eq("form_id", id).eq("user_id", auth.user!.id).maybeSingle(); setRole(c?.permission ?? "view"); }
+      if (data.owner_id === (auth.user?.id ?? "")) setRole("owner");
+      else { const { data: c } = await db.from("form_collaborators").select("permission").eq("form_id", id).eq("user_id", (auth.user?.id ?? "")).maybeSingle(); setRole(c?.permission ?? "view"); }
     })();
   }, [id, auth.user]);
 
@@ -72,7 +72,7 @@ function Editor() {
     if (!form) return;
     const { error } = await db.from("forms").update({ status, title: form.title, description: form.description, fields: form.fields, settings: form.settings }).eq("id", form.id);
     if (error) return toast.error(error.message);
-    if (status === "published") await db.from("form_versions").insert({ form_id: form.id, title: form.title, description: form.description, fields: form.fields, settings: form.settings, created_by: auth.user!.id, label: "Publicado" });
+    if (status === "published") await db.from("form_versions").insert({ form_id: form.id, title: form.title, description: form.description, fields: form.fields, settings: form.settings, created_by: (auth.user?.id ?? ""), label: "Publicado" });
     setForm({ ...form, status });
     toast.success(status === "published" ? "Formulário publicado" : status === "closed" ? "Respostas encerradas" : "Voltou para rascunho");
   };
@@ -385,7 +385,7 @@ function VersionsModal({ form, canEdit, onClose, onRestore }: { form: FormRow; c
   const load = useCallback(async () => { const { data } = await db.from("form_versions").select("*").eq("form_id", form.id).order("created_at", { ascending: false }); setList(data ?? []); }, [form.id]);
   useEffect(() => { load(); }, [load]);
   const snapshot = async () => {
-    const { error } = await db.from("form_versions").insert({ form_id: form.id, title: form.title, description: form.description, fields: form.fields, settings: form.settings, created_by: auth.user!.id, label: "Salvo manualmente" });
+    const { error } = await db.from("form_versions").insert({ form_id: form.id, title: form.title, description: form.description, fields: form.fields, settings: form.settings, created_by: (auth.user?.id ?? ""), label: "Salvo manualmente" });
     if (error) toast.error(error.message); else { toast.success("Versão salva"); load(); }
   };
   return (

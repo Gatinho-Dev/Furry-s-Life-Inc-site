@@ -40,15 +40,15 @@ function FormsHome() {
     const { data, error } = await db.from("forms").select("*, form_responses(count)").order("updated_at", { ascending: false });
     if (error) return toast.error(error.message);
     // só os meus e os que colaboro (não listar todos os publicados)
-    const { data: collab } = await db.from("form_collaborators").select("form_id").eq("user_id", auth.user!.id);
+    const { data: collab } = await db.from("form_collaborators").select("form_id").eq("user_id", (auth.user?.id ?? ""));
     const mine = new Set((collab ?? []).map((c: { form_id: string }) => c.form_id));
-    setForms(data.filter((f: FormRow) => f.owner_id === auth.user!.id || mine.has(f.id))
+    setForms(data.filter((f: FormRow) => f.owner_id === (auth.user?.id ?? "") || mine.has(f.id))
       .map((f: FormRow & { form_responses: { count: number }[] }) => ({ ...f, count: f.form_responses?.[0]?.count ?? 0 })));
   };
   useEffect(() => { load(); }, []); // eslint-disable-line
 
   const create = async (title: string, fields: Field[], theme: string, description = "") => {
-    const { data, error } = await db.from("forms").insert({ owner_id: auth.user!.id, title, description, fields, settings: { theme, accepting: true } }).select("id").single();
+    const { data, error } = await db.from("forms").insert({ owner_id: (auth.user?.id ?? ""), title, description, fields, settings: { theme, accepting: true } }).select("id").single();
     if (error) return toast.error(error.message);
     nav({ to: "/workspace/forms/$id", params: { id: data.id } });
   };
@@ -117,11 +117,11 @@ function FormsHome() {
                     <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                       <span className={`rounded-full px-2 py-0.5 ${f.status === "published" ? "bg-success/15 text-success" : "bg-secondary"}`}>{STATUS[f.status]}</span>
                       <span>{f.count} resposta(s)</span>
-                      {f.owner_id !== auth.user!.id && <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" />Compartilhado</span>}
+                      {f.owner_id !== (auth.user?.id ?? "") && <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" />Compartilhado</span>}
                     </div>
                     <div className="mt-3 text-xs text-muted-foreground">Editado {new Date(f.updated_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}</div>
                   </Link>
-                  {f.owner_id === auth.user!.id && <button onClick={() => remove(f)} aria-label="Excluir" className="absolute right-3 top-3 rounded-lg p-1.5 text-muted-foreground opacity-0 transition hover:text-destructive group-hover:opacity-100"><Trash2 className="h-4 w-4" /></button>}
+                  {f.owner_id === (auth.user?.id ?? "") && <button onClick={() => remove(f)} aria-label="Excluir" className="absolute right-3 top-3 rounded-lg p-1.5 text-muted-foreground opacity-0 transition hover:text-destructive group-hover:opacity-100"><Trash2 className="h-4 w-4" /></button>}
                 </div>
               ))}
             </div>
