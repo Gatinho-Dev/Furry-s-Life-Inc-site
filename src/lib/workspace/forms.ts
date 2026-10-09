@@ -1,4 +1,4 @@
-export type FieldType = "short" | "long" | "email" | "number" | "date" | "choice" | "checkbox" | "dropdown" | "scale" | "section";
+export type FieldType = "short" | "long" | "email" | "number" | "date" | "choice" | "checkbox" | "dropdown" | "scale" | "section" | "rating" | "nps" | "yesno" | "phone" | "url" | "time";
 export type Field = {
   id: string;
   type: FieldType;
@@ -6,7 +6,13 @@ export type Field = {
   help?: string;
   required?: boolean;
   options?: string[];
-  max?: number; // escala
+  max?: number; // escala / estrelas
+  placeholder?: string;
+  shuffle?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  minLabel?: string;
+  maxLabel?: string;
   showIf?: { fieldId: string; equals: string } | null;
 };
 export type FormSettings = {
@@ -14,6 +20,19 @@ export type FormSettings = {
   confirmation?: string;
   accepting?: boolean;
   oneResponse?: boolean;
+  accentHex?: string;
+  font?: "sans" | "serif" | "mono" | "rounded";
+  background?: "plain" | "tint" | "gradient" | "dots";
+  radius?: "sharp" | "soft" | "round";
+  coverUrl?: string;
+  logoUrl?: string;
+  submitLabel?: string;
+  showProgress?: boolean;
+  allowAnother?: boolean;
+  redirectUrl?: string;
+  closesAt?: string;
+  maxResponses?: number;
+  hideBranding?: boolean;
 };
 export type FormRow = {
   id: string; owner_id: string; title: string; description: string; fields: Field[]; settings: FormSettings;
@@ -30,6 +49,12 @@ export const FIELD_TYPES: { type: FieldType; label: string }[] = [
   { type: "checkbox", label: "Caixas de seleção" },
   { type: "dropdown", label: "Lista suspensa" },
   { type: "scale", label: "Escala linear" },
+  { type: "rating", label: "Avaliação (estrelas)" },
+  { type: "nps", label: "NPS (0 a 10)" },
+  { type: "yesno", label: "Sim / Não" },
+  { type: "phone", label: "Telefone" },
+  { type: "url", label: "Link (URL)" },
+  { type: "time", label: "Horário" },
   { type: "section", label: "Título de seção" },
 ];
 export const hasOptions = (t: FieldType) => t === "choice" || t === "checkbox" || t === "dropdown";
@@ -44,12 +69,22 @@ export const THEMES: { key: string; label: string; color: string }[] = [
   { key: "teal", label: "Turquesa", color: "oklch(0.6 0.11 195)" },
   { key: "graphite", label: "Grafite", color: "oklch(0.32 0.02 260)" },
 ];
-export const themeColor = (k?: string) => THEMES.find((t) => t.key === k)?.color ?? THEMES[0].color;
+export const themeColor = (k?: string, hex?: string) => (k === "custom" && hex ? hex : THEMES.find((t) => t.key === k)?.color ?? THEMES[0].color);
+export const FONTS = { sans: "ui-sans-serif, -apple-system, system-ui, sans-serif", serif: "ui-serif, Georgia, 'Times New Roman', serif", mono: "ui-monospace, SFMono-Regular, Menlo, monospace", rounded: "ui-rounded, 'SF Pro Rounded', system-ui, sans-serif" } as const;
+export const RADIUS = { sharp: "0.5rem", soft: "1rem", round: "1.75rem" } as const;
+/** Valores possíveis para estatísticas de perguntas fechadas. */
+export function optionsFor(f: Field): string[] | null {
+  if (hasOptions(f.type)) return f.options ?? [];
+  if (f.type === "scale" || f.type === "rating") return Array.from({ length: f.max ?? 5 }, (_, i) => String(i + 1));
+  if (f.type === "nps") return Array.from({ length: 11 }, (_, i) => String(i));
+  if (f.type === "yesno") return ["Sim", "Não"];
+  return null;
+}
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 export const newField = (type: FieldType = "short"): Field => ({
   id: uid(), type, label: type === "section" ? "Nova seção" : "Pergunta sem título", required: false,
-  options: hasOptions(type) ? ["Opção 1"] : undefined, max: type === "scale" ? 5 : undefined, showIf: null,
+  options: hasOptions(type) ? ["Opção 1"] : undefined, max: type === "scale" || type === "rating" ? 5 : undefined, showIf: null,
 });
 
 export type Answers = Record<string, string | string[]>;
@@ -75,6 +110,13 @@ export const TEMPLATES: { key: string; name: string; description: string; title:
   { key: "job", name: "Candidatura", description: "Processo seletivo", title: "Trabalhe na Furry's Life", theme: "graphite", fields: () => [
     T("Nome completo", "short", { required: true }), T("E-mail", "email", { required: true }), T("Área de interesse", "dropdown", { options: ["Tecnologia", "Design", "Marketing", "Operações"] }),
     T("Anos de experiência", "number"), T("Data disponível para início", "date"), T("Conte sobre você", "long") ] },
+  { key: "nps", name: "NPS", description: "Net Promoter Score", title: "De 0 a 10, quanto nos recomendaria?", theme: "emerald", fields: () => [
+    T("Qual a probabilidade de você nos recomendar a um amigo?", "nps", { required: true, minLabel: "Nada provável", maxLabel: "Muito provável" }), T("O que motivou sua nota?", "long") ] },
+  { key: "order", name: "Pedido", description: "Produtos e entrega", title: "Faça seu pedido", theme: "rose", fields: () => [
+    T("Nome", "short", { required: true }), T("Telefone", "phone", { required: true }), T("Produtos", "checkbox", { options: ["Produto A", "Produto B", "Produto C"], required: true }),
+    T("Quantidade", "number"), T("Data de entrega", "date"), T("Horário preferido", "time"), T("Observações", "long") ] },
+  { key: "review", name: "Avaliação de produto", description: "Estrelas e comentários", title: "Avalie nosso produto", theme: "amber", fields: () => [
+    T("Nota geral", "rating", { required: true, max: 5 }), T("Recomendaria?", "yesno"), T("Comentários", "long") ] },
 ];
 
 export function toCSV(fields: Field[], rows: { created_at: string; answers: Answers }[]) {
