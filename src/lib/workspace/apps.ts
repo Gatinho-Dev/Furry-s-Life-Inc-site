@@ -16,7 +16,7 @@ export const WORKSPACE_APPS: WorkspaceApp[] = [
   { key: "sheets", name: "Life Sheets", description: "Planilhas.", path: "/workspace/sheets", icon: Sheet, available: false },
   { key: "slides", name: "Life Slides", description: "Apresentações.", path: "/workspace/slides", icon: Presentation, available: false },
   { key: "calendar", name: "Life Calendar", description: "Agenda.", path: "/workspace/calendar", icon: Calendar, available: false },
-  { key: "forms", name: "Life Forms", description: "Formulários.", path: "/workspace/forms", icon: ClipboardList, available: false },
+  { key: "forms", name: "Life Forms", description: "Crie, publique e analise formulários.", path: "/workspace/forms", icon: ClipboardList, available: true },
   { key: "tasks", name: "Life Tasks", description: "Tarefas.", path: "/workspace/tasks", icon: CheckSquare, available: false },
   { key: "meet", name: "Life Meet", description: "Videochamadas.", path: "/workspace/meet", icon: Video, available: false },
   { key: "chat", name: "Life Chat", description: "Mensagens.", path: "/workspace/chat", icon: MessageSquare, available: false },

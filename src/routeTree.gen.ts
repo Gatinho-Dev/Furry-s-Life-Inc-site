@@ -30,6 +30,7 @@ import { Route as CollegeIndexRouteImport } from './routes/college.index'
 import { Route as CollegeStaffRouteImport } from './routes/college.staff'
 import { Route as CondIndexRouteImport } from './routes/cond.index'
 import { Route as CondStaffRouteImport } from './routes/cond.staff'
+import { Route as FIdRouteImport } from './routes/f.$id'
 import { Route as LifepayIndexRouteImport } from './routes/lifepay.index'
 import { Route as LifepayAppRouteImport } from './routes/lifepay.app'
 import { Route as LifepayEntrarRouteImport } from './routes/lifepay.entrar'
@@ -44,6 +45,8 @@ import { Route as WorkspaceDriveRouteImport } from './routes/workspace.drive'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as LifepayPagarTokenRouteImport } from './routes/lifepay.pagar.$token'
+import { Route as WorkspaceFormsIndexRouteImport } from './routes/workspace.forms.index'
+import { Route as WorkspaceFormsIdRouteImport } from './routes/workspace.forms.$id'
 import { Route as ApiPublicEmailInboundRouteImport } from './routes/api/public/email/inbound'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -156,6 +159,11 @@ const CondStaffRoute = CondStaffRouteImport.update({
   path: '/cond/staff',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FIdRoute = FIdRouteImport.update({
+  id: '/f/$id',
+  path: '/f/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LifepayIndexRoute = LifepayIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -227,6 +235,16 @@ const LifepayPagarTokenRoute = LifepayPagarTokenRouteImport.update({
   path: '/pagar/$token',
   getParentRoute: () => LifepayRoute,
 } as any)
+const WorkspaceFormsIndexRoute = WorkspaceFormsIndexRouteImport.update({
+  id: '/forms/',
+  path: '/forms/',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspaceFormsIdRoute = WorkspaceFormsIdRouteImport.update({
+  id: '/forms/$id',
+  path: '/forms/$id',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
 const ApiPublicEmailInboundRoute = ApiPublicEmailInboundRouteImport.update({
   id: '/api/public/email/inbound',
   path: '/api/public/email/inbound',
@@ -267,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
   '/cond/staff': typeof CondStaffRoute
+  '/f/$id': typeof FIdRoute
   '/lifepay/app': typeof LifepayAppRoute
   '/lifepay/entrar': typeof LifepayEntrarRoute
   '/lifepay/privacidade': typeof LifepayPrivacidadeRoute
@@ -285,6 +304,8 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
+  '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
+  '/workspace/forms/': typeof WorkspaceFormsIndexRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -305,6 +326,7 @@ export interface FileRoutesByTo {
   '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
   '/cond/staff': typeof CondStaffRoute
+  '/f/$id': typeof FIdRoute
   '/lifepay/app': typeof LifepayAppRoute
   '/lifepay/entrar': typeof LifepayEntrarRoute
   '/lifepay/privacidade': typeof LifepayPrivacidadeRoute
@@ -323,6 +345,8 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
+  '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
+  '/workspace/forms': typeof WorkspaceFormsIndexRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -347,6 +371,7 @@ export interface FileRoutesById {
   '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
   '/cond/staff': typeof CondStaffRoute
+  '/f/$id': typeof FIdRoute
   '/lifepay/app': typeof LifepayAppRoute
   '/lifepay/entrar': typeof LifepayEntrarRoute
   '/lifepay/privacidade': typeof LifepayPrivacidadeRoute
@@ -365,6 +390,8 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
+  '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
+  '/workspace/forms/': typeof WorkspaceFormsIndexRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -390,6 +417,7 @@ export interface FileRouteTypes {
     | '/aircare/staff'
     | '/college/staff'
     | '/cond/staff'
+    | '/f/$id'
     | '/lifepay/app'
     | '/lifepay/entrar'
     | '/lifepay/privacidade'
@@ -408,6 +436,8 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/lifepay/pagar/$token'
+    | '/workspace/forms/$id'
+    | '/workspace/forms/'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -428,6 +458,7 @@ export interface FileRouteTypes {
     | '/aircare/staff'
     | '/college/staff'
     | '/cond/staff'
+    | '/f/$id'
     | '/lifepay/app'
     | '/lifepay/entrar'
     | '/lifepay/privacidade'
@@ -446,6 +477,8 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/lifepay/pagar/$token'
+    | '/workspace/forms/$id'
+    | '/workspace/forms'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -469,6 +502,7 @@ export interface FileRouteTypes {
     | '/aircare/staff'
     | '/college/staff'
     | '/cond/staff'
+    | '/f/$id'
     | '/lifepay/app'
     | '/lifepay/entrar'
     | '/lifepay/privacidade'
@@ -487,6 +521,8 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/lifepay/pagar/$token'
+    | '/workspace/forms/$id'
+    | '/workspace/forms/'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -511,6 +547,7 @@ export interface RootRouteChildren {
   AircareStaffRoute: typeof AircareStaffRoute
   CollegeStaffRoute: typeof CollegeStaffRoute
   CondStaffRoute: typeof CondStaffRoute
+  FIdRoute: typeof FIdRoute
   AgencyIndexRoute: typeof AgencyIndexRoute
   AircareIndexRoute: typeof AircareIndexRoute
   CollegeIndexRoute: typeof CollegeIndexRoute
@@ -672,6 +709,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CondStaffRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/f/$id': {
+      id: '/f/$id'
+      path: '/f/$id'
+      fullPath: '/f/$id'
+      preLoaderRoute: typeof FIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lifepay/': {
       id: '/lifepay/'
       path: '/'
@@ -770,6 +814,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LifepayPagarTokenRouteImport
       parentRoute: typeof LifepayRoute
     }
+    '/workspace/forms/': {
+      id: '/workspace/forms/'
+      path: '/forms'
+      fullPath: '/workspace/forms/'
+      preLoaderRoute: typeof WorkspaceFormsIndexRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/workspace/forms/$id': {
+      id: '/workspace/forms/$id'
+      path: '/forms/$id'
+      fullPath: '/workspace/forms/$id'
+      preLoaderRoute: typeof WorkspaceFormsIdRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/api/public/email/inbound': {
       id: '/api/public/email/inbound'
       path: '/api/public/email/inbound'
@@ -841,11 +899,15 @@ const StaffRouteWithChildren = StaffRoute._addFileChildren(StaffRouteChildren)
 interface WorkspaceRouteChildren {
   WorkspaceDriveRoute: typeof WorkspaceDriveRoute
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute
+  WorkspaceFormsIdRoute: typeof WorkspaceFormsIdRoute
+  WorkspaceFormsIndexRoute: typeof WorkspaceFormsIndexRoute
 }
 
 const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceDriveRoute: WorkspaceDriveRoute,
   WorkspaceIndexRoute: WorkspaceIndexRoute,
+  WorkspaceFormsIdRoute: WorkspaceFormsIdRoute,
+  WorkspaceFormsIndexRoute: WorkspaceFormsIndexRoute,
 }
 
 const WorkspaceRouteWithChildren = WorkspaceRoute._addFileChildren(
@@ -871,6 +933,7 @@ const rootRouteChildren: RootRouteChildren = {
   AircareStaffRoute: AircareStaffRoute,
   CollegeStaffRoute: CollegeStaffRoute,
   CondStaffRoute: CondStaffRoute,
+  FIdRoute: FIdRoute,
   AgencyIndexRoute: AgencyIndexRoute,
   AircareIndexRoute: AircareIndexRoute,
   CollegeIndexRoute: CollegeIndexRoute,
