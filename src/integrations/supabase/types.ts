@@ -2368,6 +2368,7 @@ export type Database = {
         }
       }
       form_accepts: { Args: { _form: string }; Returns: boolean }
+      form_response_count: { Args: { _form: string }; Returns: number }
       form_role: { Args: { _form: string }; Returns: string }
       has_lifepay_perm: {
         Args: { _perm: string; _user_id: string }
