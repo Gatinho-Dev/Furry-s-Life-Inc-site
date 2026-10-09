@@ -315,8 +315,8 @@ function SettingsTab({ form, canEdit, patch, publish, link }: { form: FormRow; c
           <Pick label="Fonte" value={s.font ?? "sans"} disabled={!canEdit} onChange={(v) => set({ font: v as typeof s.font })} opts={[["sans", "Moderna"], ["serif", "Clássica"], ["mono", "Técnica"], ["rounded", "Arredondada"]]} />
           <Pick label="Fundo" value={s.background ?? "plain"} disabled={!canEdit} onChange={(v) => set({ background: v as typeof s.background })} opts={[["plain", "Liso"], ["tint", "Tom da cor"], ["gradient", "Degradê"], ["dots", "Pontilhado"]]} />
           <Pick label="Cantos" value={s.radius ?? "round"} disabled={!canEdit} onChange={(v) => set({ radius: v as typeof s.radius })} opts={[["sharp", "Retos"], ["soft", "Suaves"], ["round", "Redondos"]]} />
-          <label className="space-y-1 sm:col-span-2"><span className="text-xs text-muted-foreground">Imagem de capa (link https)</span><input disabled={!canEdit} value={s.coverUrl ?? ""} onChange={(e) => set({ coverUrl: e.target.value })} placeholder="https://…/capa.jpg" className="w-full rounded-xl border border-border bg-background px-3 py-2" /></label>
-          <label className="space-y-1 sm:col-span-2"><span className="text-xs text-muted-foreground">Logotipo (link https)</span><input disabled={!canEdit} value={s.logoUrl ?? ""} onChange={(e) => set({ logoUrl: e.target.value })} placeholder="https://…/logo.png" className="w-full rounded-xl border border-border bg-background px-3 py-2" /></label>
+          <ImageUpload label="Imagem de capa" value={s.coverUrl} disabled={!canEdit} onChange={(v) => set({ coverUrl: v })} />
+          <ImageUpload label="Logotipo" value={s.logoUrl} disabled={!canEdit} onChange={(v) => set({ logoUrl: v })} />
           <label className="space-y-1"><span className="text-xs text-muted-foreground">Texto do botão enviar</span><input disabled={!canEdit} value={s.submitLabel ?? ""} onChange={(e) => set({ submitLabel: e.target.value })} placeholder="Enviar" className="w-full rounded-xl border border-border bg-background px-3 py-2" /></label>
           <div className="space-y-2 pt-5">
             <label className="flex items-center justify-between">Barra de progresso<input type="checkbox" disabled={!canEdit} checked={!!s.showProgress} onChange={(e) => set({ showProgress: e.target.checked })} className="h-4 w-4" /></label>
@@ -361,6 +361,40 @@ function SettingsTab({ form, canEdit, patch, publish, link }: { form: FormRow; c
       <div className={`${row} text-sm text-muted-foreground`}>
         <div className="font-semibold text-foreground">Integrações</div>
         <p className="mt-1">Exportação para Life Sheets, anexos no Life Drive e análise com Life AI chegam junto com essas ferramentas. Por enquanto, use “Exportar CSV” em Respostas.</p>
+      </div>
+    </div>
+  );
+}
+
+function ImageUpload({ label, value, onChange, disabled }: { label: string; value?: string; onChange: (v: string | undefined) => void; disabled?: boolean }) {
+  const [busy, setBusy] = useState(false);
+  const ref = useRef<HTMLInputElement>(null);
+  const upload = async (file: File) => {
+    if (!file.type.startsWith("image/")) return toast.error("Escolha um arquivo de imagem");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Imagem maior que 5 MB");
+    setBusy(true);
+    try {
+      const { data: u } = await supabase.auth.getUser(); if (!u.user) throw new Error("Entre novamente");
+      const path = `${u.user.id}/${uid()}-${file.name.replace(/[^\w.-]/g, "_")}`;
+      const up = await supabase.storage.from("form-assets").upload(path, file, { contentType: file.type });
+      if (up.error) throw up.error;
+      const sg = await supabase.storage.from("form-assets").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (sg.error) throw sg.error;
+      onChange(sg.data.signedUrl); toast.success("Imagem enviada");
+    } catch (e) { toast.error((e as Error).message); }
+    setBusy(false);
+  };
+  return (
+    <div className="space-y-1 sm:col-span-2"><span className="text-xs text-muted-foreground">{label}</span>
+      <div className="flex items-center gap-3 rounded-xl border border-dashed border-border p-3"
+        onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && !disabled) upload(f); }}>
+        {value ? <img src={value} alt="" className="h-14 w-20 rounded-lg object-cover" /> : <div className="grid h-14 w-20 place-items-center rounded-lg bg-secondary text-xs text-muted-foreground">Sem imagem</div>}
+        <div className="flex flex-1 flex-wrap gap-2">
+          <button type="button" disabled={disabled || busy} onClick={() => ref.current?.click()} className="rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground disabled:opacity-50">{busy ? "Enviando…" : value ? "Trocar imagem" : "Escolher arquivo"}</button>
+          {value && <button type="button" disabled={disabled} onClick={() => onChange(undefined)} className="rounded-xl border border-border px-3 py-2 text-xs">Remover</button>}
+          <span className="w-full text-[11px] text-muted-foreground">PNG, JPG, WEBP ou GIF até 5 MB. Você também pode arrastar a imagem aqui.</span>
+        </div>
+        <input ref={ref} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
       </div>
     </div>
   );
