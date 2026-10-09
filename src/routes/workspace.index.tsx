@@ -20,7 +20,8 @@ export const Route = createFileRoute("/workspace/")({
 
 function Launcher() {
   const auth = useAuth();
-  const drive = WORKSPACE_APPS[0];
+  const drive = WORKSPACE_APPS.find((a) => a.key === "drive")!;
+  const forms = WORKSPACE_APPS.find((a) => a.key === "forms")!;
   const soon = WORKSPACE_APPS.filter((a) => !a.available);
   return (
     <div className="min-h-screen">
