@@ -35,7 +35,7 @@ export const subsidiaries: Subsidiary[] = [
   { key: "server",   name: "Life Server",                  category: "Comunidades",       description: "Servidores de Roblox e comunidades criativas.",                 icon: Server,       href: "/life-server", externalHref: "https://bio.site/lifeserver" },
   { key: "soccer",   name: "Life Soccer",                  category: "Esportes",          description: "Clube de futebol e organização de eventos esportivos.",         icon: Trophy },
   { key: "agency",   name: "Life Agency",                  category: "Inteligência",      description: "Agência de inteligência e operações especiais.",                icon: Shield,       href: "/agency" },
-  { key: "lifeplus", name: "Life+",                        category: "Saúde",             description: "Serviços de saúde, bem-estar e medicina preventiva.",           icon: HeartPulse },
+  { key: "lifeplus", name: "Life+",                        category: "Saúde",             description: "Serviços de saúde, bem-estar e medicina preventiva.",           icon: HeartPulse, href: "/lifeplus" },
   { key: "aircare",  name: "Life AirCare",                 category: "Sustentabilidade",  description: "Purificação do ar e tecnologias ambientais.",                   icon: Wind,         href: "/aircare" },
   { key: "lifepay",  name: "LifePay",                      category: "Finanças",          description: "Banco digital com Pix, cartões, faturas e investimentos.",  icon: Landmark,     href: "/lifepay" },
 ];

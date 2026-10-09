@@ -1410,6 +1410,328 @@ export type Database = {
         }
         Relationships: []
       }
+      lp_beds: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          ward: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          ward: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          ward?: string
+        }
+        Relationships: []
+      }
+      lp_exams: {
+        Row: {
+          completed_at: string | null
+          id: string
+          kind: string
+          patient_id: string
+          requested_at: string
+          result: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          kind: string
+          patient_id: string
+          requested_at?: string
+          result?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          kind?: string
+          patient_id?: string
+          requested_at?: string
+          result?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lp_exams_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "lp_patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lp_notes: {
+        Row: {
+          author: string | null
+          body: string
+          created_at: string
+          id: string
+          patient_id: string
+        }
+        Insert: {
+          author?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          patient_id: string
+        }
+        Update: {
+          author?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          patient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lp_notes_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "lp_patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lp_patients: {
+        Row: {
+          allergies: string | null
+          bed_id: string | null
+          birth_date: string | null
+          blood_type: string | null
+          complaint: string | null
+          created_at: string
+          created_by: string | null
+          doctor: string | null
+          full_name: string
+          id: string
+          insurance: string | null
+          is_simulated: boolean
+          sex: string | null
+          status: string
+          triage: string
+          updated_at: string
+        }
+        Insert: {
+          allergies?: string | null
+          bed_id?: string | null
+          birth_date?: string | null
+          blood_type?: string | null
+          complaint?: string | null
+          created_at?: string
+          created_by?: string | null
+          doctor?: string | null
+          full_name: string
+          id?: string
+          insurance?: string | null
+          is_simulated?: boolean
+          sex?: string | null
+          status?: string
+          triage?: string
+          updated_at?: string
+        }
+        Update: {
+          allergies?: string | null
+          bed_id?: string | null
+          birth_date?: string | null
+          blood_type?: string | null
+          complaint?: string | null
+          created_at?: string
+          created_by?: string | null
+          doctor?: string | null
+          full_name?: string
+          id?: string
+          insurance?: string | null
+          is_simulated?: boolean
+          sex?: string | null
+          status?: string
+          triage?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lp_patients_bed_id_fkey"
+            columns: ["bed_id"]
+            isOneToOne: false
+            referencedRelation: "lp_beds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lp_prescriptions: {
+        Row: {
+          administered_at: string | null
+          created_at: string
+          dose: string | null
+          id: string
+          medication: string
+          patient_id: string
+          schedule: string | null
+        }
+        Insert: {
+          administered_at?: string | null
+          created_at?: string
+          dose?: string | null
+          id?: string
+          medication: string
+          patient_id: string
+          schedule?: string | null
+        }
+        Update: {
+          administered_at?: string | null
+          created_at?: string
+          dose?: string | null
+          id?: string
+          medication?: string
+          patient_id?: string
+          schedule?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lp_prescriptions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "lp_patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lp_shift_tasks: {
+        Row: {
+          created_at: string
+          done_at: string | null
+          due_at: string | null
+          failed: boolean
+          id: string
+          kind: string
+          patient_id: string | null
+          points: number
+          shift_id: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          done_at?: string | null
+          due_at?: string | null
+          failed?: boolean
+          id?: string
+          kind: string
+          patient_id?: string | null
+          points?: number
+          shift_id?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          done_at?: string | null
+          due_at?: string | null
+          failed?: boolean
+          id?: string
+          kind?: string
+          patient_id?: string | null
+          points?: number
+          shift_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lp_shift_tasks_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "lp_patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lp_shift_tasks_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "lp_shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lp_shifts: {
+        Row: {
+          difficulty: string
+          ended_at: string | null
+          id: string
+          patients_seen: number
+          score: number
+          started_at: string
+          tasks_done: number
+          user_id: string
+        }
+        Insert: {
+          difficulty: string
+          ended_at?: string | null
+          id?: string
+          patients_seen?: number
+          score?: number
+          started_at?: string
+          tasks_done?: number
+          user_id: string
+        }
+        Update: {
+          difficulty?: string
+          ended_at?: string | null
+          id?: string
+          patients_seen?: number
+          score?: number
+          started_at?: string
+          tasks_done?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lp_vitals: {
+        Row: {
+          diastolic: number | null
+          heart_rate: number | null
+          id: string
+          measured_at: string
+          patient_id: string
+          spo2: number | null
+          systolic: number | null
+          temperature: number | null
+        }
+        Insert: {
+          diastolic?: number | null
+          heart_rate?: number | null
+          id?: string
+          measured_at?: string
+          patient_id: string
+          spo2?: number | null
+          systolic?: number | null
+          temperature?: number | null
+        }
+        Update: {
+          diastolic?: number | null
+          heart_rate?: number | null
+          id?: string
+          measured_at?: string
+          patient_id?: string
+          spo2?: number | null
+          systolic?: number | null
+          temperature?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lp_vitals_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "lp_patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mail_messages: {
         Row: {
           attachments: Json

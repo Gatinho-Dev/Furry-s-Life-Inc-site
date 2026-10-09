@@ -38,6 +38,8 @@ import { Route as LifepayPrivacidadeRouteImport } from './routes/lifepay.privaci
 import { Route as LifepaySobreRouteImport } from './routes/lifepay.sobre'
 import { Route as LifepayStaffRouteImport } from './routes/lifepay.staff'
 import { Route as LifepayTermosRouteImport } from './routes/lifepay.termos'
+import { Route as LifeplusIndexRouteImport } from './routes/lifeplus.index'
+import { Route as LifeplusStaffRouteImport } from './routes/lifeplus.staff'
 import { Route as StaffIndexRouteImport } from './routes/staff.index'
 import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
 import { Route as WorkspaceIndexRouteImport } from './routes/workspace.index'
@@ -199,6 +201,16 @@ const LifepayTermosRoute = LifepayTermosRouteImport.update({
   path: '/termos',
   getParentRoute: () => LifepayRoute,
 } as any)
+const LifeplusIndexRoute = LifeplusIndexRouteImport.update({
+  id: '/lifeplus/',
+  path: '/lifeplus/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LifeplusStaffRoute = LifeplusStaffRouteImport.update({
+  id: '/lifeplus/staff',
+  path: '/lifeplus/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StaffIndexRoute = StaffIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -292,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/lifepay/sobre': typeof LifepaySobreRoute
   '/lifepay/staff': typeof LifepayStaffRoute
   '/lifepay/termos': typeof LifepayTermosRoute
+  '/lifeplus/staff': typeof LifeplusStaffRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/workspace/drive': typeof WorkspaceDriveRoute
   '/agency/': typeof AgencyIndexRoute
@@ -299,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/college/': typeof CollegeIndexRoute
   '/cond/': typeof CondIndexRoute
   '/lifepay/': typeof LifepayIndexRoute
+  '/lifeplus/': typeof LifeplusIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/workspace/': typeof WorkspaceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -333,6 +347,7 @@ export interface FileRoutesByTo {
   '/lifepay/sobre': typeof LifepaySobreRoute
   '/lifepay/staff': typeof LifepayStaffRoute
   '/lifepay/termos': typeof LifepayTermosRoute
+  '/lifeplus/staff': typeof LifeplusStaffRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/workspace/drive': typeof WorkspaceDriveRoute
   '/agency': typeof AgencyIndexRoute
@@ -340,6 +355,7 @@ export interface FileRoutesByTo {
   '/college': typeof CollegeIndexRoute
   '/cond': typeof CondIndexRoute
   '/lifepay': typeof LifepayIndexRoute
+  '/lifeplus': typeof LifeplusIndexRoute
   '/staff': typeof StaffIndexRoute
   '/workspace': typeof WorkspaceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -378,6 +394,7 @@ export interface FileRoutesById {
   '/lifepay/sobre': typeof LifepaySobreRoute
   '/lifepay/staff': typeof LifepayStaffRoute
   '/lifepay/termos': typeof LifepayTermosRoute
+  '/lifeplus/staff': typeof LifeplusStaffRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/workspace/drive': typeof WorkspaceDriveRoute
   '/agency/': typeof AgencyIndexRoute
@@ -385,6 +402,7 @@ export interface FileRoutesById {
   '/college/': typeof CollegeIndexRoute
   '/cond/': typeof CondIndexRoute
   '/lifepay/': typeof LifepayIndexRoute
+  '/lifeplus/': typeof LifeplusIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/workspace/': typeof WorkspaceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -424,6 +442,7 @@ export interface FileRouteTypes {
     | '/lifepay/sobre'
     | '/lifepay/staff'
     | '/lifepay/termos'
+    | '/lifeplus/staff'
     | '/staff/dashboard'
     | '/workspace/drive'
     | '/agency/'
@@ -431,6 +450,7 @@ export interface FileRouteTypes {
     | '/college/'
     | '/cond/'
     | '/lifepay/'
+    | '/lifeplus/'
     | '/staff/'
     | '/workspace/'
     | '/.lovable/oauth/consent'
@@ -465,6 +485,7 @@ export interface FileRouteTypes {
     | '/lifepay/sobre'
     | '/lifepay/staff'
     | '/lifepay/termos'
+    | '/lifeplus/staff'
     | '/staff/dashboard'
     | '/workspace/drive'
     | '/agency'
@@ -472,6 +493,7 @@ export interface FileRouteTypes {
     | '/college'
     | '/cond'
     | '/lifepay'
+    | '/lifeplus'
     | '/staff'
     | '/workspace'
     | '/.lovable/oauth/consent'
@@ -509,6 +531,7 @@ export interface FileRouteTypes {
     | '/lifepay/sobre'
     | '/lifepay/staff'
     | '/lifepay/termos'
+    | '/lifeplus/staff'
     | '/staff/dashboard'
     | '/workspace/drive'
     | '/agency/'
@@ -516,6 +539,7 @@ export interface FileRouteTypes {
     | '/college/'
     | '/cond/'
     | '/lifepay/'
+    | '/lifeplus/'
     | '/staff/'
     | '/workspace/'
     | '/.lovable/oauth/consent'
@@ -548,10 +572,12 @@ export interface RootRouteChildren {
   CollegeStaffRoute: typeof CollegeStaffRoute
   CondStaffRoute: typeof CondStaffRoute
   FIdRoute: typeof FIdRoute
+  LifeplusStaffRoute: typeof LifeplusStaffRoute
   AgencyIndexRoute: typeof AgencyIndexRoute
   AircareIndexRoute: typeof AircareIndexRoute
   CollegeIndexRoute: typeof CollegeIndexRoute
   CondIndexRoute: typeof CondIndexRoute
+  LifeplusIndexRoute: typeof LifeplusIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicEmailInboundRoute: typeof ApiPublicEmailInboundRoute
@@ -765,6 +791,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LifepayTermosRouteImport
       parentRoute: typeof LifepayRoute
     }
+    '/lifeplus/': {
+      id: '/lifeplus/'
+      path: '/lifeplus'
+      fullPath: '/lifeplus/'
+      preLoaderRoute: typeof LifeplusIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lifeplus/staff': {
+      id: '/lifeplus/staff'
+      path: '/lifeplus/staff'
+      fullPath: '/lifeplus/staff'
+      preLoaderRoute: typeof LifeplusStaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/staff/': {
       id: '/staff/'
       path: '/'
@@ -934,10 +974,12 @@ const rootRouteChildren: RootRouteChildren = {
   CollegeStaffRoute: CollegeStaffRoute,
   CondStaffRoute: CondStaffRoute,
   FIdRoute: FIdRoute,
+  LifeplusStaffRoute: LifeplusStaffRoute,
   AgencyIndexRoute: AgencyIndexRoute,
   AircareIndexRoute: AircareIndexRoute,
   CollegeIndexRoute: CollegeIndexRoute,
   CondIndexRoute: CondIndexRoute,
+  LifeplusIndexRoute: LifeplusIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicEmailInboundRoute: ApiPublicEmailInboundRoute,
