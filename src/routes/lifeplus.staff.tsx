@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, ArrowLeft, HeartPulse, LayoutDashboard, Users, BedDouble, Gamepad2, Plus, Trash2, X, FlaskConical, Pill, NotebookPen, Activity, Play, Square, Trophy, Timer } from "lucide-react";
+import { Loader2, ArrowLeft, HeartPulse, LayoutDashboard, Users, BedDouble, Gamepad2, Plus, Trash2, X, FlaskConical, Pill, NotebookPen, Activity, Play, Square, Trophy, Timer, Server } from "lucide-react";
 import { useAuth } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { MaplePanel } from "@/components/lifeplus/MaplePanel";
 import { DIFF, TRIAGE, CASES, randomPatient, type Difficulty } from "@/components/lifeplus/game";
 
 export const Route = createFileRoute("/lifeplus/staff")({
@@ -26,7 +27,7 @@ function age(d: string | null) { if (!d) return "—"; return `${Math.floor((Dat
 
 function LifePlusStaff() {
   const auth = useAuth(); const nav = useNavigate();
-  const [tab, setTab] = useState<"overview" | "patients" | "beds" | "game">("overview");
+  const [tab, setTab] = useState<"overview" | "patients" | "beds" | "game" | "maple">("overview");
   const [beds, setBeds] = useState<Bed[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
@@ -50,7 +51,7 @@ function LifePlusStaff() {
 
   const tabs = [
     { k: "overview", l: "Visão geral", i: LayoutDashboard }, { k: "patients", l: "Pacientes", i: Users },
-    { k: "beds", l: "Leitos", i: BedDouble }, { k: "game", l: "Modo Plantão", i: Gamepad2 },
+    { k: "beds", l: "Leitos", i: BedDouble }, { k: "game", l: "Modo Plantão", i: Gamepad2 }, { k: "maple", l: "Maple Hospital", i: Server },
   ] as const;
 
   return (
@@ -67,6 +68,7 @@ function LifePlusStaff() {
         {tab === "overview" && <Overview beds={beds} patients={patients} exams={exams} onOpen={setOpen} />}
         {tab === "patients" && <PatientsPanel beds={beds} patients={patients} reload={load} onOpen={setOpen} />}
         {tab === "beds" && <BedsPanel beds={beds} patients={patients} onOpen={setOpen} />}
+        {tab === "maple" && <MaplePanel />}
         {tab === "game" && <GamePanel userId={auth.user.id} beds={beds} patients={patients} reload={load} onOpen={setOpen} />}
       </main>
       {open && <PatientDrawer id={open} beds={beds} patients={patients} onClose={() => setOpen(null)} reload={load} author={auth.user.email ?? "equipe"} />}
