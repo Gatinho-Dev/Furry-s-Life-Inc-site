@@ -38,9 +38,13 @@ async function robloxNames(ids: number[]): Promise<Record<number, string>> {
   } catch { return {}; }
 }
 
+export type MapleServer = { ServerName?: string; ServerDescription?: string; Code?: string; Icon?: string; PlayerCount?: number; MaxPlayers?: number; Owner?: number; Admins?: number[]; HeadAdmins?: number[] };
+export type MapleOverview = { server: MapleServer | null; error: string | null; players: number[]; queue: number[]; bans: number[]; names: Record<string, string>; rate: { limit: string | null; remaining: string | null; reset: string | null } | null };
+export type MapleActionInput = z.infer<typeof action>;
+
 export const mapleOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .handler(async ({ context }): Promise<MapleOverview> => {
     await assertAccess(context as unknown as Ctx);
     const server = await maple("/v1/server");
     const players = await maple("/v1/server/players");
@@ -55,7 +59,7 @@ export const mapleOverview = createServerFn({ method: "POST" })
     const srv = server.data as { Admins?: number[]; HeadAdmins?: number[]; Owner?: number } | null;
     const names = await robloxNames([...new Set([...pIds, ...qIds, ...bIds, ...(srv?.Admins ?? []), ...(srv?.HeadAdmins ?? []), ...(srv?.Owner ? [srv.Owner] : [])])]);
     return {
-      server: server.data as Record<string, unknown> | null,
+      server: srv,
       error: server.ok ? null : server.message,
       players: pIds, queue: qIds, bans: bIds, names, rate: bans.rate ?? server.rate,
     };
@@ -73,7 +77,7 @@ const action = z.discriminatedUnion("type", [
 export const mapleAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => action.parse(d))
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data, context }): Promise<{ ok: boolean; message: string | null }> => {
     await assertAccess(context as unknown as Ctx);
     let r;
     switch (data.type) {

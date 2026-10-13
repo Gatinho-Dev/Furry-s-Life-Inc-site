@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, RefreshCw, Users, Megaphone, ShieldBan, UserX, Power, Settings2, Terminal, Hourglass, Server } from "lucide-react";
-import { mapleAction, mapleLookup, mapleOverview } from "@/lib/maple.functions";
+import { mapleAction, mapleLookup, mapleOverview, type MapleActionInput, type MapleOverview } from "@/lib/maple.functions";
 
-type Overview = Awaited<ReturnType<typeof mapleOverview>>;
+type Overview = MapleOverview;
 const card = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm";
 const inp = "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none";
 const btn = "inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50";
@@ -27,7 +27,7 @@ export function MaplePanel() {
   const now = () => new Date().toLocaleTimeString("pt-BR");
   const name = (id: number) => o?.names[id] ?? `#${id}`;
 
-  const run = async (label: string, data: Parameters<typeof act>[0]["data"], confirmText?: string) => {
+  const run = async (label: string, data: MapleActionInput, confirmText?: string) => {
     if (confirmText && !confirm(confirmText)) return;
     setBusy(true);
     try { const r = await act({ data }); setLog((l) => [{ t: now(), ok: r.ok, m: `${label}: ${r.message}` }, ...l].slice(0, 50)); if (r.ok) setTimeout(load, 1500); }
@@ -60,7 +60,7 @@ export function MaplePanel() {
     setCmd("");
   };
 
-  const s = o?.server as Record<string, unknown> | null | undefined;
+  const s = o?.server;
   return (
     <div className="space-y-4">
       <div className={`${card} flex flex-wrap items-center gap-4 bg-gradient-to-r from-red-600 to-rose-500 text-white`}>
@@ -84,7 +84,7 @@ export function MaplePanel() {
             {o?.players.map((id) => (
               <div key={id} className="flex items-center gap-2 py-2">
                 <img src={`https://www.roblox.com/headshot-thumbnail/image?userId=${id}&width=48&height=48&format=png`} alt="" className="h-8 w-8 rounded-full bg-slate-100" />
-                <div className="flex-1 text-sm"><div className="font-medium">{name(id)}</div><div className="text-xs text-slate-500">ID {id}{s && (s.Admins as number[] | undefined)?.includes(id) ? " · Admin" : ""}{s && (s.HeadAdmins as number[] | undefined)?.includes(id) ? " · Head Admin" : ""}{s?.Owner === id ? " · Dono" : ""}</div></div>
+                <div className="flex-1 text-sm"><div className="font-medium">{name(id)}</div><div className="text-xs text-slate-500">ID {id}{s && s.Admins?.includes(id) ? " · Admin" : ""}{s && s.HeadAdmins?.includes(id) ? " · Head Admin" : ""}{s?.Owner === id ? " · Dono" : ""}</div></div>
                 <button disabled={busy} className={ghost} onClick={() => run(`Expulsar ${name(id)}`, { type: "kick", userId: id, reason: reason || undefined }, `Expulsar ${name(id)}?`)}><UserX className="h-3 w-3" />Expulsar</button>
                 <button disabled={busy} className={`${ghost} text-red-600`} onClick={() => run(`Banir ${name(id)}`, { type: "ban", userId: id, banned: true }, `Banir ${name(id)}?`)}><ShieldBan className="h-3 w-3" />Banir</button>
               </div>
