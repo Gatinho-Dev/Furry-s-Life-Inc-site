@@ -360,6 +360,100 @@ export type Database = {
         }
         Relationships: []
       }
+      doc_favorites: {
+        Row: {
+          doc_id: string
+          user_id: string
+        }
+        Insert: {
+          doc_id: string
+          user_id: string
+        }
+        Update: {
+          doc_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doc_favorites_doc_id_fkey"
+            columns: ["doc_id"]
+            isOneToOne: false
+            referencedRelation: "docs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doc_shares: {
+        Row: {
+          created_at: string
+          doc_id: string
+          email: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_id: string
+          email?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_id?: string
+          email?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doc_shares_doc_id_fkey"
+            columns: ["doc_id"]
+            isOneToOne: false
+            referencedRelation: "docs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      docs: {
+        Row: {
+          content: Json
+          created_at: string
+          folder_id: string | null
+          id: string
+          owner_id: string
+          preview: string
+          title: string
+          trashed_at: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          folder_id?: string | null
+          id?: string
+          owner_id: string
+          preview?: string
+          title?: string
+          trashed_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          folder_id?: string | null
+          id?: string
+          owner_id?: string
+          preview?: string
+          title?: string
+          trashed_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       drive_favorites: {
         Row: {
           created_at: string
@@ -2320,6 +2414,15 @@ export type Database = {
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
+      }
+      doc_role: { Args: { _doc: string; _uid: string }; Returns: string }
+      docs_find_user: { Args: { _email: string }; Returns: string }
+      docs_owner_emails: {
+        Args: { _ids: string[] }
+        Returns: {
+          email: string
+          id: string
+        }[]
       }
       drive_file_permission: { Args: { _file: string }; Returns: string }
       drive_find_user: { Args: { _email: string }; Returns: string }
