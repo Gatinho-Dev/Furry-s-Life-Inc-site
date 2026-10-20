@@ -64,7 +64,7 @@ export function MaplePanel() {
   return (
     <div className="space-y-4">
       <div className={`${card} flex flex-wrap items-center gap-4 bg-gradient-to-r from-red-600 to-rose-500 text-white`}>
-        {s?.Icon ? <img src={String(s.Icon)} alt="" className="h-12 w-12 rounded-xl bg-white/20 object-cover" /> : <Server className="h-10 w-10" />}
+        {s?.Icon && String(s.Icon).startsWith("http") ? <img src={String(s.Icon)} alt="" className="h-12 w-12 rounded-xl bg-white/20 object-cover" /> : <Server className="h-10 w-10" />}
         <div className="flex-1">
           <div className="text-lg font-semibold">{s?.ServerName ? String(s.ServerName) : "Maple Hospital"}</div>
           <div className="text-sm text-white/80">{s?.ServerDescription ? String(s.ServerDescription) : "Controle remoto do servidor privado"}{s?.Code ? ` · Código ${String(s.Code)}` : ""}</div>
