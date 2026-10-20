@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Mail as MailIcon } from "lucide-react";
+import { LayoutGrid, Mail as MailIcon } from "lucide-react";
 import symbol from "@/assets/fli-symbol.png.asset.json";
 import { DISCORD_URL } from "@/lib/site-data";
 
@@ -45,6 +45,8 @@ export function Navbar() {
     return isHome && activeHash === l.id;
   };
 
+  const workspaceActive = path.startsWith("/workspace");
+
   return (
     <header className="fixed top-0 inset-x-0 z-50">
       <div className="mx-auto mt-4 max-w-6xl px-4">
@@ -82,6 +84,16 @@ export function Navbar() {
               title="Abrir a caixa de entrada do seu e-mail do domínio (requer login)">
               <MailIcon className="h-4 w-4" />
               <span className="hidden sm:inline">E-mail</span>
+            </Link>
+            <Link to="/workspace"
+              className={`glass-button inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium ring-1 ${
+                workspaceActive ? "ring-primary/45" : "ring-primary/20"
+              }`}
+              title="Abrir o Life Workspace (requer login)">
+              <span className={`flex items-center gap-1.5 ${workspaceActive ? "text-primary" : "text-primary/90"}`}>
+                <LayoutGrid className="h-4 w-4" />
+                <span className="hidden sm:inline">Workspace</span>
+              </span>
             </Link>
             <Link to="/staff"
               className="glass-button rounded-full px-3.5 py-1.5 text-[13px] font-medium">
