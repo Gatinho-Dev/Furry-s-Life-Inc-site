@@ -47,6 +47,7 @@ import { Route as WorkspaceDriveRouteImport } from './routes/workspace.drive'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as LifepayPagarTokenRouteImport } from './routes/lifepay.pagar.$token'
+import { Route as WorkspaceDocsIndexRouteImport } from './routes/workspace.docs.index'
 import { Route as WorkspaceFormsIndexRouteImport } from './routes/workspace.forms.index'
 import { Route as WorkspaceFormsIdRouteImport } from './routes/workspace.forms.$id'
 import { Route as ApiPublicEmailInboundRouteImport } from './routes/api/public/email/inbound'
@@ -247,6 +248,11 @@ const LifepayPagarTokenRoute = LifepayPagarTokenRouteImport.update({
   path: '/pagar/$token',
   getParentRoute: () => LifepayRoute,
 } as any)
+const WorkspaceDocsIndexRoute = WorkspaceDocsIndexRouteImport.update({
+  id: '/docs/',
+  path: '/docs/',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
 const WorkspaceFormsIndexRoute = WorkspaceFormsIndexRouteImport.update({
   id: '/forms/',
   path: '/forms/',
@@ -319,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
+  '/workspace/docs/': typeof WorkspaceDocsIndexRoute
   '/workspace/forms/': typeof WorkspaceFormsIndexRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -362,6 +369,7 @@ export interface FileRoutesByTo {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
+  '/workspace/docs': typeof WorkspaceDocsIndexRoute
   '/workspace/forms': typeof WorkspaceFormsIndexRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -409,6 +417,7 @@ export interface FileRoutesById {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
+  '/workspace/docs/': typeof WorkspaceDocsIndexRoute
   '/workspace/forms/': typeof WorkspaceFormsIndexRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -457,6 +466,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/lifepay/pagar/$token'
     | '/workspace/forms/$id'
+    | '/workspace/docs/'
     | '/workspace/forms/'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
@@ -500,6 +510,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/lifepay/pagar/$token'
     | '/workspace/forms/$id'
+    | '/workspace/docs'
     | '/workspace/forms'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
@@ -546,6 +557,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/lifepay/pagar/$token'
     | '/workspace/forms/$id'
+    | '/workspace/docs/'
     | '/workspace/forms/'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
@@ -854,6 +866,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LifepayPagarTokenRouteImport
       parentRoute: typeof LifepayRoute
     }
+    '/workspace/docs/': {
+      id: '/workspace/docs/'
+      path: '/docs'
+      fullPath: '/workspace/docs/'
+      preLoaderRoute: typeof WorkspaceDocsIndexRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/workspace/forms/': {
       id: '/workspace/forms/'
       path: '/forms'
@@ -940,6 +959,7 @@ interface WorkspaceRouteChildren {
   WorkspaceDriveRoute: typeof WorkspaceDriveRoute
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute
   WorkspaceFormsIdRoute: typeof WorkspaceFormsIdRoute
+  WorkspaceDocsIndexRoute: typeof WorkspaceDocsIndexRoute
   WorkspaceFormsIndexRoute: typeof WorkspaceFormsIndexRoute
 }
 
@@ -947,6 +967,7 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceDriveRoute: WorkspaceDriveRoute,
   WorkspaceIndexRoute: WorkspaceIndexRoute,
   WorkspaceFormsIdRoute: WorkspaceFormsIdRoute,
+  WorkspaceDocsIndexRoute: WorkspaceDocsIndexRoute,
   WorkspaceFormsIndexRoute: WorkspaceFormsIndexRoute,
 }
 
