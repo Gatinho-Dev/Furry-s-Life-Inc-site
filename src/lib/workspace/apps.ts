@@ -12,7 +12,7 @@ export type WorkspaceApp = {
 
 export const WORKSPACE_APPS: WorkspaceApp[] = [
   { key: "drive", name: "Life Drive", description: "Armazene, organize e compartilhe seus arquivos.", path: "/workspace/drive", icon: HardDrive, available: true },
-  { key: "docs", name: "Life Docs", description: "Documentos colaborativos.", path: "/workspace/docs", icon: FileText, available: false },
+  { key: "docs", name: "Life Docs", description: "Documentos colaborativos.", path: "/workspace/docs", icon: FileText, available: true },
   { key: "sheets", name: "Life Sheets", description: "Planilhas.", path: "/workspace/sheets", icon: Sheet, available: false },
   { key: "slides", name: "Life Slides", description: "Apresentações.", path: "/workspace/slides", icon: Presentation, available: false },
   { key: "calendar", name: "Life Calendar", description: "Agenda.", path: "/workspace/calendar", icon: Calendar, available: false },
