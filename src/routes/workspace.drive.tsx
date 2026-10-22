@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ddb, DOC_TEMPLATES, createDoc, fmtDate, type DocRow } from "@/lib/workspace/docs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -76,6 +77,12 @@ function DrivePage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
   const folderId = view === "drive" || view === "shared" ? search.folder ?? null : null;
+  const routerNav = useNavigate();
+  const newDocHere = async () => {
+    setNewOpen(false);
+    try { const t = DOC_TEMPLATES[0]; const id = await createDoc(me, t.title, t.content, view === "drive" ? folderId : null); routerNav({ to: "/workspace/docs/$id", params: { id } }); }
+    catch { toast.error("Não foi possível criar o documento."); }
+  };
 
   const reload = useCallback(async () => {
     try { setData(await api.listAll()); } catch (e) { toast.error((e as Error).message); }
@@ -194,6 +201,7 @@ function DrivePage() {
                 <div className="fixed inset-0 z-30" onClick={() => setNewOpen(false)} />
                 <div className="animate-spring-in absolute left-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-2xl border border-border bg-popover p-1.5 shadow-2xl">
                   <MenuBtn icon={FolderPlus} label="Nova pasta" onClick={() => { setNewOpen(false); setView("drive"); setDialog({ type: "newFolder" }); }} />
+                  <MenuBtn icon={FileText} label="Documento do Life Docs" onClick={newDocHere} />
                   <div className="my-1 h-px bg-border" />
                   <MenuBtn icon={Upload} label="Enviar arquivo" onClick={() => { setNewOpen(false); fileInput.current?.click(); }} />
                   <MenuBtn icon={FolderUp} label="Enviar pasta" onClick={() => { setNewOpen(false); folderInput.current?.click(); }} />
@@ -229,6 +237,8 @@ function DrivePage() {
             ))}
           </div>
         )}
+
+        {data && (view === "home" || view === "drive") && <DocsStrip me={me} folderId={view === "drive" ? folderId : undefined} q={q} />}
 
         {view === "settings" && !q ? <SettingsPanel data={data} me={me} layout={layout} setLayout={setLayout} />
           : view === "help" && !q ? <HelpPanel />
@@ -567,4 +577,29 @@ function HelpPanel() {
     ["Lixeira", "Itens excluídos ficam na Lixeira até você restaurá-los ou apagá-los de vez."],
   ];
   return <div className="grid max-w-3xl gap-3 sm:grid-cols-2">{tips.map(([t, d]) => <div key={t} className="rounded-2xl border border-border bg-card p-5"><div className="text-sm font-semibold">{t}</div><p className="mt-1 text-sm text-muted-foreground">{d}</p></div>)}</div>;
+}
+
+function DocsStrip({ me, folderId, q }: { me: string; folderId: string | null | undefined; q: string }) {
+  const [docs, setDocs] = useState<DocRow[] | null>(null);
+  useEffect(() => {
+    let qy = ddb.from("docs").select("id,owner_id,title,preview,folder_id,updated_at").is("trashed_at", null).order("updated_at", { ascending: false });
+    if (folderId === undefined) qy = qy.limit(6); else qy = folderId ? qy.eq("folder_id", folderId) : qy.is("folder_id", null).eq("owner_id", me);
+    qy.then(({ data }: { data: DocRow[] | null }) => setDocs(data ?? []));
+  }, [folderId, me]);
+  const list = (docs ?? []).filter((d) => d.title.toLowerCase().includes(q.toLowerCase()));
+  if (!list.length) return null;
+  return (
+    <div className="mb-6">
+      <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{folderId === undefined ? "Documentos recentes do Life Docs" : "Documentos do Life Docs"}</div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {list.map((d) => (
+          <Link key={d.id} to="/workspace/docs/$id" params={{ id: d.id }} className="group rounded-2xl border border-border bg-card p-3 transition hover:shadow-md">
+            <div className="h-20 overflow-hidden rounded-lg bg-background p-2 text-[9px] leading-snug text-muted-foreground">{d.preview || "Documento vazio"}</div>
+            <div className="mt-2 flex items-center gap-1.5 truncate text-sm font-medium"><FileText className="h-4 w-4 shrink-0 text-primary" />{d.title}</div>
+            <div className="truncate text-[11px] text-muted-foreground">Life Docs · {d.owner_id === me ? "Você" : "Compartilhado"} · {fmtDate(d.updated_at)}</div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
 }

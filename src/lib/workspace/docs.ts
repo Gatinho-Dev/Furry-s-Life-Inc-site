@@ -34,8 +34,8 @@ export const DOC_TEMPLATES: { key: string; name: string; title: string; content:
   ] } },
 ];
 
-export async function createDoc(ownerId: string, title: string, content: unknown) {
-  const { data, error } = await ddb.from("docs").insert({ owner_id: ownerId, title, content }).select("id").single();
+export async function createDoc(ownerId: string, title: string, content: unknown, folderId: string | null = null) {
+  const { data, error } = await ddb.from("docs").insert({ owner_id: ownerId, title, content, folder_id: folderId }).select("id").single();
   if (error) throw error;
   return data.id as string;
 }
