@@ -135,7 +135,7 @@ function DocsHome() {
             className="w-full rounded-full border border-border bg-muted/50 py-2 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
         </label>
         <div className="ml-auto flex items-center gap-2">
-          <Link to="/workspace/drive" className="hidden rounded-full px-3 py-2 text-sm text-muted-foreground hover:bg-muted sm:block">Life Drive</Link>
+          <Link to="/workspace/drive" search={{ folder: undefined }} className="hidden rounded-full px-3 py-2 text-sm text-muted-foreground hover:bg-muted sm:block">Life Drive</Link>
           <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-3 py-2 text-sm hover:bg-muted">
             {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Importar DOCX
             <input type="file" accept=".docx" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) importDocx(f); e.target.value = ""; }} />
