@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ddb, DOC_TEMPLATES, createDoc, fmtDate, type DocRow } from "@/lib/workspace/docs";
+import { ddb, DOC_TEMPLATES, createDoc, fmtDate as fmtDocDate, type DocRow } from "@/lib/workspace/docs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -596,7 +596,7 @@ function DocsStrip({ me, folderId, q }: { me: string; folderId: string | null | 
           <Link key={d.id} to="/workspace/docs/$id" params={{ id: d.id }} className="group rounded-2xl border border-border bg-card p-3 transition hover:shadow-md">
             <div className="h-20 overflow-hidden rounded-lg bg-background p-2 text-[9px] leading-snug text-muted-foreground">{d.preview || "Documento vazio"}</div>
             <div className="mt-2 flex items-center gap-1.5 truncate text-sm font-medium"><FileText className="h-4 w-4 shrink-0 text-primary" />{d.title}</div>
-            <div className="truncate text-[11px] text-muted-foreground">Life Docs · {d.owner_id === me ? "Você" : "Compartilhado"} · {fmtDate(d.updated_at)}</div>
+            <div className="truncate text-[11px] text-muted-foreground">Life Docs · {d.owner_id === me ? "Você" : "Compartilhado"} · {fmtDocDate(d.updated_at)}</div>
           </Link>
         ))}
       </div>
