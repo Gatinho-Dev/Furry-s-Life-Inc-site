@@ -62,7 +62,7 @@ function DocsHome() {
   const newDoc = async (key = "blank") => {
     const t = DOC_TEMPLATES.find((x) => x.key === key)!;
     try { const id = await createDoc(uid, t.title, t.content); nav({ to: "/workspace/docs/$id", params: { id } }); }
-    catch { toast.error("Erro ao criar o documento."); }
+    catch (e) { toast.error("Erro ao criar o documento: " + ((e as Error).message ?? "")); }
   };
 
   const importDocx = async (file: File) => {
