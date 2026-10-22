@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import {
   ArrowLeft, FileText, Undo2, Redo2, Bold, Italic, Underline as U, Strikethrough, Eraser, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Indent, Outdent, Link2, Image as Img, Table as Tbl, Minus, CalendarDays, Share2, Printer, Check, Loader2, AlertCircle, WifiOff, X, Trash2,
+  List, ListOrdered, Indent, Outdent, Link2, Image as Img, Table as Tbl, Minus, CalendarDays, Share2, Printer, Check, Loader2, AlertCircle, WifiOff, X, Trash2, Folder,
 } from "lucide-react";
 import { useAuth } from "@/lib/use-auth";
 import { ddb, fmtDate, type DocRow, type DocShare } from "@/lib/workspace/docs";
@@ -37,6 +37,7 @@ function DocEditor() {
   const [title, setTitle] = useState("");
   const [save, setSave] = useState<Save>("saved");
   const [shareOpen, setShareOpen] = useState(false);
+  const [folderOpen, setFolderOpen] = useState(false);
   const version = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pending = useRef<{ title?: string; content?: unknown; preview?: string }>({});
@@ -113,6 +114,7 @@ function DocEditor() {
           <button onClick={() => editor?.chain().focus().undo().run()} aria-label="Desfazer" className="rounded-full p-2 hover:bg-muted"><Undo2 className="h-4 w-4" /></button>
           <button onClick={() => editor?.chain().focus().redo().run()} aria-label="Refazer" className="rounded-full p-2 hover:bg-muted"><Redo2 className="h-4 w-4" /></button>
           <button onClick={() => window.print()} aria-label="Exportar PDF" title="Exportar PDF (escolha 'Salvar como PDF')" className="inline-flex items-center gap-1.5 rounded-full p-2 text-sm hover:bg-muted sm:px-3"><Printer className="h-4 w-4" /><span className="hidden sm:inline">PDF</span></button>
+          {role === "owner" && doc && <button onClick={() => setFolderOpen(true)} aria-label="Pasta no Life Drive" title="Organizar no Life Drive" className="inline-flex items-center gap-1.5 rounded-full p-2 text-sm hover:bg-muted sm:px-3"><Folder className="h-4 w-4" /><span className="hidden md:inline">Pasta</span></button>}
           {role === "owner" && <button onClick={() => setShareOpen(true)} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Share2 className="h-4 w-4" /><span className="hidden sm:inline">Compartilhar</span></button>}
           <div className="hidden h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-semibold uppercase sm:flex" title={auth.user?.email ?? ""}>{auth.user?.email?.[0]}</div>
         </div>
@@ -125,6 +127,7 @@ function DocEditor() {
           <EditorContent editor={editor} />
         </div>
       </main>
+      {folderOpen && doc && <FolderDialog doc={doc} onClose={() => setFolderOpen(false)} onMoved={(fid) => { setDoc({ ...doc, folder_id: fid }); version.current += 1; }} />}
       {shareOpen && doc && <ShareDialog doc={doc} onClose={() => setShareOpen(false)} />}
     </div>
   );
@@ -273,6 +276,33 @@ function ShareDialog({ doc, onClose }: { doc: DocRow; onClose: () => void }) {
           ))}
         </div>
         <button onClick={copy} className="mt-5 w-full rounded-lg border border-border py-2 text-sm hover:bg-muted">Copiar link</button>
+      </div>
+    </div>
+  );
+}
+
+function FolderDialog({ doc, onClose, onMoved }: { doc: DocRow; onClose: () => void; onMoved: (f: string | null) => void }) {
+  const [folders, setFolders] = useState<{ id: string; name: string; parent_id: string | null }[] | null>(null);
+  useEffect(() => { ddb.from("drive_folders").select("id,name,parent_id").eq("owner_id", doc.owner_id).is("trashed_at", null).then(({ data }: { data: { id: string; name: string; parent_id: string | null }[] | null }) => setFolders(data ?? [])); }, [doc.owner_id]);
+  const path = (id: string): string => { const f = folders?.find((x) => x.id === id); if (!f) return ""; return f.parent_id ? `${path(f.parent_id)} / ${f.name}` : f.name; };
+  const opts = (folders ?? []).map((f) => ({ id: f.id, label: path(f.id) })).sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
+  const move = async (fid: string | null) => {
+    const { data, error } = await ddb.from("docs").update({ folder_id: fid }).eq("id", doc.id).select("version");
+    if (error || !data?.length) return toast.error("Não foi possível mover o documento.");
+    onMoved(fid); toast.success(fid ? `Movido para ${path(fid)}` : "Movido para Meu Drive"); onClose();
+  };
+  return (
+    <div className="no-print fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose} role="dialog" aria-modal="true" aria-label="Organizar no Life Drive">
+      <div className="w-full max-w-md rounded-2xl bg-background p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between"><h2 className="font-display text-lg font-semibold">Organizar no Life Drive</h2><button aria-label="Fechar" onClick={onClose} className="rounded-full p-1 hover:bg-muted"><X className="h-4 w-4" /></button></div>
+        <p className="mt-1 text-sm text-muted-foreground">Pasta atual: {doc.folder_id ? path(doc.folder_id) || "…" : "Meu Drive"}</p>
+        <div className="mt-4 max-h-72 space-y-1 overflow-y-auto">
+          {folders === null ? <Loader2 className="mx-auto h-5 w-5 animate-spin" /> : <>
+            <button onClick={() => move(null)} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-muted ${!doc.folder_id ? "bg-primary/10" : ""}`}><Folder className="h-4 w-4" />Meu Drive</button>
+            {opts.map((o) => <button key={o.id} onClick={() => move(o.id)} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-muted ${doc.folder_id === o.id ? "bg-primary/10" : ""}`}><Folder className="h-4 w-4 text-primary" />{o.label}</button>)}
+            {opts.length === 0 && <p className="px-3 py-2 text-sm text-muted-foreground">Você ainda não tem pastas no Life Drive.</p>}
+          </>}
+        </div>
       </div>
     </div>
   );
