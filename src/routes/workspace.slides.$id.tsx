@@ -100,18 +100,7 @@ function SlideEditor() {
     try { await renamePresentation(id, clean); } catch { toast.error("Não foi possível renomear."); }
   };
 
-  if (missing) return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
-      <p className="font-medium">Apresentação não encontrada ou você não tem acesso.</p>
-      <Link to="/workspace/slides" className="text-sm text-primary underline">Voltar ao Life Slides</Link>
-    </div>
-  );
-  if (!deck) return <div className="flex h-screen items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
-
-  const slide = deck.slides[current] ?? deck.slides[0];
-  const idx = deck.slides[current] ? current : 0;
-
-  // URLs assinadas só em memória: buscadas para as imagens do slide atual.
+  // URLs assinadas só em memória. Precisa ficar antes dos returns condicionais (regra dos hooks).
   useEffect(() => {
     if (!deck) return;
     const wanted = deck.slides.flatMap((s) => s.elements).filter((e) => e.kind === "image" && e.storagePath);
@@ -123,6 +112,17 @@ function SlideEditor() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deck]);
+
+  if (missing) return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
+      <p className="font-medium">Apresentação não encontrada ou você não tem acesso.</p>
+      <Link to="/workspace/slides" className="text-sm text-primary underline">Voltar ao Life Slides</Link>
+    </div>
+  );
+  if (!deck) return <div className="flex h-screen items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+
+  const slide = deck.slides[current] ?? deck.slides[0];
+  const idx = deck.slides[current] ? current : 0;
 
   const addImage = async (file: File) => {
     if (!uid || !canEdit) return;
