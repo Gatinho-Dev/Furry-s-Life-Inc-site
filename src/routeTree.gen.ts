@@ -51,10 +51,13 @@ import { Route as WorkspaceDocsIndexRouteImport } from './routes/workspace.docs.
 import { Route as WorkspaceDocsIdRouteImport } from './routes/workspace.docs.$id'
 import { Route as WorkspaceFormsIndexRouteImport } from './routes/workspace.forms.index'
 import { Route as WorkspaceFormsIdRouteImport } from './routes/workspace.forms.$id'
+import { Route as WorkspaceSlidesIndexRouteImport } from './routes/workspace.slides.index'
+import { Route as WorkspaceSlidesIdRouteImport } from './routes/workspace.slides.$id'
 import { Route as ApiPublicEmailInboundRouteImport } from './routes/api/public/email/inbound'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as WorkspaceSlidesIdPresentRouteImport } from './routes/workspace.slides.$id.present'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -269,6 +272,16 @@ const WorkspaceFormsIdRoute = WorkspaceFormsIdRouteImport.update({
   path: '/forms/$id',
   getParentRoute: () => WorkspaceRoute,
 } as any)
+const WorkspaceSlidesIndexRoute = WorkspaceSlidesIndexRouteImport.update({
+  id: '/slides/',
+  path: '/slides/',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspaceSlidesIdRoute = WorkspaceSlidesIdRouteImport.update({
+  id: '/slides/$id',
+  path: '/slides/$id',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
 const ApiPublicEmailInboundRoute = ApiPublicEmailInboundRouteImport.update({
   id: '/api/public/email/inbound',
   path: '/api/public/email/inbound',
@@ -289,6 +302,12 @@ const LovableEmailQueueProcessRoute =
     id: '/lovable/email/queue/process',
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const WorkspaceSlidesIdPresentRoute =
+  WorkspaceSlidesIdPresentRouteImport.update({
+    id: '/present',
+    path: '/present',
+    getParentRoute: () => WorkspaceSlidesIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -332,12 +351,15 @@ export interface FileRoutesByFullPath {
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/workspace/docs/$id': typeof WorkspaceDocsIdRoute
   '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
+  '/workspace/slides/$id': typeof WorkspaceSlidesIdRouteWithChildren
   '/workspace/docs/': typeof WorkspaceDocsIndexRoute
   '/workspace/forms/': typeof WorkspaceFormsIndexRoute
+  '/workspace/slides/': typeof WorkspaceSlidesIndexRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/workspace/slides/$id/present': typeof WorkspaceSlidesIdPresentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -377,12 +399,15 @@ export interface FileRoutesByTo {
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/workspace/docs/$id': typeof WorkspaceDocsIdRoute
   '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
+  '/workspace/slides/$id': typeof WorkspaceSlidesIdRouteWithChildren
   '/workspace/docs': typeof WorkspaceDocsIndexRoute
   '/workspace/forms': typeof WorkspaceFormsIndexRoute
+  '/workspace/slides': typeof WorkspaceSlidesIndexRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/workspace/slides/$id/present': typeof WorkspaceSlidesIdPresentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -426,12 +451,15 @@ export interface FileRoutesById {
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/workspace/docs/$id': typeof WorkspaceDocsIdRoute
   '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
+  '/workspace/slides/$id': typeof WorkspaceSlidesIdRouteWithChildren
   '/workspace/docs/': typeof WorkspaceDocsIndexRoute
   '/workspace/forms/': typeof WorkspaceFormsIndexRoute
+  '/workspace/slides/': typeof WorkspaceSlidesIndexRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/workspace/slides/$id/present': typeof WorkspaceSlidesIdPresentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -476,12 +504,15 @@ export interface FileRouteTypes {
     | '/lifepay/pagar/$token'
     | '/workspace/docs/$id'
     | '/workspace/forms/$id'
+    | '/workspace/slides/$id'
     | '/workspace/docs/'
     | '/workspace/forms/'
+    | '/workspace/slides/'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/workspace/slides/$id/present'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -521,12 +552,15 @@ export interface FileRouteTypes {
     | '/lifepay/pagar/$token'
     | '/workspace/docs/$id'
     | '/workspace/forms/$id'
+    | '/workspace/slides/$id'
     | '/workspace/docs'
     | '/workspace/forms'
+    | '/workspace/slides'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/workspace/slides/$id/present'
   id:
     | '__root__'
     | '/'
@@ -569,12 +603,15 @@ export interface FileRouteTypes {
     | '/lifepay/pagar/$token'
     | '/workspace/docs/$id'
     | '/workspace/forms/$id'
+    | '/workspace/slides/$id'
     | '/workspace/docs/'
     | '/workspace/forms/'
+    | '/workspace/slides/'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/workspace/slides/$id/present'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -906,6 +943,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceFormsIdRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/workspace/slides/': {
+      id: '/workspace/slides/'
+      path: '/slides'
+      fullPath: '/workspace/slides/'
+      preLoaderRoute: typeof WorkspaceSlidesIndexRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/workspace/slides/$id': {
+      id: '/workspace/slides/$id'
+      path: '/slides/$id'
+      fullPath: '/workspace/slides/$id'
+      preLoaderRoute: typeof WorkspaceSlidesIdRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/api/public/email/inbound': {
       id: '/api/public/email/inbound'
       path: '/api/public/email/inbound'
@@ -933,6 +984,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/lovable/email/queue/process'
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/workspace/slides/$id/present': {
+      id: '/workspace/slides/$id/present'
+      path: '/present'
+      fullPath: '/workspace/slides/$id/present'
+      preLoaderRoute: typeof WorkspaceSlidesIdPresentRouteImport
+      parentRoute: typeof WorkspaceSlidesIdRoute
     }
   }
 }
@@ -974,13 +1032,26 @@ const StaffRouteChildren: StaffRouteChildren = {
 
 const StaffRouteWithChildren = StaffRoute._addFileChildren(StaffRouteChildren)
 
+interface WorkspaceSlidesIdRouteChildren {
+  WorkspaceSlidesIdPresentRoute: typeof WorkspaceSlidesIdPresentRoute
+}
+
+const WorkspaceSlidesIdRouteChildren: WorkspaceSlidesIdRouteChildren = {
+  WorkspaceSlidesIdPresentRoute: WorkspaceSlidesIdPresentRoute,
+}
+
+const WorkspaceSlidesIdRouteWithChildren =
+  WorkspaceSlidesIdRoute._addFileChildren(WorkspaceSlidesIdRouteChildren)
+
 interface WorkspaceRouteChildren {
   WorkspaceDriveRoute: typeof WorkspaceDriveRoute
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute
   WorkspaceDocsIdRoute: typeof WorkspaceDocsIdRoute
   WorkspaceFormsIdRoute: typeof WorkspaceFormsIdRoute
+  WorkspaceSlidesIdRoute: typeof WorkspaceSlidesIdRouteWithChildren
   WorkspaceDocsIndexRoute: typeof WorkspaceDocsIndexRoute
   WorkspaceFormsIndexRoute: typeof WorkspaceFormsIndexRoute
+  WorkspaceSlidesIndexRoute: typeof WorkspaceSlidesIndexRoute
 }
 
 const WorkspaceRouteChildren: WorkspaceRouteChildren = {
@@ -988,8 +1059,10 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceIndexRoute: WorkspaceIndexRoute,
   WorkspaceDocsIdRoute: WorkspaceDocsIdRoute,
   WorkspaceFormsIdRoute: WorkspaceFormsIdRoute,
+  WorkspaceSlidesIdRoute: WorkspaceSlidesIdRouteWithChildren,
   WorkspaceDocsIndexRoute: WorkspaceDocsIndexRoute,
   WorkspaceFormsIndexRoute: WorkspaceFormsIndexRoute,
+  WorkspaceSlidesIndexRoute: WorkspaceSlidesIndexRoute,
 }
 
 const WorkspaceRouteWithChildren = WorkspaceRoute._addFileChildren(

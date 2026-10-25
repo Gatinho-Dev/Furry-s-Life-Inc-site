@@ -22,6 +22,7 @@ function Launcher() {
   const auth = useAuth();
   const drive = WORKSPACE_APPS.find((a) => a.key === "drive")!;
   const docs = WORKSPACE_APPS.find((a) => a.key === "docs")!;
+  const slides = WORKSPACE_APPS.find((a) => a.key === "slides")!;
   const forms = WORKSPACE_APPS.find((a) => a.key === "forms")!;
   const soon = WORKSPACE_APPS.filter((a) => !a.available);
   return (
@@ -37,7 +38,7 @@ function Launcher() {
           <p className="mt-3 text-lg text-muted-foreground">Seu espaço de trabalho digital.</p>
         </div>
         <div className="mt-12 grid gap-4 md:grid-cols-2">
-          {[drive, docs, forms].map((app) => {
+          {[drive, docs, slides, forms].map((app) => {
             const inner = (<>
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><app.icon className="h-7 w-7" /></div>
               <div className="flex-1"><h2 className="font-display text-xl font-bold">{app.name}</h2><p className="mt-1 text-sm text-muted-foreground">{app.description}</p></div>
@@ -48,7 +49,9 @@ function Launcher() {
               ? <Link key={app.key} to="/workspace/drive" search={{ folder: undefined }} className={cls}>{inner}</Link>
               : app.key === "docs"
                 ? <Link key={app.key} to="/workspace/docs" className={cls}>{inner}</Link>
-                : <Link key={app.key} to="/workspace/forms" className={cls}>{inner}</Link>;
+                : app.key === "slides"
+                  ? <Link key={app.key} to="/workspace/slides" className={cls}>{inner}</Link>
+                  : <Link key={app.key} to="/workspace/forms" className={cls}>{inner}</Link>;
           })}
         </div>
         <div className="mt-14">
