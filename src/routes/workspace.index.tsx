@@ -21,6 +21,7 @@ export const Route = createFileRoute("/workspace/")({
 function Launcher() {
   const auth = useAuth();
   const drive = WORKSPACE_APPS.find((a) => a.key === "drive")!;
+  const docs = WORKSPACE_APPS.find((a) => a.key === "docs")!;
   const forms = WORKSPACE_APPS.find((a) => a.key === "forms")!;
   const soon = WORKSPACE_APPS.filter((a) => !a.available);
   return (
@@ -36,7 +37,7 @@ function Launcher() {
           <p className="mt-3 text-lg text-muted-foreground">Seu espaço de trabalho digital.</p>
         </div>
         <div className="mt-12 grid gap-4 md:grid-cols-2">
-          {[drive, forms].map((app) => {
+          {[drive, docs, forms].map((app) => {
             const inner = (<>
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><app.icon className="h-7 w-7" /></div>
               <div className="flex-1"><h2 className="font-display text-xl font-bold">{app.name}</h2><p className="mt-1 text-sm text-muted-foreground">{app.description}</p></div>
@@ -45,7 +46,9 @@ function Launcher() {
             const cls = "group flex items-center gap-5 rounded-3xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl";
             return app.key === "drive"
               ? <Link key={app.key} to="/workspace/drive" search={{ folder: undefined }} className={cls}>{inner}</Link>
-              : <Link key={app.key} to="/workspace/forms" className={cls}>{inner}</Link>;
+              : app.key === "docs"
+                ? <Link key={app.key} to="/workspace/docs" className={cls}>{inner}</Link>
+                : <Link key={app.key} to="/workspace/forms" className={cls}>{inner}</Link>;
           })}
         </div>
         <div className="mt-14">
