@@ -51,6 +51,8 @@ import { Route as WorkspaceDocsIndexRouteImport } from './routes/workspace.docs.
 import { Route as WorkspaceDocsIdRouteImport } from './routes/workspace.docs.$id'
 import { Route as WorkspaceFormsIndexRouteImport } from './routes/workspace.forms.index'
 import { Route as WorkspaceFormsIdRouteImport } from './routes/workspace.forms.$id'
+import { Route as WorkspaceSheetsIndexRouteImport } from './routes/workspace.sheets.index'
+import { Route as WorkspaceSheetsIdRouteImport } from './routes/workspace.sheets.$id'
 import { Route as WorkspaceSlidesIndexRouteImport } from './routes/workspace.slides.index'
 import { Route as WorkspaceSlidesIdRouteImport } from './routes/workspace.slides.$id'
 import { Route as ApiPublicEmailInboundRouteImport } from './routes/api/public/email/inbound'
@@ -272,6 +274,16 @@ const WorkspaceFormsIdRoute = WorkspaceFormsIdRouteImport.update({
   path: '/forms/$id',
   getParentRoute: () => WorkspaceRoute,
 } as any)
+const WorkspaceSheetsIndexRoute = WorkspaceSheetsIndexRouteImport.update({
+  id: '/sheets/',
+  path: '/sheets/',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspaceSheetsIdRoute = WorkspaceSheetsIdRouteImport.update({
+  id: '/sheets/$id',
+  path: '/sheets/$id',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
 const WorkspaceSlidesIndexRoute = WorkspaceSlidesIndexRouteImport.update({
   id: '/slides/',
   path: '/slides/',
@@ -351,9 +363,11 @@ export interface FileRoutesByFullPath {
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/workspace/docs/$id': typeof WorkspaceDocsIdRoute
   '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
+  '/workspace/sheets/$id': typeof WorkspaceSheetsIdRoute
   '/workspace/slides/$id': typeof WorkspaceSlidesIdRouteWithChildren
   '/workspace/docs/': typeof WorkspaceDocsIndexRoute
   '/workspace/forms/': typeof WorkspaceFormsIndexRoute
+  '/workspace/sheets/': typeof WorkspaceSheetsIndexRoute
   '/workspace/slides/': typeof WorkspaceSlidesIndexRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -399,9 +413,11 @@ export interface FileRoutesByTo {
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/workspace/docs/$id': typeof WorkspaceDocsIdRoute
   '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
+  '/workspace/sheets/$id': typeof WorkspaceSheetsIdRoute
   '/workspace/slides/$id': typeof WorkspaceSlidesIdRouteWithChildren
   '/workspace/docs': typeof WorkspaceDocsIndexRoute
   '/workspace/forms': typeof WorkspaceFormsIndexRoute
+  '/workspace/sheets': typeof WorkspaceSheetsIndexRoute
   '/workspace/slides': typeof WorkspaceSlidesIndexRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -451,9 +467,11 @@ export interface FileRoutesById {
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/workspace/docs/$id': typeof WorkspaceDocsIdRoute
   '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
+  '/workspace/sheets/$id': typeof WorkspaceSheetsIdRoute
   '/workspace/slides/$id': typeof WorkspaceSlidesIdRouteWithChildren
   '/workspace/docs/': typeof WorkspaceDocsIndexRoute
   '/workspace/forms/': typeof WorkspaceFormsIndexRoute
+  '/workspace/sheets/': typeof WorkspaceSheetsIndexRoute
   '/workspace/slides/': typeof WorkspaceSlidesIndexRoute
   '/api/public/email/inbound': typeof ApiPublicEmailInboundRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -504,9 +522,11 @@ export interface FileRouteTypes {
     | '/lifepay/pagar/$token'
     | '/workspace/docs/$id'
     | '/workspace/forms/$id'
+    | '/workspace/sheets/$id'
     | '/workspace/slides/$id'
     | '/workspace/docs/'
     | '/workspace/forms/'
+    | '/workspace/sheets/'
     | '/workspace/slides/'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
@@ -552,9 +572,11 @@ export interface FileRouteTypes {
     | '/lifepay/pagar/$token'
     | '/workspace/docs/$id'
     | '/workspace/forms/$id'
+    | '/workspace/sheets/$id'
     | '/workspace/slides/$id'
     | '/workspace/docs'
     | '/workspace/forms'
+    | '/workspace/sheets'
     | '/workspace/slides'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
@@ -603,9 +625,11 @@ export interface FileRouteTypes {
     | '/lifepay/pagar/$token'
     | '/workspace/docs/$id'
     | '/workspace/forms/$id'
+    | '/workspace/sheets/$id'
     | '/workspace/slides/$id'
     | '/workspace/docs/'
     | '/workspace/forms/'
+    | '/workspace/sheets/'
     | '/workspace/slides/'
     | '/api/public/email/inbound'
     | '/lovable/email/auth/preview'
@@ -943,6 +967,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceFormsIdRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/workspace/sheets/': {
+      id: '/workspace/sheets/'
+      path: '/sheets'
+      fullPath: '/workspace/sheets/'
+      preLoaderRoute: typeof WorkspaceSheetsIndexRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/workspace/sheets/$id': {
+      id: '/workspace/sheets/$id'
+      path: '/sheets/$id'
+      fullPath: '/workspace/sheets/$id'
+      preLoaderRoute: typeof WorkspaceSheetsIdRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/workspace/slides/': {
       id: '/workspace/slides/'
       path: '/slides'
@@ -1048,9 +1086,11 @@ interface WorkspaceRouteChildren {
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute
   WorkspaceDocsIdRoute: typeof WorkspaceDocsIdRoute
   WorkspaceFormsIdRoute: typeof WorkspaceFormsIdRoute
+  WorkspaceSheetsIdRoute: typeof WorkspaceSheetsIdRoute
   WorkspaceSlidesIdRoute: typeof WorkspaceSlidesIdRouteWithChildren
   WorkspaceDocsIndexRoute: typeof WorkspaceDocsIndexRoute
   WorkspaceFormsIndexRoute: typeof WorkspaceFormsIndexRoute
+  WorkspaceSheetsIndexRoute: typeof WorkspaceSheetsIndexRoute
   WorkspaceSlidesIndexRoute: typeof WorkspaceSlidesIndexRoute
 }
 
@@ -1059,9 +1099,11 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceIndexRoute: WorkspaceIndexRoute,
   WorkspaceDocsIdRoute: WorkspaceDocsIdRoute,
   WorkspaceFormsIdRoute: WorkspaceFormsIdRoute,
+  WorkspaceSheetsIdRoute: WorkspaceSheetsIdRoute,
   WorkspaceSlidesIdRoute: WorkspaceSlidesIdRouteWithChildren,
   WorkspaceDocsIndexRoute: WorkspaceDocsIndexRoute,
   WorkspaceFormsIndexRoute: WorkspaceFormsIndexRoute,
+  WorkspaceSheetsIndexRoute: WorkspaceSheetsIndexRoute,
   WorkspaceSlidesIndexRoute: WorkspaceSlidesIndexRoute,
 }
 
