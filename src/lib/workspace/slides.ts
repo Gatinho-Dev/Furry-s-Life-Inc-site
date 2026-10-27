@@ -1,4 +1,5 @@
 // Modelo de dados do Life Slides. Funções puras, sem acesso ao banco.
+import type { CSSProperties } from "react";
 
 export const SLIDE_W = 1920;
 export const SLIDE_H = 1080;
@@ -85,6 +86,51 @@ export function updateElement(slide: Slide, elementId: string, patch: Partial<Sl
   return {
     ...slide,
     elements: slide.elements.map((e) => (e.id === elementId ? { ...e, ...patch } : e)),
+  };
+}
+
+/** Substitui o slide no índice dado. */
+export function withSlide(deck: Deck, index: number, slide: Slide): Deck {
+  return { slides: deck.slides.map((s, i) => (i === index ? slide : s)) };
+}
+
+/** Duplica um elemento com um pequeno deslocamento; a cópia fica por cima. */
+export function duplicateElement(slide: Slide, elementId: string): Slide {
+  const src = slide.elements.find((e) => e.id === elementId);
+  if (!src) return slide;
+  const copy: SlideElement = { ...src, id: newId(), ...clampRect({ x: src.x + 40, y: src.y + 40, w: src.w, h: src.h }) };
+  return { ...slide, elements: [...slide.elements, copy] };
+}
+
+export function removeElement(slide: Slide, elementId: string): Slide {
+  return { ...slide, elements: slide.elements.filter((e) => e.id !== elementId) };
+}
+
+/** Traz o elemento para frente ou envia para trás na ordem de empilhamento. */
+export function moveElementZ(slide: Slide, elementId: string, to: "front" | "back"): Slide {
+  const el = slide.elements.find((e) => e.id === elementId);
+  if (!el) return slide;
+  const rest = slide.elements.filter((e) => e.id !== elementId);
+  return { ...slide, elements: to === "front" ? [...rest, el] : [el, ...rest] };
+}
+
+/** Estilo visual de um elemento. Tamanhos de fonte e borda usam cqh, relativo ao contêiner do slide. */
+export function elementStyle(el: SlideElement): CSSProperties {
+  return {
+    left: `${(el.x / SLIDE_W) * 100}%`,
+    top: `${(el.y / SLIDE_H) * 100}%`,
+    width: `${(el.w / SLIDE_W) * 100}%`,
+    height: `${(el.h / SLIDE_H) * 100}%`,
+    background: el.kind === "shape" ? el.fill : undefined,
+    border: el.kind === "shape" && el.strokeWidth ? `${(el.strokeWidth / SLIDE_H) * 100}cqh solid ${el.stroke}` : undefined,
+    borderRadius: el.shape === "ellipse" ? "50%" : el.shape === "round" ? "12%" : undefined,
+    color: el.color,
+    textAlign: el.align,
+    fontSize: el.fontSize ? `${(el.fontSize / SLIDE_H) * 100}cqh` : undefined,
+    fontWeight: el.bold ? 700 : 400,
+    fontStyle: el.italic ? "italic" : "normal",
+    whiteSpace: "pre-wrap",
+    lineHeight: 1.2,
   };
 }
 
