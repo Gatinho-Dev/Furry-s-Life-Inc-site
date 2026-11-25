@@ -1504,53 +1504,346 @@ export type Database = {
         }
         Relationships: []
       }
+      lp_admissions: {
+        Row: {
+          admitted_at: string
+          bed_id: string | null
+          created_at: string
+          created_by: string | null
+          discharge_notes: string | null
+          discharged_at: string | null
+          id: string
+          patient_id: string
+          reason: string | null
+          sector: string | null
+          staff_id: string | null
+          status: string
+        }
+        Insert: {
+          admitted_at?: string
+          bed_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          discharge_notes?: string | null
+          discharged_at?: string | null
+          id?: string
+          patient_id: string
+          reason?: string | null
+          sector?: string | null
+          staff_id?: string | null
+          status?: string
+        }
+        Update: {
+          admitted_at?: string
+          bed_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          discharge_notes?: string | null
+          discharged_at?: string | null
+          id?: string
+          patient_id?: string
+          reason?: string | null
+          sector?: string | null
+          staff_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lp_admissions_bed_id_fkey"
+            columns: ["bed_id"]
+            isOneToOne: false
+            referencedRelation: "lp_beds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lp_admissions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "lp_patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lp_admissions_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "lp_staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lp_appointments: {
+        Row: {
+          checked_in_at: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          duration_min: number
+          finished_at: string | null
+          id: string
+          patient_id: string
+          priority: string
+          reason: string | null
+          specialty: string | null
+          staff_id: string | null
+          started_at: string | null
+          starts_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          checked_in_at?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          duration_min?: number
+          finished_at?: string | null
+          id?: string
+          patient_id: string
+          priority?: string
+          reason?: string | null
+          specialty?: string | null
+          staff_id?: string | null
+          started_at?: string | null
+          starts_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          checked_in_at?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          duration_min?: number
+          finished_at?: string | null
+          id?: string
+          patient_id?: string
+          priority?: string
+          reason?: string | null
+          specialty?: string | null
+          staff_id?: string | null
+          started_at?: string | null
+          starts_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lp_appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "lp_patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lp_appointments_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "lp_staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lp_audit: {
+        Row: {
+          action: string
+          actor: string | null
+          after_data: Json | null
+          before_data: Json | null
+          created_at: string
+          id: string
+          row_id: string | null
+          table_name: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          id?: string
+          row_id?: string | null
+          table_name: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          id?: string
+          row_id?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
       lp_beds: {
         Row: {
           code: string
           created_at: string
           id: string
+          room: string | null
+          status: string
           ward: string
         }
         Insert: {
           code: string
           created_at?: string
           id?: string
+          room?: string | null
+          status?: string
           ward: string
         }
         Update: {
           code?: string
           created_at?: string
           id?: string
+          room?: string | null
+          status?: string
           ward?: string
         }
         Relationships: []
       }
-      lp_exams: {
+      lp_diagnosis_catalog: {
         Row: {
-          completed_at: string | null
+          category: string | null
+          code: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          category?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      lp_documents: {
+        Row: {
+          body: string
+          code: string
+          created_at: string
+          created_by: string | null
+          data: Json
+          finalized_at: string | null
           id: string
           kind: string
+          patient_id: string | null
+          staff_id: string | null
+          status: string
+          template_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          finalized_at?: string | null
+          id?: string
+          kind: string
+          patient_id?: string | null
+          staff_id?: string | null
+          status?: string
+          template_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          finalized_at?: string | null
+          id?: string
+          kind?: string
+          patient_id?: string | null
+          staff_id?: string | null
+          status?: string
+          template_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lp_documents_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "lp_patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lp_documents_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "lp_staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lp_documents_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "lp_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lp_exams: {
+        Row: {
+          attachments: Json
+          category: string
+          completed_at: string | null
+          id: string
+          justification: string | null
+          kind: string
+          notes: string | null
           patient_id: string
           requested_at: string
           result: string | null
+          scheduled_for: string | null
+          staff_id: string | null
           status: string
         }
         Insert: {
+          attachments?: Json
+          category?: string
           completed_at?: string | null
           id?: string
+          justification?: string | null
           kind: string
+          notes?: string | null
           patient_id: string
           requested_at?: string
           result?: string | null
+          scheduled_for?: string | null
+          staff_id?: string | null
           status?: string
         }
         Update: {
+          attachments?: Json
+          category?: string
           completed_at?: string | null
           id?: string
+          justification?: string | null
           kind?: string
+          notes?: string | null
           patient_id?: string
           requested_at?: string
           result?: string | null
+          scheduled_for?: string | null
+          staff_id?: string | null
           status?: string
         }
         Relationships: [
@@ -1561,7 +1854,59 @@ export type Database = {
             referencedRelation: "lp_patients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "lp_exams_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "lp_staff"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      lp_medications: {
+        Row: {
+          active_ingredient: string | null
+          concentration: string | null
+          created_at: string
+          expires_on: string | null
+          id: string
+          lot: string | null
+          manufacturer: string | null
+          min_stock: number
+          name: string
+          presentation: string | null
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          active_ingredient?: string | null
+          concentration?: string | null
+          created_at?: string
+          expires_on?: string | null
+          id?: string
+          lot?: string | null
+          manufacturer?: string | null
+          min_stock?: number
+          name: string
+          presentation?: string | null
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          active_ingredient?: string | null
+          concentration?: string | null
+          created_at?: string
+          expires_on?: string | null
+          id?: string
+          lot?: string | null
+          manufacturer?: string | null
+          min_stock?: number
+          name?: string
+          presentation?: string | null
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       lp_notes: {
         Row: {
@@ -1597,54 +1942,84 @@ export type Database = {
       }
       lp_patients: {
         Row: {
+          address: string | null
           allergies: string | null
+          archived_at: string | null
           bed_id: string | null
           birth_date: string | null
           blood_type: string | null
+          code: string | null
           complaint: string | null
+          conditions: string | null
           created_at: string
           created_by: string | null
           doctor: string | null
+          email: string | null
           full_name: string
           id: string
           insurance: string | null
           is_simulated: boolean
+          medical_notes: string | null
+          medications: string | null
+          nickname: string | null
+          phone: string | null
+          photo_url: string | null
           sex: string | null
           status: string
           triage: string
           updated_at: string
         }
         Insert: {
+          address?: string | null
           allergies?: string | null
+          archived_at?: string | null
           bed_id?: string | null
           birth_date?: string | null
           blood_type?: string | null
+          code?: string | null
           complaint?: string | null
+          conditions?: string | null
           created_at?: string
           created_by?: string | null
           doctor?: string | null
+          email?: string | null
           full_name: string
           id?: string
           insurance?: string | null
           is_simulated?: boolean
+          medical_notes?: string | null
+          medications?: string | null
+          nickname?: string | null
+          phone?: string | null
+          photo_url?: string | null
           sex?: string | null
           status?: string
           triage?: string
           updated_at?: string
         }
         Update: {
+          address?: string | null
           allergies?: string | null
+          archived_at?: string | null
           bed_id?: string | null
           birth_date?: string | null
           blood_type?: string | null
+          code?: string | null
           complaint?: string | null
+          conditions?: string | null
           created_at?: string
           created_by?: string | null
           doctor?: string | null
+          email?: string | null
           full_name?: string
           id?: string
           insurance?: string | null
           is_simulated?: boolean
+          medical_notes?: string | null
+          medications?: string | null
+          nickname?: string | null
+          phone?: string | null
+          photo_url?: string | null
           sex?: string | null
           status?: string
           triage?: string
@@ -1697,6 +2072,122 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      lp_records: {
+        Row: {
+          appointment_id: string | null
+          body: string
+          corrects: string | null
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          kind: string
+          patient_id: string
+          specialty: string | null
+          staff_id: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          body?: string
+          corrects?: string | null
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          kind: string
+          patient_id: string
+          specialty?: string | null
+          staff_id?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          body?: string
+          corrects?: string | null
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          kind?: string
+          patient_id?: string
+          specialty?: string | null
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lp_records_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "lp_appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lp_records_corrects_fkey"
+            columns: ["corrects"]
+            isOneToOne: false
+            referencedRelation: "lp_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lp_records_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "lp_patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lp_records_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "lp_staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lp_settings: {
+        Row: {
+          accent: string
+          address: string | null
+          cnpj: string | null
+          director: string | null
+          id: number
+          logo_url: string | null
+          name: string
+          phone: string | null
+          sectors: string[]
+          specialties: string[]
+          technical_lead: string | null
+          updated_at: string
+        }
+        Insert: {
+          accent?: string
+          address?: string | null
+          cnpj?: string | null
+          director?: string | null
+          id?: number
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          sectors?: string[]
+          specialties?: string[]
+          technical_lead?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accent?: string
+          address?: string | null
+          cnpj?: string | null
+          director?: string | null
+          id?: number
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          sectors?: string[]
+          specialties?: string[]
+          technical_lead?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       lp_shift_tasks: {
         Row: {
@@ -1782,6 +2273,140 @@ export type Database = {
           started_at?: string
           tasks_done?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      lp_staff: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          photo_url: string | null
+          registry: string | null
+          role: string
+          specialty: string | null
+          status: string
+          uf: string | null
+          updated_at: string
+          user_id: string | null
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          photo_url?: string | null
+          registry?: string | null
+          role?: string
+          specialty?: string | null
+          status?: string
+          uf?: string | null
+          updated_at?: string
+          user_id?: string | null
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          photo_url?: string | null
+          registry?: string | null
+          role?: string
+          specialty?: string | null
+          status?: string
+          uf?: string | null
+          updated_at?: string
+          user_id?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      lp_stock_moves: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          medication_id: string
+          note: string | null
+          qty: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          medication_id: string
+          note?: string | null
+          qty: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          medication_id?: string
+          note?: string | null
+          qty?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lp_stock_moves_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "lp_medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lp_templates: {
+        Row: {
+          accent: string
+          archived: boolean
+          body: string
+          created_at: string
+          font: string
+          footer: string
+          header: string
+          id: string
+          kind: string
+          logo_url: string | null
+          margin_mm: number
+          name: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          accent?: string
+          archived?: boolean
+          body?: string
+          created_at?: string
+          font?: string
+          footer?: string
+          header?: string
+          id?: string
+          kind: string
+          logo_url?: string | null
+          margin_mm?: number
+          name: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          accent?: string
+          archived?: boolean
+          body?: string
+          created_at?: string
+          font?: string
+          footer?: string
+          header?: string
+          id?: string
+          kind?: string
+          logo_url?: string | null
+          margin_mm?: number
+          name?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2948,6 +3573,9 @@ export type Database = {
         Args: { _action: string; _id: string }
         Returns: boolean
       }
+      lp_access: { Args: { _uid: string }; Returns: boolean }
+      lp_has: { Args: { _roles: string[]; _uid: string }; Returns: boolean }
+      lp_role: { Args: { _uid: string }; Returns: string }
       move_to_dlq: {
         Args: {
           dlq_name: string

@@ -36,6 +36,20 @@
       "when": 1792631532565,
       "tag": "0004_docs_select_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795649133066,
+      "tag": "0005_lifeplus_hms",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795649147282,
+      "tag": "0006_lp_files_policies",
+      "breakpoints": true
     }
   ]
 }
