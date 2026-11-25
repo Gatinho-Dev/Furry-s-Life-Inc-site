@@ -2104,6 +2104,85 @@ export type Database = {
         }
         Relationships: []
       }
+      presentation_shares: {
+        Row: {
+          created_at: string
+          id: string
+          owner_id: string
+          permission: string
+          presentation_id: string
+          shared_with: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_id: string
+          permission?: string
+          presentation_id: string
+          shared_with: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_id?: string
+          permission?: string
+          presentation_id?: string
+          shared_with?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "presentation_shares_presentation_id_fkey"
+            columns: ["presentation_id"]
+            isOneToOne: false
+            referencedRelation: "presentations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      presentations: {
+        Row: {
+          created_at: string
+          deck: Json
+          folder_id: string | null
+          id: string
+          owner_id: string
+          title: string
+          trashed_at: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          deck?: Json
+          folder_id?: string | null
+          id?: string
+          owner_id: string
+          title?: string
+          trashed_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          deck?: Json
+          folder_id?: string | null
+          id?: string
+          owner_id?: string
+          title?: string
+          trashed_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "presentations_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "drive_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2169,6 +2248,170 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      rostos_alunos: {
+        Row: {
+          cadastrado_em: string
+          consentido_em: string
+          descritor: Json
+          user_id: string
+        }
+        Insert: {
+          cadastrado_em?: string
+          consentido_em: string
+          descritor: Json
+          user_id: string
+        }
+        Update: {
+          cadastrado_em?: string
+          consentido_em?: string
+          descritor?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      spreadsheet_cells: {
+        Row: {
+          col_idx: number
+          raw: string | null
+          row_idx: number
+          sheet_id: string
+          style: Json
+        }
+        Insert: {
+          col_idx: number
+          raw?: string | null
+          row_idx: number
+          sheet_id: string
+          style?: Json
+        }
+        Update: {
+          col_idx?: number
+          raw?: string | null
+          row_idx?: number
+          sheet_id?: string
+          style?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spreadsheet_cells_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "spreadsheet_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spreadsheet_shares: {
+        Row: {
+          created_at: string
+          id: string
+          owner_id: string
+          permission: string
+          shared_with: string
+          spreadsheet_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_id: string
+          permission?: string
+          shared_with: string
+          spreadsheet_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_id?: string
+          permission?: string
+          shared_with?: string
+          spreadsheet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spreadsheet_shares_spreadsheet_id_fkey"
+            columns: ["spreadsheet_id"]
+            isOneToOne: false
+            referencedRelation: "spreadsheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spreadsheet_sheets: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          position: number
+          spreadsheet_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          spreadsheet_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          spreadsheet_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spreadsheet_sheets_spreadsheet_id_fkey"
+            columns: ["spreadsheet_id"]
+            isOneToOne: false
+            referencedRelation: "spreadsheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spreadsheets: {
+        Row: {
+          created_at: string
+          folder_id: string | null
+          id: string
+          owner_id: string
+          title: string
+          trashed_at: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          folder_id?: string | null
+          id?: string
+          owner_id: string
+          title?: string
+          trashed_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          folder_id?: string | null
+          id?: string
+          owner_id?: string
+          title?: string
+          trashed_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spreadsheets_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "drive_folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       staff_notices: {
         Row: {
@@ -2714,6 +2957,7 @@ export type Database = {
         }
         Returns: number
       }
+      presentation_permission: { Args: { _pres: string }; Returns: string }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -2722,6 +2966,9 @@ export type Database = {
           read_ct: number
         }[]
       }
+      sheet_permission: { Args: { _sheet: string }; Returns: string }
+      sheet_spreadsheet: { Args: { _sheet: string }; Returns: string }
+      slide_image_readable: { Args: { _path: string }; Returns: boolean }
     }
     Enums: {
       app_role: "ceo" | "admin" | "staff"
