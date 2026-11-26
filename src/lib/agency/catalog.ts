@@ -22,6 +22,7 @@ export type ToolPageKey =
   | "document"
   | "geospatial"
   | "threat"
+  | "palette"
   | "workspace"
   | "identity"
   | "graph"
@@ -43,6 +44,7 @@ export type NavItem = {
 export const NAV: NavItem[] = [
   { key: "overview", label: "Overview", icon: "LayoutDashboard", to: "/agency", group: "Operations", hint: "Intelligence dashboard" },
   { key: "quick-search", label: "Quick Search", icon: "Search", to: "/agency/quick-search", group: "Operations", hint: "Universal pivoting" },
+  { key: "palette", label: "Life Palette", icon: "Layers", to: "/agency/palette", group: "Operations", hint: "Visual investigation canvas" },
   { key: "osint", label: "OSINT Intelligence", icon: "Library", to: "/agency/osint", group: "OSINT", hint: "Framework library" },
   { key: "domain", label: "Domain Intelligence", icon: "Globe", to: "/agency/domain", group: "OSINT" },
   { key: "ip", label: "IP Intelligence", icon: "Server", to: "/agency/ip", group: "OSINT" },
