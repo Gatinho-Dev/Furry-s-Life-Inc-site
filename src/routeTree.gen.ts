@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AgencyRouteImport } from './routes/agency'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DriveRouteImport } from './routes/drive'
 import { Route as LifeServerRouteImport } from './routes/life-server'
@@ -24,29 +23,7 @@ import { Route as WorkspaceRouteImport } from './routes/workspace'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AgencyIndexRouteImport } from './routes/agency.index'
-import { Route as AgencyActivityRouteImport } from './routes/agency.activity'
-import { Route as AgencyApiRouteImport } from './routes/agency.api'
-import { Route as AgencyCompanyRouteImport } from './routes/agency.company'
-import { Route as AgencyCyberRouteImport } from './routes/agency.cyber'
-import { Route as AgencyDocumentRouteImport } from './routes/agency.document'
-import { Route as AgencyDomainRouteImport } from './routes/agency.domain'
-import { Route as AgencyEmailRouteImport } from './routes/agency.email'
-import { Route as AgencyGeospatialRouteImport } from './routes/agency.geospatial'
-import { Route as AgencyGraphRouteImport } from './routes/agency.graph'
-import { Route as AgencyImageRouteImport } from './routes/agency.image'
-import { Route as AgencyIpRouteImport } from './routes/agency.ip'
-import { Route as AgencyNetworkRouteImport } from './routes/agency.network'
-import { Route as AgencyOsintRouteImport } from './routes/agency.osint'
-import { Route as AgencyQuickSearchRouteImport } from './routes/agency.quick-search'
-import { Route as AgencyReportsRouteImport } from './routes/agency.reports'
-import { Route as AgencySettingsRouteImport } from './routes/agency.settings'
-import { Route as AgencySocialRouteImport } from './routes/agency.social'
 import { Route as AgencyStaffRouteImport } from './routes/agency.staff'
-import { Route as AgencyThreatRouteImport } from './routes/agency.threat'
-import { Route as AgencyToolBuilderRouteImport } from './routes/agency.tool-builder'
-import { Route as AgencyUsernameRouteImport } from './routes/agency.username'
-import { Route as AgencyWebRouteImport } from './routes/agency.web'
-import { Route as AgencyWorkspaceRouteImport } from './routes/agency.workspace'
 import { Route as AircareIndexRouteImport } from './routes/aircare.index'
 import { Route as AircareStaffRouteImport } from './routes/aircare.staff'
 import { Route as CollegeIndexRouteImport } from './routes/college.index'
@@ -87,11 +64,6 @@ import { Route as WorkspaceSlidesIdPresentRouteImport } from './routes/workspace
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AgencyRoute = AgencyRouteImport.update({
-  id: '/agency',
-  path: '/agency',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -157,124 +129,14 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
     getParentRoute: () => rootRouteImport,
   } as any)
 const AgencyIndexRoute = AgencyIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyActivityRoute = AgencyActivityRouteImport.update({
-  id: '/activity',
-  path: '/activity',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyApiRoute = AgencyApiRouteImport.update({
-  id: '/api',
-  path: '/api',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyCompanyRoute = AgencyCompanyRouteImport.update({
-  id: '/company',
-  path: '/company',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyCyberRoute = AgencyCyberRouteImport.update({
-  id: '/cyber',
-  path: '/cyber',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyDocumentRoute = AgencyDocumentRouteImport.update({
-  id: '/document',
-  path: '/document',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyDomainRoute = AgencyDomainRouteImport.update({
-  id: '/domain',
-  path: '/domain',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyEmailRoute = AgencyEmailRouteImport.update({
-  id: '/email',
-  path: '/email',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyGeospatialRoute = AgencyGeospatialRouteImport.update({
-  id: '/geospatial',
-  path: '/geospatial',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyGraphRoute = AgencyGraphRouteImport.update({
-  id: '/graph',
-  path: '/graph',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyImageRoute = AgencyImageRouteImport.update({
-  id: '/image',
-  path: '/image',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyIpRoute = AgencyIpRouteImport.update({
-  id: '/ip',
-  path: '/ip',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyNetworkRoute = AgencyNetworkRouteImport.update({
-  id: '/network',
-  path: '/network',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyOsintRoute = AgencyOsintRouteImport.update({
-  id: '/osint',
-  path: '/osint',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyQuickSearchRoute = AgencyQuickSearchRouteImport.update({
-  id: '/quick-search',
-  path: '/quick-search',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyReportsRoute = AgencyReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencySettingsRoute = AgencySettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencySocialRoute = AgencySocialRouteImport.update({
-  id: '/social',
-  path: '/social',
-  getParentRoute: () => AgencyRoute,
+  id: '/agency/',
+  path: '/agency/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AgencyStaffRoute = AgencyStaffRouteImport.update({
-  id: '/staff',
-  path: '/staff',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyThreatRoute = AgencyThreatRouteImport.update({
-  id: '/threat',
-  path: '/threat',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyToolBuilderRoute = AgencyToolBuilderRouteImport.update({
-  id: '/tool-builder',
-  path: '/tool-builder',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyUsernameRoute = AgencyUsernameRouteImport.update({
-  id: '/username',
-  path: '/username',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyWebRoute = AgencyWebRouteImport.update({
-  id: '/web',
-  path: '/web',
-  getParentRoute: () => AgencyRoute,
-} as any)
-const AgencyWorkspaceRoute = AgencyWorkspaceRouteImport.update({
-  id: '/workspace',
-  path: '/workspace',
-  getParentRoute: () => AgencyRoute,
+  id: '/agency/staff',
+  path: '/agency/staff',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AircareIndexRoute = AircareIndexRouteImport.update({
   id: '/aircare/',
@@ -462,7 +324,6 @@ const WorkspaceSlidesIdPresentRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/agency': typeof AgencyRouteWithChildren
   '/auth': typeof AuthRoute
   '/drive': typeof DriveRoute
   '/life-server': typeof LifeServerRoute
@@ -475,29 +336,7 @@ export interface FileRoutesByFullPath {
   '/workspace': typeof WorkspaceRouteWithChildren
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/agency/activity': typeof AgencyActivityRoute
-  '/agency/api': typeof AgencyApiRoute
-  '/agency/company': typeof AgencyCompanyRoute
-  '/agency/cyber': typeof AgencyCyberRoute
-  '/agency/document': typeof AgencyDocumentRoute
-  '/agency/domain': typeof AgencyDomainRoute
-  '/agency/email': typeof AgencyEmailRoute
-  '/agency/geospatial': typeof AgencyGeospatialRoute
-  '/agency/graph': typeof AgencyGraphRoute
-  '/agency/image': typeof AgencyImageRoute
-  '/agency/ip': typeof AgencyIpRoute
-  '/agency/network': typeof AgencyNetworkRoute
-  '/agency/osint': typeof AgencyOsintRoute
-  '/agency/quick-search': typeof AgencyQuickSearchRoute
-  '/agency/reports': typeof AgencyReportsRoute
-  '/agency/settings': typeof AgencySettingsRoute
-  '/agency/social': typeof AgencySocialRoute
   '/agency/staff': typeof AgencyStaffRoute
-  '/agency/threat': typeof AgencyThreatRoute
-  '/agency/tool-builder': typeof AgencyToolBuilderRoute
-  '/agency/username': typeof AgencyUsernameRoute
-  '/agency/web': typeof AgencyWebRoute
-  '/agency/workspace': typeof AgencyWorkspaceRoute
   '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
   '/cond/staff': typeof CondStaffRoute
@@ -547,29 +386,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/agency/activity': typeof AgencyActivityRoute
-  '/agency/api': typeof AgencyApiRoute
-  '/agency/company': typeof AgencyCompanyRoute
-  '/agency/cyber': typeof AgencyCyberRoute
-  '/agency/document': typeof AgencyDocumentRoute
-  '/agency/domain': typeof AgencyDomainRoute
-  '/agency/email': typeof AgencyEmailRoute
-  '/agency/geospatial': typeof AgencyGeospatialRoute
-  '/agency/graph': typeof AgencyGraphRoute
-  '/agency/image': typeof AgencyImageRoute
-  '/agency/ip': typeof AgencyIpRoute
-  '/agency/network': typeof AgencyNetworkRoute
-  '/agency/osint': typeof AgencyOsintRoute
-  '/agency/quick-search': typeof AgencyQuickSearchRoute
-  '/agency/reports': typeof AgencyReportsRoute
-  '/agency/settings': typeof AgencySettingsRoute
-  '/agency/social': typeof AgencySocialRoute
   '/agency/staff': typeof AgencyStaffRoute
-  '/agency/threat': typeof AgencyThreatRoute
-  '/agency/tool-builder': typeof AgencyToolBuilderRoute
-  '/agency/username': typeof AgencyUsernameRoute
-  '/agency/web': typeof AgencyWebRoute
-  '/agency/workspace': typeof AgencyWorkspaceRoute
   '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
   '/cond/staff': typeof CondStaffRoute
@@ -611,7 +428,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/agency': typeof AgencyRouteWithChildren
   '/auth': typeof AuthRoute
   '/drive': typeof DriveRoute
   '/life-server': typeof LifeServerRoute
@@ -624,29 +440,7 @@ export interface FileRoutesById {
   '/workspace': typeof WorkspaceRouteWithChildren
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/agency/activity': typeof AgencyActivityRoute
-  '/agency/api': typeof AgencyApiRoute
-  '/agency/company': typeof AgencyCompanyRoute
-  '/agency/cyber': typeof AgencyCyberRoute
-  '/agency/document': typeof AgencyDocumentRoute
-  '/agency/domain': typeof AgencyDomainRoute
-  '/agency/email': typeof AgencyEmailRoute
-  '/agency/geospatial': typeof AgencyGeospatialRoute
-  '/agency/graph': typeof AgencyGraphRoute
-  '/agency/image': typeof AgencyImageRoute
-  '/agency/ip': typeof AgencyIpRoute
-  '/agency/network': typeof AgencyNetworkRoute
-  '/agency/osint': typeof AgencyOsintRoute
-  '/agency/quick-search': typeof AgencyQuickSearchRoute
-  '/agency/reports': typeof AgencyReportsRoute
-  '/agency/settings': typeof AgencySettingsRoute
-  '/agency/social': typeof AgencySocialRoute
   '/agency/staff': typeof AgencyStaffRoute
-  '/agency/threat': typeof AgencyThreatRoute
-  '/agency/tool-builder': typeof AgencyToolBuilderRoute
-  '/agency/username': typeof AgencyUsernameRoute
-  '/agency/web': typeof AgencyWebRoute
-  '/agency/workspace': typeof AgencyWorkspaceRoute
   '/aircare/staff': typeof AircareStaffRoute
   '/college/staff': typeof CollegeStaffRoute
   '/cond/staff': typeof CondStaffRoute
@@ -689,7 +483,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/agency'
     | '/auth'
     | '/drive'
     | '/life-server'
@@ -702,29 +495,7 @@ export interface FileRouteTypes {
     | '/workspace'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
-    | '/agency/activity'
-    | '/agency/api'
-    | '/agency/company'
-    | '/agency/cyber'
-    | '/agency/document'
-    | '/agency/domain'
-    | '/agency/email'
-    | '/agency/geospatial'
-    | '/agency/graph'
-    | '/agency/image'
-    | '/agency/ip'
-    | '/agency/network'
-    | '/agency/osint'
-    | '/agency/quick-search'
-    | '/agency/reports'
-    | '/agency/settings'
-    | '/agency/social'
     | '/agency/staff'
-    | '/agency/threat'
-    | '/agency/tool-builder'
-    | '/agency/username'
-    | '/agency/web'
-    | '/agency/workspace'
     | '/aircare/staff'
     | '/college/staff'
     | '/cond/staff'
@@ -774,29 +545,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
-    | '/agency/activity'
-    | '/agency/api'
-    | '/agency/company'
-    | '/agency/cyber'
-    | '/agency/document'
-    | '/agency/domain'
-    | '/agency/email'
-    | '/agency/geospatial'
-    | '/agency/graph'
-    | '/agency/image'
-    | '/agency/ip'
-    | '/agency/network'
-    | '/agency/osint'
-    | '/agency/quick-search'
-    | '/agency/reports'
-    | '/agency/settings'
-    | '/agency/social'
     | '/agency/staff'
-    | '/agency/threat'
-    | '/agency/tool-builder'
-    | '/agency/username'
-    | '/agency/web'
-    | '/agency/workspace'
     | '/aircare/staff'
     | '/college/staff'
     | '/cond/staff'
@@ -837,7 +586,6 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/agency'
     | '/auth'
     | '/drive'
     | '/life-server'
@@ -850,29 +598,7 @@ export interface FileRouteTypes {
     | '/workspace'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
-    | '/agency/activity'
-    | '/agency/api'
-    | '/agency/company'
-    | '/agency/cyber'
-    | '/agency/document'
-    | '/agency/domain'
-    | '/agency/email'
-    | '/agency/geospatial'
-    | '/agency/graph'
-    | '/agency/image'
-    | '/agency/ip'
-    | '/agency/network'
-    | '/agency/osint'
-    | '/agency/quick-search'
-    | '/agency/reports'
-    | '/agency/settings'
-    | '/agency/social'
     | '/agency/staff'
-    | '/agency/threat'
-    | '/agency/tool-builder'
-    | '/agency/username'
-    | '/agency/web'
-    | '/agency/workspace'
     | '/aircare/staff'
     | '/college/staff'
     | '/cond/staff'
@@ -914,7 +640,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AgencyRoute: typeof AgencyRouteWithChildren
   AuthRoute: typeof AuthRoute
   DriveRoute: typeof DriveRoute
   LifeServerRoute: typeof LifeServerRoute
@@ -927,11 +652,13 @@ export interface RootRouteChildren {
   WorkspaceRoute: typeof WorkspaceRouteWithChildren
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  AgencyStaffRoute: typeof AgencyStaffRoute
   AircareStaffRoute: typeof AircareStaffRoute
   CollegeStaffRoute: typeof CollegeStaffRoute
   CondStaffRoute: typeof CondStaffRoute
   FIdRoute: typeof FIdRoute
   LifeplusStaffRoute: typeof LifeplusStaffRoute
+  AgencyIndexRoute: typeof AgencyIndexRoute
   AircareIndexRoute: typeof AircareIndexRoute
   CollegeIndexRoute: typeof CollegeIndexRoute
   CondIndexRoute: typeof CondIndexRoute
@@ -951,13 +678,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/agency': {
-      id: '/agency'
-      path: '/agency'
-      fullPath: '/agency'
-      preLoaderRoute: typeof AgencyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -1046,171 +766,17 @@ declare module '@tanstack/react-router' {
     }
     '/agency/': {
       id: '/agency/'
-      path: '/'
+      path: '/agency'
       fullPath: '/agency/'
       preLoaderRoute: typeof AgencyIndexRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/activity': {
-      id: '/agency/activity'
-      path: '/activity'
-      fullPath: '/agency/activity'
-      preLoaderRoute: typeof AgencyActivityRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/api': {
-      id: '/agency/api'
-      path: '/api'
-      fullPath: '/agency/api'
-      preLoaderRoute: typeof AgencyApiRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/company': {
-      id: '/agency/company'
-      path: '/company'
-      fullPath: '/agency/company'
-      preLoaderRoute: typeof AgencyCompanyRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/cyber': {
-      id: '/agency/cyber'
-      path: '/cyber'
-      fullPath: '/agency/cyber'
-      preLoaderRoute: typeof AgencyCyberRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/document': {
-      id: '/agency/document'
-      path: '/document'
-      fullPath: '/agency/document'
-      preLoaderRoute: typeof AgencyDocumentRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/domain': {
-      id: '/agency/domain'
-      path: '/domain'
-      fullPath: '/agency/domain'
-      preLoaderRoute: typeof AgencyDomainRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/email': {
-      id: '/agency/email'
-      path: '/email'
-      fullPath: '/agency/email'
-      preLoaderRoute: typeof AgencyEmailRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/geospatial': {
-      id: '/agency/geospatial'
-      path: '/geospatial'
-      fullPath: '/agency/geospatial'
-      preLoaderRoute: typeof AgencyGeospatialRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/graph': {
-      id: '/agency/graph'
-      path: '/graph'
-      fullPath: '/agency/graph'
-      preLoaderRoute: typeof AgencyGraphRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/image': {
-      id: '/agency/image'
-      path: '/image'
-      fullPath: '/agency/image'
-      preLoaderRoute: typeof AgencyImageRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/ip': {
-      id: '/agency/ip'
-      path: '/ip'
-      fullPath: '/agency/ip'
-      preLoaderRoute: typeof AgencyIpRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/network': {
-      id: '/agency/network'
-      path: '/network'
-      fullPath: '/agency/network'
-      preLoaderRoute: typeof AgencyNetworkRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/osint': {
-      id: '/agency/osint'
-      path: '/osint'
-      fullPath: '/agency/osint'
-      preLoaderRoute: typeof AgencyOsintRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/quick-search': {
-      id: '/agency/quick-search'
-      path: '/quick-search'
-      fullPath: '/agency/quick-search'
-      preLoaderRoute: typeof AgencyQuickSearchRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/reports': {
-      id: '/agency/reports'
-      path: '/reports'
-      fullPath: '/agency/reports'
-      preLoaderRoute: typeof AgencyReportsRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/settings': {
-      id: '/agency/settings'
-      path: '/settings'
-      fullPath: '/agency/settings'
-      preLoaderRoute: typeof AgencySettingsRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/social': {
-      id: '/agency/social'
-      path: '/social'
-      fullPath: '/agency/social'
-      preLoaderRoute: typeof AgencySocialRouteImport
-      parentRoute: typeof AgencyRoute
+      parentRoute: typeof rootRouteImport
     }
     '/agency/staff': {
       id: '/agency/staff'
-      path: '/staff'
+      path: '/agency/staff'
       fullPath: '/agency/staff'
       preLoaderRoute: typeof AgencyStaffRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/threat': {
-      id: '/agency/threat'
-      path: '/threat'
-      fullPath: '/agency/threat'
-      preLoaderRoute: typeof AgencyThreatRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/tool-builder': {
-      id: '/agency/tool-builder'
-      path: '/tool-builder'
-      fullPath: '/agency/tool-builder'
-      preLoaderRoute: typeof AgencyToolBuilderRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/username': {
-      id: '/agency/username'
-      path: '/username'
-      fullPath: '/agency/username'
-      preLoaderRoute: typeof AgencyUsernameRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/web': {
-      id: '/agency/web'
-      path: '/web'
-      fullPath: '/agency/web'
-      preLoaderRoute: typeof AgencyWebRouteImport
-      parentRoute: typeof AgencyRoute
-    }
-    '/agency/workspace': {
-      id: '/agency/workspace'
-      path: '/workspace'
-      fullPath: '/agency/workspace'
-      preLoaderRoute: typeof AgencyWorkspaceRouteImport
-      parentRoute: typeof AgencyRoute
+      parentRoute: typeof rootRouteImport
     }
     '/aircare/': {
       id: '/aircare/'
@@ -1467,63 +1033,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AgencyRouteChildren {
-  AgencyActivityRoute: typeof AgencyActivityRoute
-  AgencyApiRoute: typeof AgencyApiRoute
-  AgencyCompanyRoute: typeof AgencyCompanyRoute
-  AgencyCyberRoute: typeof AgencyCyberRoute
-  AgencyDocumentRoute: typeof AgencyDocumentRoute
-  AgencyDomainRoute: typeof AgencyDomainRoute
-  AgencyEmailRoute: typeof AgencyEmailRoute
-  AgencyGeospatialRoute: typeof AgencyGeospatialRoute
-  AgencyGraphRoute: typeof AgencyGraphRoute
-  AgencyImageRoute: typeof AgencyImageRoute
-  AgencyIpRoute: typeof AgencyIpRoute
-  AgencyNetworkRoute: typeof AgencyNetworkRoute
-  AgencyOsintRoute: typeof AgencyOsintRoute
-  AgencyQuickSearchRoute: typeof AgencyQuickSearchRoute
-  AgencyReportsRoute: typeof AgencyReportsRoute
-  AgencySettingsRoute: typeof AgencySettingsRoute
-  AgencySocialRoute: typeof AgencySocialRoute
-  AgencyStaffRoute: typeof AgencyStaffRoute
-  AgencyThreatRoute: typeof AgencyThreatRoute
-  AgencyToolBuilderRoute: typeof AgencyToolBuilderRoute
-  AgencyUsernameRoute: typeof AgencyUsernameRoute
-  AgencyWebRoute: typeof AgencyWebRoute
-  AgencyWorkspaceRoute: typeof AgencyWorkspaceRoute
-  AgencyIndexRoute: typeof AgencyIndexRoute
-}
-
-const AgencyRouteChildren: AgencyRouteChildren = {
-  AgencyActivityRoute: AgencyActivityRoute,
-  AgencyApiRoute: AgencyApiRoute,
-  AgencyCompanyRoute: AgencyCompanyRoute,
-  AgencyCyberRoute: AgencyCyberRoute,
-  AgencyDocumentRoute: AgencyDocumentRoute,
-  AgencyDomainRoute: AgencyDomainRoute,
-  AgencyEmailRoute: AgencyEmailRoute,
-  AgencyGeospatialRoute: AgencyGeospatialRoute,
-  AgencyGraphRoute: AgencyGraphRoute,
-  AgencyImageRoute: AgencyImageRoute,
-  AgencyIpRoute: AgencyIpRoute,
-  AgencyNetworkRoute: AgencyNetworkRoute,
-  AgencyOsintRoute: AgencyOsintRoute,
-  AgencyQuickSearchRoute: AgencyQuickSearchRoute,
-  AgencyReportsRoute: AgencyReportsRoute,
-  AgencySettingsRoute: AgencySettingsRoute,
-  AgencySocialRoute: AgencySocialRoute,
-  AgencyStaffRoute: AgencyStaffRoute,
-  AgencyThreatRoute: AgencyThreatRoute,
-  AgencyToolBuilderRoute: AgencyToolBuilderRoute,
-  AgencyUsernameRoute: AgencyUsernameRoute,
-  AgencyWebRoute: AgencyWebRoute,
-  AgencyWorkspaceRoute: AgencyWorkspaceRoute,
-  AgencyIndexRoute: AgencyIndexRoute,
-}
-
-const AgencyRouteWithChildren =
-  AgencyRoute._addFileChildren(AgencyRouteChildren)
-
 interface LifepayRouteChildren {
   LifepayAppRoute: typeof LifepayAppRoute
   LifepayEntrarRoute: typeof LifepayEntrarRoute
@@ -1604,7 +1113,6 @@ const WorkspaceRouteWithChildren = WorkspaceRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AgencyRoute: AgencyRouteWithChildren,
   AuthRoute: AuthRoute,
   DriveRoute: DriveRoute,
   LifeServerRoute: LifeServerRoute,
@@ -1618,11 +1126,13 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  AgencyStaffRoute: AgencyStaffRoute,
   AircareStaffRoute: AircareStaffRoute,
   CollegeStaffRoute: CollegeStaffRoute,
   CondStaffRoute: CondStaffRoute,
   FIdRoute: FIdRoute,
   LifeplusStaffRoute: LifeplusStaffRoute,
+  AgencyIndexRoute: AgencyIndexRoute,
   AircareIndexRoute: AircareIndexRoute,
   CollegeIndexRoute: CollegeIndexRoute,
   CondIndexRoute: CondIndexRoute,
