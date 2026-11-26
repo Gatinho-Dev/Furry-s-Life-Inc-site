@@ -50,6 +50,13 @@
       "when": 1795649147282,
       "tag": "0006_lp_files_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795681924093,
+      "tag": "0007_staff_notices_restrict_read",
+      "breakpoints": true
     }
   ]
 }
