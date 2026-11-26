@@ -2,6 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 @import "./hms.css";
+@import "./agency.css";
 
 @custom-variant dark (&:is(.dark *));
 
