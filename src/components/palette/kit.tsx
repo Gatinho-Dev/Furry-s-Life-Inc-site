@@ -1,9 +1,9 @@
 import { useEffect, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
-  AtSign, BadgeCheck, Building2, CalendarClock, CircleDot, FileKey2, FileSearch, FileText,
-  Fingerprint, Globe, Hash, KeySquare, Link2, MapPin, Network, NotebookPen, Radar,
-  ScanLine, Server, ShieldAlert, ShieldCheck, Waypoints, X,
+  AtSign, BadgeCheck, Blocks, Building2, CalendarClock, CircleDot, FileKey2, FileSearch, FileText,
+  Fingerprint, Globe, Hash, IdCard, KeySquare, Link2, MapPin, Network, NotebookPen, Phone, Radar,
+  ScanLine, Server, ShieldAlert, ShieldCheck, UserRound, Wallet, Waypoints, X,
 } from "lucide-react";
 import {
   CONFIDENCE_LABEL, NODE_KIND_LABEL,
@@ -16,6 +16,8 @@ export const KIND_ICON: Record<PaletteNodeKind, LucideIcon> = {
   url: Link2, certificate: ShieldCheck, "dns-record": ScanLine,
   username: AtSign, email: AtSign, hash: Hash, cve: ShieldAlert, file: FileKey2, document: FileText,
   company: Building2, organization: Building2, website: Globe, "public-service": BadgeCheck,
+  person: UserRound, phone: Phone, wallet: Wallet, location: MapPin, "social-profile": IdCard,
+  custom: Blocks,
   event: CalendarClock, observation: FileSearch, evidence: FileSearch, source: Radar, note: NotebookPen,
 };
 
@@ -24,6 +26,8 @@ export const KIND_COLOR: Record<PaletteNodeKind, string> = {
   url: "#f472b6", certificate: "#c084fc", "dns-record": "#5eead4",
   username: "#34d399", email: "#fb7185", hash: "#f59e0b", cve: "#ef4444", file: "#fbbf24", document: "#a3a3a3",
   company: "#eab308", organization: "#facc15", website: "#60a5fa", "public-service": "#2dd4bf",
+  person: "#a78bfa", phone: "#2dd4bf", wallet: "#f59e0b", location: "#fb7185",
+  "social-profile": "#a3e635", custom: "#e879f9",
   event: "#f97316", observation: "#94a3b8", evidence: "#10b981", source: "#8b5cf6", note: "#64748b",
 };
 

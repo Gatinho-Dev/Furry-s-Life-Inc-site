@@ -286,13 +286,20 @@ export function ExtractReviewModal({
         if (!map.has(key)) map.set(key, { kind: cand.kind, value: cand.value, source: o.sourceName, confidence: "unverified", label: cand.label });
       }
     }
-    return [...map.values()];
+    const rank = (kind: string) => {
+      const order = ["domain", "subdomain", "ipv4", "ipv6", "url", "email", "cve", "asn", "hash", "username", "certificate"];
+      const i = order.indexOf(kind);
+      return i === -1 ? order.length : i;
+    };
+    // Payloads can contain hundreds of schema/CDN values; keep the most
+    // useful shapes first and cap the review list so it stays auditable.
+    return [...map.values()].sort((a, b) => rank(a.kind) - rank(b.kind) || a.value.localeCompare(b.value)).slice(0, 200);
   }, [payload]);
 
   useEffect(() => {
     if (!open) return;
     const initial: Record<string, boolean> = {};
-    for (const cand of candidates) initial[`${cand.kind}:${cand.value.toLowerCase()}`] = true;
+    for (const cand of candidates.slice(0, 60)) initial[`${cand.kind}:${cand.value.toLowerCase()}`] = true;
     setSelected(initial);
   }, [open, candidates]);
 
@@ -301,7 +308,7 @@ export function ExtractReviewModal({
 
   return (
     <Modal open={open} onClose={onClose} width="max-w-3xl"
-      title="Revisar entidades extraídas" subtitle="Extração local por padrões. Nada entra no caso sem sua confirmação."
+      title="Revisar entidades extraídas" subtitle="Extração local por padrões. Nada entra no caso sem sua confirmação — os 60 primeiros vêm pré-selecionados por tipo."
       footer={<><PalButton variant="ghost" onClick={onClose}>Cancelar</PalButton><PalButton variant="primary" onClick={() => {
         onConfirm(chosen.map((cand) => ({ candidate: cand, selected: true })), { relation, confidence, linkToQuery, archiveEvidence });
         onClose();
@@ -310,7 +317,7 @@ export function ExtractReviewModal({
         <div className="flex flex-wrap items-center gap-2 text-[10px] text-[#8399ae]">
           <span>Consulta: <b className="text-[#dbe7f4]">{payload?.query}</b></span>
           <span>·</span>
-          <span>{candidates.length} candidato(s)</span>
+          <span>{candidates.length} candidato(s){chosen.length < candidates.length ? ` · ${chosen.length} selecionado(s)` : ""}</span>
           <button className="ml-auto text-cyan-300 hover:underline" onClick={() => setSelected(Object.fromEntries(candidates.map((cand) => [`${cand.kind}:${cand.value.toLowerCase()}`, true])))}>selecionar todos</button>
           <button className="text-[#8399ae] hover:underline" onClick={() => setSelected({})}>limpar</button>
         </div>
