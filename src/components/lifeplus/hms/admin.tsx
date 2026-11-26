@@ -10,7 +10,9 @@ import {
 import { useHms, ALL_ROLES, PERMS, type AuditRow, type ModuleKey } from "./data";
 import { Avatar, Banner, Btn, Card, Chip, CopyBtn, Empty, Field, Kpi, Modal, Page, SearchInput, Table, Tabs } from "./ui";
 import { PatientSelect } from "./pickers";
-import { paperToPdf, printPaper, PaperView } from "./docs";
+import { buildPaperModel } from "./paper/model";
+import { downloadPdf, printPdf } from "./paper/render";
+import { DocStage } from "./paper/viewer";
 
 /* ============================ EQUIPE ============================ */
 
@@ -133,7 +135,7 @@ export function ReportsModule() {
   const [from, setFrom] = useState(new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10));
   const [to, setTo] = useState(today.toISOString().slice(0, 10));
   const [staffId, setStaffId] = useState("");
-  const paperRef = useRef<HTMLDivElement>(null);
+
   const [busy, setBusy] = useState(false);
   const inRange = (s: string | null | undefined) => { if (!s) return false; const d = s.slice(0, 10); return d >= from && d <= to; };
 
@@ -198,9 +200,23 @@ export function ReportsModule() {
 
   const csv = () => { download(`lifeplus-${kind}-${from}_${to}.csv`, toCSV(rows.map((r) => Object.fromEntries(head.map((h, i) => [h, r[i]]))))); };
 
+  const reportModel = useMemo(() => buildPaperModel({
+    kind: "relatorio",
+    kicker: "Relatório institucional",
+    title: title.toUpperCase(),
+    code: `REL-${from.replace(/-/g, "")}`,
+    status: "finalizado",
+    dateISO: to,
+    emittedAt: new Date().toISOString(),
+    settings: data.settings,
+    body: `Relatório gerado em ${fDateTime(new Date().toISOString())}. Período de ${fDate(from)} a ${fDate(to)}. Profissional: ${staffId ? staffById(staffId)?.full_name ?? "não identificado" : "todos"}. Total de registros: ${rows.length}.`,
+    table: { head, rows: rows.map((r) => r.map((c) => String(c))) },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [title, from, to, rows, head, staffId, data.settings]);
+
   return (
     <Page eyebrow="Inteligência operacional" title="Relatórios" sub="Filtre por período e profissional, exporte em CSV ou gere um PDF institucional A4."
-      actions={<><Btn variant="ghost" icon={Download} onClick={csv}>CSV</Btn><Btn variant="ghost" icon={Printer} onClick={() => paperRef.current && printPaper(paperRef.current)}>Imprimir</Btn><Btn icon={Download} disabled={busy} onClick={async () => { if (!paperRef.current) return; setBusy(true); try { await paperToPdf(paperRef.current, `lifeplus-${kind}-${from}.pdf`); } finally { setBusy(false); } }}>{busy ? "Gerando…" : "PDF"}</Btn></>}>
+      actions={<><Btn variant="ghost" icon={Download} onClick={csv}>CSV</Btn><Btn variant="ghost" icon={Printer} disabled={busy} onClick={() => void printPdf(reportModel)}>Imprimir</Btn><Btn icon={Download} disabled={busy} onClick={async () => { setBusy(true); try { await downloadPdf(reportModel, `lifeplus-${kind}-${from}.pdf`); } finally { setBusy(false); } }}>{busy ? "Gerando…" : "PDF"}</Btn></>}>
       <div className="hms-grid hms-cols-3 mb-3">
         <Kpi label="Registros no relatório" value={rows.length} note={title} icon={ClipboardList} tone="brand" />
         {summary.slice(0, 2).map((s) => <Kpi key={s.label} label={s.label} value={s.value} note={`${fDate(from)} – ${fDate(to)}`} icon={LineChart} />)}
@@ -225,11 +241,7 @@ export function ReportsModule() {
 
       <div className="rounded-xl border border-[var(--h-line)] bg-[var(--h-soft)] p-4">
         <div className="mb-2 flex items-center justify-between"><div className="hms-section-label">Prévia do PDF institucional</div><Chip tone="outline">A4 · Life+ RP</Chip></div>
-        <div className="overflow-auto">
-          <div ref={paperRef} style={{ zoom: 0.72 }}>
-            <PaperView settings={data.settings} title={title.toUpperCase()} code={`REL-${from.replace(/-/g, "")}`} date={`${fDate(from)} a ${fDate(to)}`} body={`Relatório institucional gerado em ${fDateTime(new Date().toISOString())}.\nTotal de registros: ${rows.length}.\nProfissional: ${staffId ? staffById(staffId)?.full_name : "todos"}.`} extraFields={summary.map((s) => ({ label: s.label, value: String(s.value) }))} />
-          </div>
-        </div>
+        <DocStage model={reportModel} delay={700} />
       </div>
     </Page>
   );
@@ -383,9 +395,18 @@ export function SettingsModule() {
         </Card>
         <div className="hms-stack">
           <Card title="Prévia institucional" sub="Cabeçalho usado em todos os documentos">
-            <div style={{ zoom: 0.55 }} className="origin-top-left">
-              <PaperView settings={{ ...s, name: f.name, address: f.address, phone: f.phone, cnpj: f.cnpj, director: f.director, technical_lead: f.technical_lead, accent: f.accent, logo_url: f.logo_url || null }} title="DOCUMENTO LIFE+" code="DOC-000000" date={fDate(new Date().toISOString())} body={"Este é o cabeçalho institucional aplicado a atestados, receitas, laudos e relatórios.\n\nTodos os documentos são fictícios e exclusivos do roleplay."} />
-            </div>
+            <DocStage
+              delay={700}
+              model={buildPaperModel({
+                kind: "atestado",
+                title: "Documento Life+",
+                kicker: "Prévia institucional",
+                code: "DOC-000000",
+                status: "rascunho",
+                settings: { ...s, name: f.name, address: f.address, phone: f.phone, cnpj: f.cnpj, director: f.director, technical_lead: f.technical_lead, accent: f.accent, logo_url: f.logo_url || null },
+                body: "Este é o cabeçalho institucional aplicado a atestados, receitas, laudos e relatórios.\n\nTodos os documentos são fictícios e exclusivos do roleplay.",
+              })}
+            />
           </Card>
           <Card title="Estrutura hospitalar" sub={`${data.beds.length} leitos · ${s.sectors.length} setores`}>
             <div className="space-y-2 text-[12px]">

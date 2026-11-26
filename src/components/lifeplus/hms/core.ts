@@ -39,11 +39,16 @@ export type Patient = {
   bed_id: string | null; doctor: string | null; is_simulated: boolean; archived_at: string | null; created_at: string; updated_at: string;
 };
 export type Staff = { id: string; user_id: string | null; full_name: string; photo_url: string | null; username: string | null; role: string; specialty: string | null; registry: string | null; uf: string | null; status: string; created_at: string };
-export type Settings = { name: string; logo_url: string | null; address: string | null; phone: string | null; cnpj: string | null; director: string | null; technical_lead: string | null; accent: string; specialties: string[]; sectors: string[] };
+export type Settings = { name: string; logo_url: string | null; address: string | null; phone: string | null; cnpj: string | null; director: string | null; technical_lead: string | null; accent: string; specialties: string[]; sectors: string[]; email?: string | null; signature_url?: string | null };
 export type Bed = { id: string; ward: string; code: string; room: string | null; status: string };
 export type Appointment = { id: string; code: string; patient_id: string; staff_id: string | null; specialty: string | null; starts_at: string; duration_min: number; reason: string | null; priority: string; status: string; checked_in_at: string | null; started_at: string | null; finished_at: string | null; created_at: string };
 export type RecordRow = { id: string; patient_id: string; appointment_id: string | null; staff_id: string | null; kind: string; specialty: string | null; body: string; data: Record<string, unknown>; corrects: string | null; created_at: string };
-export type Template = { id: string; kind: string; name: string; title: string; body: string; header: string; footer: string; accent: string; font: string; margin_mm: number; logo_url: string | null; archived: boolean };
+export type Template = {
+  id: string; kind: string; name: string; title: string; body: string; header: string; footer: string; accent: string;
+  font: string; margin_mm: number; logo_url: string | null; archived: boolean;
+  /* colunas opcionais da migração 0007 */
+  sector?: string | null; signature_url?: string | null; is_default?: boolean; style?: Record<string, unknown> | null;
+};
 export type DocRow = { id: string; code: string; kind: string; template_id: string | null; patient_id: string | null; staff_id: string | null; title: string; data: Record<string, unknown>; body: string; status: string; finalized_at: string | null; created_at: string; updated_at: string };
 export type Exam = { id: string; patient_id: string; kind: string; category: string; status: string; result: string | null; staff_id: string | null; justification: string | null; scheduled_for: string | null; attachments: { path: string; name: string }[]; notes: string | null; requested_at: string; completed_at: string | null };
 export type Admission = { id: string; patient_id: string; staff_id: string | null; bed_id: string | null; sector: string | null; reason: string | null; admitted_at: string; discharged_at: string | null; discharge_notes: string | null; status: string };
