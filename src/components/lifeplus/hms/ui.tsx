@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/use-auth";
 import { DISCLAIMER, fDate, fDateTime, type Patient } from "./core";
+import { LifeMark } from "../Brand";
 import { useHms, type ModuleKey } from "./data";
 
 /* ---------------------------------- theme ---------------------------------- */
@@ -63,9 +64,9 @@ export function HmsShell({ items, children }: { items: NavItem[]; children: Reac
         {open && <div className="hms-scrim" onClick={() => setOpen(false)} />}
         <aside className={`hms-side ${open ? "is-open" : ""}`}>
           <div className="hms-brand">
-            <span className="hms-brand-mark"><HeartPulse className="h-5 w-5" /></span>
+            <span className="hms-brand-mark hms-brand-plate"><LifeMark size={25} alt="" /></span>
             <div>
-              <div className="hms-brand-name">Life+</div>
+              <div className="hms-brand-name">Life<span className="hms-brand-plus">+</span></div>
               <div className="hms-brand-sub">Sistema Hospitalar</div>
             </div>
             <button className="ml-auto text-white/50 md:hidden" onClick={() => setOpen(false)} aria-label="Fechar menu"><X className="h-4 w-4" /></button>

@@ -3,6 +3,7 @@ import {
   Ambulance, ArrowRight, Baby, BedDouble, Brain, CalendarClock, ChevronRight, ClipboardList,
   FileText, FlaskConical, HeartPulse, MapPin, Microscope, Phone, Pill, ShieldCheck, Stethoscope, Users,
 } from "lucide-react";
+import { LifeLogo } from "@/components/lifeplus/Brand";
 
 export const Route = createFileRoute("/lifeplus/")({
   head: () => ({
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/lifeplus/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "icon", type: "image/svg+xml", href: "/brand/lifeplus-mark.svg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" },
@@ -52,12 +54,8 @@ function LifePlusHome() {
     <div className="hms min-h-screen">
       <header className="sticky top-0 z-30 border-b border-[var(--h-line)] bg-[color-mix(in_srgb,var(--h-panel)_86%,transparent)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3.5">
-          <Link to="/lifeplus" className="flex items-center gap-2.5">
-            <span className="hms-brand-mark !h-9 !w-9 !rounded-[11px]"><HeartPulse className="h-5 w-5" /></span>
-            <span className="leading-tight">
-              <span className="block text-[15px] font-bold tracking-[-0.02em]">Life+</span>
-              <span className="block text-[9px] uppercase tracking-[0.18em] text-[var(--h-faint)]">Hospital · Furry&apos;s Life</span>
-            </span>
+          <Link to="/lifeplus" aria-label="Life+ Serviços Médicos — página inicial" className="flex items-center">
+            <LifeLogo size={40} />
           </Link>
           <nav className="hidden items-center gap-7 text-[12.5px] text-[var(--h-muted)] md:flex">
             <a href="#estrutura" className="hover:text-[var(--h-fg)]">Estrutura</a>
@@ -205,10 +203,7 @@ function LifePlusHome() {
         <div className="mx-auto max-w-6xl px-6 py-12">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div className="lg:col-span-2">
-              <div className="flex items-center gap-2.5">
-                <span className="hms-brand-mark !h-8 !w-8 !rounded-lg"><HeartPulse className="h-4 w-4" /></span>
-                <span className="text-[14px] font-bold">Life+</span>
-              </div>
+              <LifeLogo size={32} />
               <p className="mt-3 max-w-sm text-[12px] leading-relaxed text-[var(--h-muted)]">Hospital fictício da Furry&apos;s Life Inc. Todo o conteúdo, incluindo documentos e dados clínicos, pertence ao universo de roleplay e não tem validade médica ou legal.</p>
             </div>
             <div>
