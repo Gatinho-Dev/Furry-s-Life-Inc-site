@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   AlertTriangle, Bell, Check, ChevronRight, Copy, HeartPulse, Loader2, LogOut, Menu, Moon,
@@ -267,36 +268,60 @@ export function Field({ label, hint, className = "", children }: { label?: strin
   );
 }
 
+/* Overlays are portaled to <body>. Inside an animated/contained ancestor, a
+   fixed overlay would be clipped to that ancestor's box — which used to cut
+   long forms (patient/modals) down to a few centimeters tall. */
+function OverlayLayer({ children }: { children: ReactNode }) {
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  useEffect(() => { setHost(document.body); }, []);
+  useEffect(() => {
+    if (!host) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previous; };
+  }, [host]);
+  if (!host) return null;
+  const dark = !!document.querySelector(".hms.dark");
+  return createPortal(
+    <div className={`hms${dark ? " dark" : ""}`} style={{ display: "contents" }}>{children}</div>,
+    host,
+  );
+}
+
 export function Modal({ title, sub, onClose, children, footer, size = "md", wide, slim }: { title: ReactNode; sub?: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode; size?: "md" | "wide" | "slim"; wide?: boolean; slim?: boolean }) {
   useEffect(() => { const k = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); }; window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, [onClose]);
   const resolved = wide ? "wide" : slim ? "slim" : size;
   return (
-    <div className="hms-overlay center" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className={`hms-modal ${resolved === "wide" ? "wide" : resolved === "slim" ? "slim" : ""}`}>
-        <div className="hms-overlay-head">
-          <div className="min-w-0 flex-1"><h2 className="truncate">{title}</h2>{sub && <div className="hms-sub mt-0.5">{sub}</div>}</div>
-          <button className="hms-btn ghost icon sm" onClick={onClose} aria-label="Fechar"><X className="h-4 w-4" /></button>
+    <OverlayLayer>
+      <div className="hms-overlay center" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+        <div className={`hms-modal ${resolved === "wide" ? "wide" : resolved === "slim" ? "slim" : ""}`} role="dialog" aria-modal="true">
+          <div className="hms-overlay-head">
+            <div className="min-w-0 flex-1"><h2 className="truncate">{title}</h2>{sub && <div className="hms-sub mt-0.5">{sub}</div>}</div>
+            <button className="hms-btn ghost icon sm" onClick={onClose} aria-label="Fechar"><X className="h-4 w-4" /></button>
+          </div>
+          <div className="hms-overlay-body">{children}</div>
+          {footer && <div className="hms-overlay-foot">{footer}</div>}
         </div>
-        <div className="hms-overlay-body">{children}</div>
-        {footer && <div className="hms-overlay-foot">{footer}</div>}
       </div>
-    </div>
+    </OverlayLayer>
   );
 }
 
 export function Drawer({ title, sub, onClose, children, footer }: { title: ReactNode; sub?: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode }) {
   useEffect(() => { const k = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); }; window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, [onClose]);
   return (
-    <div className="hms-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="hms-drawer">
-        <div className="hms-overlay-head">
-          <div className="min-w-0 flex-1"><h2 className="truncate">{title}</h2>{sub && <div className="hms-sub mt-0.5">{sub}</div>}</div>
-          <button className="hms-btn ghost icon sm" onClick={onClose} aria-label="Fechar"><X className="h-4 w-4" /></button>
+    <OverlayLayer>
+      <div className="hms-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+        <div className="hms-drawer" role="dialog" aria-modal="true">
+          <div className="hms-overlay-head">
+            <div className="min-w-0 flex-1"><h2 className="truncate">{title}</h2>{sub && <div className="hms-sub mt-0.5">{sub}</div>}</div>
+            <button className="hms-btn ghost icon sm" onClick={onClose} aria-label="Fechar"><X className="h-4 w-4" /></button>
+          </div>
+          <div className="hms-overlay-body">{children}</div>
+          {footer && <div className="hms-overlay-foot">{footer}</div>}
         </div>
-        <div className="hms-overlay-body">{children}</div>
-        {footer && <div className="hms-overlay-foot">{footer}</div>}
       </div>
-    </div>
+    </OverlayLayer>
   );
 }
 
