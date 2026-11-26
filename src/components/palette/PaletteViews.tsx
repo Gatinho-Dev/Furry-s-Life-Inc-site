@@ -7,7 +7,7 @@ import {
 import { caseStats, deleteKnowledge, duplicateCase, exportCaseJson, getPrefs, listFeedback, listKnowledge, savePrefs, updateFeedback, upsertKnowledge, type DuplicateGroup } from "@/lib/palette/store";
 import { ensureSeedKnowledge, extractDocumentText, invalidateKnowledgeCache, knowledgeStats, makeKnowledgeDoc, KNOWLEDGE_CATEGORIES } from "@/lib/palette/knowledge";
 import { PALETTE_TEMPLATES, planFromTemplate } from "@/lib/palette/templates";
-import { REPORT_LABEL, buildReport, reportToCsv, reportToHtml, reportToMarkdown, downloadReportPdf, type ReportType } from "@/lib/palette/report";
+import { REPORT_LABEL, buildReport, reportToCsv, reportToGraphMl, reportToHtml, reportToMarkdown, downloadReportPdf, type ReportType } from "@/lib/palette/report";
 import { CONFIDENCE_LABEL, NODE_KIND_LABEL, CASE_STATUS_LABEL, type PaletteCase, type PaletteNodeKind, type PalettePrefs } from "@/lib/palette/types";
 import { PalButton, PalEmpty, PalField, PalLabel, inputCls, selectCls, Toggle, KindPill, ConfidencePill, KIND_COLOR } from "./kit";
 import { cx } from "@/components/agency/kit";
@@ -392,9 +392,10 @@ export function PaletteReports({ cases, initialCaseId, onToast }: { cases: Palet
           <PalButton size="sm" variant="soft" onClick={() => { download(`${fileBase}.csv`, reportToCsv(c, type), "text/csv"); onToast("CSV exportado.", "ok"); }}><Download className="h-3 w-3" /> CSV</PalButton>
           <PalButton size="sm" variant="soft" onClick={() => { download(`${fileBase}.md`, reportToMarkdown(c, type), "text/markdown"); onToast("Markdown exportado.", "ok"); }}><Download className="h-3 w-3" /> MD</PalButton>
           <PalButton size="sm" variant="soft" onClick={() => { download(`${fileBase}-case.json`, exportCaseJson(c), "application/json"); onToast("Caso completo exportado.", "ok"); }}><Download className="h-3 w-3" /> Caso</PalButton>
+          <PalButton size="sm" variant="soft" onClick={() => { download(`${c.code}-graph.graphml`, reportToGraphMl(c), "application/graphml+xml"); onToast("GraphML exportado.", "ok"); }}><Share2 className="h-3 w-3" /> GraphML</PalButton>
         </div>
         <div className="rounded-lg border border-[#1e2c3a] bg-[#0a1118] p-2 text-[9px] leading-relaxed text-[#71879c]">
-          PNG do canvas: use o botão de imagem na barra do canvas. PDF e HTML incluem identificação, objetivo, metodologia, entidades, relações, fontes, evidências, confiança, limitações e conclusão.
+          PNG do canvas: use o botão de imagem na barra do canvas. GraphML abre em Gephi, yEd e Cytoscape com as mesmas relações do caso. PDF e HTML incluem identificação, objetivo, metodologia, entidades, relações, fontes, evidências, confiança, limitações e conclusão.
         </div>
       </div>
       <div className="min-w-0 rounded-xl border border-[#1e2c3a] bg-white/[0.02] p-2">

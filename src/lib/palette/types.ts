@@ -7,7 +7,58 @@ export type PaletteNodeKind =
   | "domain" | "subdomain" | "ipv4" | "ipv6" | "asn" | "network" | "url"
   | "certificate" | "dns-record" | "username" | "email" | "hash" | "cve"
   | "file" | "document" | "company" | "organization" | "website" | "public-service"
-  | "event" | "observation" | "evidence" | "source" | "note";
+  | "event" | "observation" | "evidence" | "source" | "note"
+  | "person" | "phone" | "wallet" | "location" | "social-profile" | "custom";
+
+/** Investigation depth controls how many compatible sources run per entity. */
+export type InvestigationDepth = "quick" | "standard" | "deep";
+
+/**
+ * Explainable classification of an extracted value. `score` is an operational
+ * indicator (0-100) produced by deterministic rules, not a probability.
+ */
+export type Classification = {
+  score: number;
+  status: "confirmed" | "probable" | "ambiguous";
+  context: string;
+  alternates: Array<{ kind: PaletteNodeKind; score: number; why: string }>;
+  note?: string;
+};
+
+export type CustomFieldType = "text" | "url" | "number" | "date" | "select";
+
+export type CustomEntityType = {
+  id: string;
+  name: string;
+  color: string;
+  description: string;
+  fields: Array<{ key: string; label: string; type: CustomFieldType; required: boolean; options?: string[] }>;
+  relations: string[];
+  createdAt: string;
+};
+
+export type SourceCategory =
+  | "infrastructure" | "registration" | "certificates" | "security"
+  | "profiles" | "archives" | "companies" | "search";
+
+export type SearchState =
+  | "pending" | "running" | "completed" | "empty" | "rate-limited" | "unavailable" | "error";
+
+export type SearchJob = {
+  id: string;
+  entityId?: string;
+  value: string;
+  kind: PaletteNodeKind;
+  sourceId: string;
+  sourceName: string;
+  category: SourceCategory;
+  state: SearchState;
+  startedAt?: string;
+  durationMs: number;
+  resultCount: number;
+  error?: string;
+  reference?: string;
+};
 
 export type ConfidenceLevel = "verified" | "high" | "medium" | "low" | "unverified";
 
@@ -32,6 +83,9 @@ export type PaletteNode = {
   confidence: ConfidenceLevel;
   sources: string[];
   evidenceIds: string[];
+  classification?: Classification;
+  /** Id of a case-defined custom entity type, when kind === "custom". */
+  customTypeId?: string;
   groupId?: string;
   x: number;
   y: number;
@@ -167,6 +221,7 @@ export type PaletteCase = {
   participants: Participant[];
   viewport: Viewport;
   plan: PlanStep[];
+  customEntityTypes?: CustomEntityType[];
   shared?: { readOnly: boolean; importedFrom?: string };
 };
 
@@ -273,6 +328,12 @@ export const NODE_KIND_LABEL: Record<PaletteNodeKind, string> = {
   organization: "Organização",
   website: "Website",
   "public-service": "Serviço público",
+  person: "Pessoa (pública)",
+  phone: "Telefone público",
+  wallet: "Carteira cripto",
+  location: "Localização",
+  "social-profile": "Perfil público",
+  custom: "Entidade personalizada",
   event: "Evento",
   observation: "Observação",
   evidence: "Evidência",
@@ -285,6 +346,8 @@ export const NODE_KIND_GROUP: Record<PaletteNodeKind, "infra" | "identifier" | "
   url: "infra", certificate: "infra", "dns-record": "infra",
   username: "identifier", email: "identifier", hash: "identifier", cve: "identifier", file: "identifier", document: "identifier",
   company: "org", organization: "org", website: "org", "public-service": "org",
+  person: "identifier", phone: "identifier", wallet: "identifier", location: "investigation",
+  "social-profile": "identifier", custom: "investigation",
   event: "investigation", observation: "investigation", evidence: "investigation", source: "investigation", note: "investigation",
 };
 
@@ -292,6 +355,8 @@ export const RELATION_TYPES = [
   "Resolves to", "Hosted on", "Associated with", "Uses certificate", "Subdomain of",
   "Registered by", "Mentions", "References", "Observed in", "Potentially related to",
   "Owns", "Operates", "Announced by", "Shares identifier", "Same infrastructure",
+  "Belongs to", "Registered under", "Uses", "Connected through source", "Observed together",
+  "Custom relationship",
 ] as const;
 
 export const CONFIDENCE_LABEL: Record<ConfidenceLevel, string> = {

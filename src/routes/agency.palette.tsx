@@ -11,8 +11,8 @@ export const Route = createFileRoute("/agency/palette")({
   }),
   head: () => ({
     meta: [
-      { title: "Life Palette — Visual OSINT Investigation Platform" },
-      { name: "description", content: "Canvas infinito, casos persistentes, busca multi-fonte, entidades, evidências e Life Intelligence AI. See Connections. Discover Intelligence." },
+      { title: "Life Palette 2.0 — Intelligence Workspace · Life Agency" },
+      { name: "description", content: "Input Engine com reconhecimento de entidades, investigação automática multi-fonte gratuita, grafo de relações, evidências e relatórios. See Connections. Discover Intelligence." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

@@ -317,6 +317,47 @@ export async function downloadReportPdf(c: PaletteCase, type: ReportType): Promi
   pdf.save(`life-palette-${type}-${c.code}.pdf`);
 }
 
+/** GraphML export — valid XML consumable by Gephi, yEd and Cytoscape. */
+export function reportToGraphMl(c: PaletteCase): string {
+  const esc = (v: string) => String(v)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  const nodes = c.nodes.map((n) => `    <node id="${esc(n.id)}">
+      <data key="label">${esc(n.title)}</data>
+      <data key="kind">${esc(n.kind)}</data>
+      <data key="confidence">${esc(n.confidence)}</data>
+      <data key="sources">${esc(n.sources.join(" | "))}</data>
+      <data key="evidence">${n.evidenceIds.length}</data>
+      <data key="tags">${esc(n.tags.join(" | "))}</data>
+    </node>`).join("\n");
+  const edges = c.edges.map((e) => `    <edge id="${esc(e.id)}" source="${esc(e.source)}" target="${esc(e.target)}">
+      <data key="label">${esc(e.relation)}</data>
+      <data key="confidence">${esc(e.confidence)}</data>
+      <data key="style">${esc(e.style)}</data>
+      <data key="source">${esc(e.sourceLabel)}</data>
+      <data key="origin">${esc(e.origin)}</data>
+      <data key="discovered">${esc(e.discoveredAt.slice(0, 10))}</data>
+    </edge>`).join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key id="label" for="all" attr.name="label" attr.type="string"/>
+  <key id="kind" for="node" attr.name="kind" attr.type="string"/>
+  <key id="confidence" for="all" attr.name="confidence" attr.type="string"/>
+  <key id="sources" for="node" attr.name="sources" attr.type="string"/>
+  <key id="evidence" for="node" attr.name="evidence" attr.type="int"/>
+  <key id="tags" for="node" attr.name="tags" attr.type="string"/>
+  <key id="style" for="edge" attr.name="style" attr.type="string"/>
+  <key id="source" for="edge" attr.name="source" attr.type="string"/>
+  <key id="origin" for="edge" attr.name="origin" attr.type="string"/>
+  <key id="discovered" for="edge" attr.name="discovered" attr.type="string"/>
+  <graph id="${esc(c.code)}" edgedefault="directed">
+    <data key="label">${esc(`${c.code} — ${c.title}`)}</data>
+${nodes}
+${edges}
+  </graph>
+</graphml>`;
+}
+
 export function evidenceChain(c: PaletteCase): Array<{ evidenceId: string; title: string; nodes: string[]; collectedAt: string; sha256?: string }> {
   return c.evidence.map((e) => ({
     evidenceId: e.id,

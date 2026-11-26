@@ -34,6 +34,18 @@ const SEARCH_TOOL: Partial<Record<PaletteNode["kind"], { tool: string; label: st
   cve: { tool: "cveLookup", label: "NVD + KEV + EPSS" },
   hash: { tool: "hashLookup", label: "Metadados públicos do hash" },
   company: { tool: "cnpjLookup", label: "Dados públicos de CNPJ" },
+  "social-profile": { tool: "urlAnalyzer", label: "Análise do perfil público" },
+  person: { tool: "githubSearch", label: "Busca pública do nome" },
+  organization: { tool: "githubSearch", label: "Busca pública da organização" },
+};
+
+/** Types with no working free connector: the AI must say so, not invent one. */
+export const NO_FREE_SOURCE: Partial<Record<PaletteNode["kind"], string>> = {
+  phone: "telefone",
+  wallet: "carteira de criptomoedas",
+  location: "localização",
+  event: "evento",
+  custom: "entidade personalizada",
 };
 
 function ageDays(iso: string): number {
