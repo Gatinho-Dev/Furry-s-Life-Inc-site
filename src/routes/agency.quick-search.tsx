@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, CircleDashed, Layers, Loader2, Play, Plus, Search, XCircle } from "lucide-react";
+import { ArrowRight, CheckCircle2, CircleDashed, Fingerprint, Layers, Loader2, Play, Plus, Search, XCircle } from "lucide-react";
 import { detectInput, suggestionsFor, type InputKind } from "@/lib/agency/catalog";
 import { runTool } from "@/lib/agency/run";
 import { workflowsFor } from "@/lib/agency/workflows";
@@ -188,6 +188,24 @@ function QuickSearch() {
               </ul>
             )}
           </Panel>
+
+          {(kind === "username" || kind === "email") && input.trim() && (
+            <Panel title="Identidade e correlação" description="Cruza perfis, contatos declarados, chaves e avatar em um caso único." icon={<Fingerprint className="h-3.5 w-3.5" />}>
+              <p className="text-[11px] leading-relaxed text-[var(--ag-muted)]">
+                {kind === "username"
+                  ? "Varre 464 sites (Sherlock, MIT), GitHub, Keybase, Hacker News, Mastodon, GitLab e dev.to; deriva e-mails/sites publicados e monta o caso com confiança por sinal."
+                  : "Consulta o perfil público do Gravatar para o e-mail e reúne contas vinculadas quando existirem."}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link to="/agency/identity" search={{ seed: input.trim(), deep: undefined }} className="ag-btn ag-btn-primary !px-2.5 !py-1.5 !text-[11px]">
+                  <Fingerprint className="h-3 w-3" /> Abrir no Case Seeder
+                </Link>
+                <Link to="/agency/username" className="ag-btn ag-btn-ghost !px-2.5 !py-1.5 !text-[11px]">
+                  Sherlock · varredura estendida
+                </Link>
+              </div>
+            </Panel>
+          )}
 
           {workflows.length > 0 && (
             <Panel title="Investigação combinada" description="Executa todas as etapas em sequência, cada uma com sua própria fonte.">

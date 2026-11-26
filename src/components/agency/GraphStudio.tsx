@@ -22,7 +22,7 @@ import { Badge, Button, Empty, Field, Notice, Panel, Spinner, cx, errorMessage }
 const KIND_COLOR: Record<string, string> = {
   domain: "#3b82f6", subdomain: "#60a5fa", ip: "#0ea5e9", asn: "#22d3ee",
   organization: "#eab308", certificate: "#a78bfa", url: "#ec4899", cve: "#fb7185",
-  hash: "#f97316", username: "#34d399", email: "#f472b6", person: "#e5e7eb", note: "#64748b",
+  hash: "#f97316", username: "#34d399", email: "#f472b6", person: "#e5e7eb", key: "#facc15", note: "#64748b",
 };
 
 type NodeData = { kind: EntityKind; label: string; source: string; confidence: string; at: string };

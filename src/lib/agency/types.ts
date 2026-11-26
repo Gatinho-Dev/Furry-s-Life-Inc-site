@@ -28,6 +28,7 @@ export const ENTITY_LABELS: Record<string, string> = {
   hash: "Hash",
   username: "Username público",
   email: "E-mail",
+  key: "Chave pública",
   person: "Pessoa",
   note: "Nota",
 };

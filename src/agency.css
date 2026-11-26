@@ -370,3 +370,133 @@
 [data-agency-blur="true"] .agency-root .ag-mono { filter: blur(4px); }
 [data-agency-blur="true"] .agency-root .ag-mono:hover,
 [data-agency-blur="true"] .agency-root .ag-mono:focus { filter: none; }
+
+/* ============================================================
+   CASE SEEDER — identity correlation
+   Glass is used once per surface, as a deliberate choice.
+   ============================================================ */
+
+.agency-root .ag-glass {
+  background:
+    linear-gradient(180deg, rgba(17, 26, 37, 0.72), rgba(9, 14, 20, 0.78));
+  border-color: rgba(125, 211, 252, 0.14);
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 40px -32px rgba(0, 0, 0, 0.9);
+}
+
+.agency-root .ag-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.agency-root .ag-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--ag-cyan), var(--ag-accent));
+  transition: width 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.agency-root .ag-progress > span.ag-progress-live {
+  background-image: linear-gradient(90deg, var(--ag-cyan), var(--ag-accent), var(--ag-cyan));
+  background-size: 200% 100%;
+  animation: agProgress 1.6s linear infinite;
+}
+@keyframes agProgress {
+  from { background-position: 0% 0; }
+  to { background-position: -200% 0; }
+}
+
+.agency-root .ag-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 7px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: background-color 220ms ease, border-color 220ms ease;
+}
+.agency-root .ag-step-running {
+  background: rgba(34, 211, 238, 0.06);
+  border-color: rgba(34, 211, 238, 0.22);
+}
+.agency-root .ag-step-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 1px;
+  border-radius: 6px;
+  border: 1px solid var(--ag-border-strong);
+  color: var(--ag-faint);
+}
+.agency-root .ag-step-done .ag-step-dot {
+  color: var(--ag-green);
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.1);
+}
+.agency-root .ag-step-running .ag-step-dot { color: var(--ag-cyan); border-color: rgba(34, 211, 238, 0.45); }
+.agency-root .ag-step-error .ag-step-dot { color: var(--ag-rose); border-color: rgba(251, 113, 133, 0.4); }
+.agency-root .ag-step-skipped { opacity: 0.55; }
+
+.agency-root .ag-ribbon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 4px 0;
+}
+.agency-root .ag-ribbon-hop {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  animation: agRibbonIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.agency-root .ag-ribbon-node {
+  display: inline-block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  border: 1px solid var(--ag-border-strong);
+  background: rgba(10, 15, 21, 0.7);
+  color: var(--ag-muted);
+}
+.agency-root .ag-ribbon-seed {
+  color: #e8f4ff;
+  border-color: rgba(34, 211, 238, 0.5);
+  background: rgba(34, 211, 238, 0.12);
+}
+.agency-root .ag-ribbon-confirmed { color: #a7f3d0; border-color: rgba(52, 211, 153, 0.42); }
+.agency-root .ag-ribbon-probable { color: #fde68a; border-color: rgba(251, 191, 36, 0.38); }
+
+@keyframes agRibbonIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.agency-root .ag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--ag-border);
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 10.5px;
+  color: var(--ag-muted);
+  transition: border-color 180ms ease, color 180ms ease, background-color 180ms ease;
+}
+.agency-root .ag-chip:hover {
+  border-color: rgba(34, 211, 238, 0.45);
+  color: #dff6ff;
+  background: rgba(34, 211, 238, 0.07);
+}

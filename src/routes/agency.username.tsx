@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AlertTriangle, AtSign, Ban, CheckCircle2, CircleHelp, Github, GithubIcon, Star } from "lucide-react";
 import { githubUser, redditUser, usernameScan } from "@/lib/agency/api/social.functions";
 import { QueryTool } from "@/components/agency/QueryTool";
+import { SherlockScan } from "@/components/agency/SherlockScan";
 import { Badge, Button, DataTable, Empty, ErrorBox, KV, Notice, PageHeader, Panel, Spinner, ValueView, cx, errorMessage } from "@/components/agency/kit";
 import { formatDate } from "@/lib/agency/format";
 
@@ -24,9 +25,11 @@ function UsernamePage() {
       <PageHeader
         eyebrow="OSINT · Identidade pública"
         title="Username Intelligence"
-        subtitle="Verificação de perfis públicos em 26 plataformas, perfil GitHub e Reddit. Um mesmo username não prova que as contas pertencem à mesma pessoa."
+        subtitle="Verificação em 26 plataformas essenciais e em 464 sites via Sherlock Project, mais perfil GitHub e Reddit. Um mesmo username não prova que as contas pertencem à mesma pessoa."
         actions={<Badge tone="green">sem chave</Badge>}
       />
+
+      <SherlockScan />
 
       <QueryTool
         title="Username Search"
