@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   AtSign, Building2, ChevronLeft, ChevronRight, Command, ExternalLink, FileBarChart, FileText, Fingerprint, FolderOpen,
-  Globe, History, Image as ImageIcon, LayoutDashboard, Library, Link2, Mail, Map as MapIcon, Menu, Network,
+  Globe, History, Image as ImageIcon, Layers, LayoutDashboard, Library, Link2, Mail, Map as MapIcon, Menu, Network,
   PlugZap, Radar, Search, Server, Settings as SettingsIcon, Share2, ShieldAlert, ShieldCheck, Waypoints, Workflow, X,
 } from "lucide-react";
 import { NAV, NAV_GROUPS, APP_VERSION } from "@/lib/agency/catalog";
@@ -11,7 +11,7 @@ import { cx } from "./kit";
 
 const ICONS: Record<string, typeof Globe> = {
   LayoutDashboard, Search, Library, Globe, Server, Network, AtSign, Mail, Link2, Share2, Building2,
-  Image: ImageIcon, FileText, Map: MapIcon, ShieldAlert, Radar, FolderOpen, Fingerprint, Waypoints,
+  Image: ImageIcon, FileText, Map: MapIcon, ShieldAlert, Radar, FolderOpen, Fingerprint, Waypoints, Layers,
   FileBarChart, Workflow, History, PlugZap, Settings: SettingsIcon,
 };
 

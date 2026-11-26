@@ -500,3 +500,75 @@
   color: #dff6ff;
   background: rgba(34, 211, 238, 0.07);
 }
+
+/* ============================================================
+   LIFE PALETTE — visual OSINT investigation platform
+   ============================================================ */
+
+.palette-root {
+  --palette-bg: #050a0f;
+  --palette-panel: #080f16;
+  --palette-line: #16212d;
+  font-feature-settings: "ss01" on, "cv11" on;
+}
+
+.palette-root ::selection { background: rgba(34, 211, 238, 0.25); }
+
+.palette-root .react-flow__attribution { display: none; }
+.palette-root .react-flow__edge-text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.palette-root .react-flow__edge.selected .react-flow__edge-path,
+.palette-root .react-flow__edge:focus .react-flow__edge-path {
+  stroke: #67e8f9 !important;
+  filter: drop-shadow(0 0 4px rgba(34, 211, 238, 0.35));
+}
+.palette-root .react-flow__node-entity.selected { z-index: 8; }
+.palette-root .react-flow__node-groupbox { z-index: 0; }
+.palette-root .react-flow__handle {
+  width: 6px;
+  height: 6px;
+  border: 0;
+  background: rgba(103, 232, 249, 0.5);
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.palette-root .react-flow__node:hover .react-flow__handle,
+.palette-root .react-flow__node.selected .react-flow__handle { opacity: 1; }
+.palette-root .react-flow__selection {
+  background: rgba(34, 211, 238, 0.06);
+  border: 1px dashed rgba(34, 211, 238, 0.55);
+}
+.palette-root .react-flow__controls-button {
+  background: #0a1118;
+  border-bottom: 1px solid #1b2836;
+  color: #a5b8ca;
+}
+.palette-root .react-flow__controls-button:hover { background: #142030; }
+.palette-root .react-flow__controls-button svg { fill: currentColor; }
+.palette-root .react-flow__minimap { overflow: hidden; }
+.palette-root .react-flow__minimap-mask { fill: rgba(3, 7, 12, 0.72); }
+
+.palette-root .ag-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.palette-root input[type="color"] { padding: 2px; }
+
+.palette-root details > summary { list-style: none; }
+.palette-root details > summary::-webkit-details-marker { display: none; }
+
+.palette-root ::-webkit-scrollbar { width: 8px; height: 8px; }
+.palette-root ::-webkit-scrollbar-track { background: transparent; }
+.palette-root ::-webkit-scrollbar-thumb { background: #1d2b3a; border-radius: 999px; }
+.palette-root ::-webkit-scrollbar-thumb:hover { background: #2b4054; }
+
+.ag-modal-in { animation: agModalIn 200ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes agModalIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .palette-root *,
+  .ag-modal-in {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

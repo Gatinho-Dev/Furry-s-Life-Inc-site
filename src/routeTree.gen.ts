@@ -38,6 +38,7 @@ import { Route as AgencyImageRouteImport } from './routes/agency.image'
 import { Route as AgencyIpRouteImport } from './routes/agency.ip'
 import { Route as AgencyNetworkRouteImport } from './routes/agency.network'
 import { Route as AgencyOsintRouteImport } from './routes/agency.osint'
+import { Route as AgencyPaletteRouteImport } from './routes/agency.palette'
 import { Route as AgencyQuickSearchRouteImport } from './routes/agency.quick-search'
 import { Route as AgencyReportsRouteImport } from './routes/agency.reports'
 import { Route as AgencySettingsRouteImport } from './routes/agency.settings'
@@ -70,6 +71,7 @@ import { Route as WorkspaceIndexRouteImport } from './routes/workspace.index'
 import { Route as WorkspaceDriveRouteImport } from './routes/workspace.drive'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as ApiPaletteSearchRouteImport } from './routes/api/palette/search'
 import { Route as LifepayPagarTokenRouteImport } from './routes/lifepay.pagar.$token'
 import { Route as WorkspaceDocsIndexRouteImport } from './routes/workspace.docs.index'
 import { Route as WorkspaceDocsIdRouteImport } from './routes/workspace.docs.$id'
@@ -230,6 +232,11 @@ const AgencyNetworkRoute = AgencyNetworkRouteImport.update({
 const AgencyOsintRoute = AgencyOsintRouteImport.update({
   id: '/osint',
   path: '/osint',
+  getParentRoute: () => AgencyRoute,
+} as any)
+const AgencyPaletteRoute = AgencyPaletteRouteImport.update({
+  id: '/palette',
+  path: '/palette',
   getParentRoute: () => AgencyRoute,
 } as any)
 const AgencyQuickSearchRoute = AgencyQuickSearchRouteImport.update({
@@ -393,6 +400,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPaletteSearchRoute = ApiPaletteSearchRouteImport.update({
+  id: '/api/palette/search',
+  path: '/api/palette/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LifepayPagarTokenRoute = LifepayPagarTokenRouteImport.update({
   id: '/pagar/$token',
   path: '/pagar/$token',
@@ -495,6 +507,7 @@ export interface FileRoutesByFullPath {
   '/agency/ip': typeof AgencyIpRoute
   '/agency/network': typeof AgencyNetworkRoute
   '/agency/osint': typeof AgencyOsintRoute
+  '/agency/palette': typeof AgencyPaletteRoute
   '/agency/quick-search': typeof AgencyQuickSearchRoute
   '/agency/reports': typeof AgencyReportsRoute
   '/agency/settings': typeof AgencySettingsRoute
@@ -528,6 +541,7 @@ export interface FileRoutesByFullPath {
   '/workspace/': typeof WorkspaceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/palette/search': typeof ApiPaletteSearchRoute
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/workspace/docs/$id': typeof WorkspaceDocsIdRoute
   '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
@@ -568,6 +582,7 @@ export interface FileRoutesByTo {
   '/agency/ip': typeof AgencyIpRoute
   '/agency/network': typeof AgencyNetworkRoute
   '/agency/osint': typeof AgencyOsintRoute
+  '/agency/palette': typeof AgencyPaletteRoute
   '/agency/quick-search': typeof AgencyQuickSearchRoute
   '/agency/reports': typeof AgencyReportsRoute
   '/agency/settings': typeof AgencySettingsRoute
@@ -601,6 +616,7 @@ export interface FileRoutesByTo {
   '/workspace': typeof WorkspaceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/palette/search': typeof ApiPaletteSearchRoute
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/workspace/docs/$id': typeof WorkspaceDocsIdRoute
   '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
@@ -646,6 +662,7 @@ export interface FileRoutesById {
   '/agency/ip': typeof AgencyIpRoute
   '/agency/network': typeof AgencyNetworkRoute
   '/agency/osint': typeof AgencyOsintRoute
+  '/agency/palette': typeof AgencyPaletteRoute
   '/agency/quick-search': typeof AgencyQuickSearchRoute
   '/agency/reports': typeof AgencyReportsRoute
   '/agency/settings': typeof AgencySettingsRoute
@@ -679,6 +696,7 @@ export interface FileRoutesById {
   '/workspace/': typeof WorkspaceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/palette/search': typeof ApiPaletteSearchRoute
   '/lifepay/pagar/$token': typeof LifepayPagarTokenRoute
   '/workspace/docs/$id': typeof WorkspaceDocsIdRoute
   '/workspace/forms/$id': typeof WorkspaceFormsIdRoute
@@ -725,6 +743,7 @@ export interface FileRouteTypes {
     | '/agency/ip'
     | '/agency/network'
     | '/agency/osint'
+    | '/agency/palette'
     | '/agency/quick-search'
     | '/agency/reports'
     | '/agency/settings'
@@ -758,6 +777,7 @@ export interface FileRouteTypes {
     | '/workspace/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/palette/search'
     | '/lifepay/pagar/$token'
     | '/workspace/docs/$id'
     | '/workspace/forms/$id'
@@ -798,6 +818,7 @@ export interface FileRouteTypes {
     | '/agency/ip'
     | '/agency/network'
     | '/agency/osint'
+    | '/agency/palette'
     | '/agency/quick-search'
     | '/agency/reports'
     | '/agency/settings'
@@ -831,6 +852,7 @@ export interface FileRouteTypes {
     | '/workspace'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/palette/search'
     | '/lifepay/pagar/$token'
     | '/workspace/docs/$id'
     | '/workspace/forms/$id'
@@ -875,6 +897,7 @@ export interface FileRouteTypes {
     | '/agency/ip'
     | '/agency/network'
     | '/agency/osint'
+    | '/agency/palette'
     | '/agency/quick-search'
     | '/agency/reports'
     | '/agency/settings'
@@ -908,6 +931,7 @@ export interface FileRouteTypes {
     | '/workspace/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/palette/search'
     | '/lifepay/pagar/$token'
     | '/workspace/docs/$id'
     | '/workspace/forms/$id'
@@ -950,6 +974,7 @@ export interface RootRouteChildren {
   LifeplusIndexRoute: typeof LifeplusIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPaletteSearchRoute: typeof ApiPaletteSearchRoute
   ApiPublicEmailInboundRoute: typeof ApiPublicEmailInboundRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -1159,6 +1184,13 @@ declare module '@tanstack/react-router' {
       path: '/osint'
       fullPath: '/agency/osint'
       preLoaderRoute: typeof AgencyOsintRouteImport
+      parentRoute: typeof AgencyRoute
+    }
+    '/agency/palette': {
+      id: '/agency/palette'
+      path: '/palette'
+      fullPath: '/agency/palette'
+      preLoaderRoute: typeof AgencyPaletteRouteImport
       parentRoute: typeof AgencyRoute
     }
     '/agency/quick-search': {
@@ -1385,6 +1417,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/palette/search': {
+      id: '/api/palette/search'
+      path: '/api/palette/search'
+      fullPath: '/api/palette/search'
+      preLoaderRoute: typeof ApiPaletteSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lifepay/pagar/$token': {
       id: '/lifepay/pagar/$token'
       path: '/pagar/$token'
@@ -1501,6 +1540,7 @@ interface AgencyRouteChildren {
   AgencyIpRoute: typeof AgencyIpRoute
   AgencyNetworkRoute: typeof AgencyNetworkRoute
   AgencyOsintRoute: typeof AgencyOsintRoute
+  AgencyPaletteRoute: typeof AgencyPaletteRoute
   AgencyQuickSearchRoute: typeof AgencyQuickSearchRoute
   AgencyReportsRoute: typeof AgencyReportsRoute
   AgencySettingsRoute: typeof AgencySettingsRoute
@@ -1529,6 +1569,7 @@ const AgencyRouteChildren: AgencyRouteChildren = {
   AgencyIpRoute: AgencyIpRoute,
   AgencyNetworkRoute: AgencyNetworkRoute,
   AgencyOsintRoute: AgencyOsintRoute,
+  AgencyPaletteRoute: AgencyPaletteRoute,
   AgencyQuickSearchRoute: AgencyQuickSearchRoute,
   AgencyReportsRoute: AgencyReportsRoute,
   AgencySettingsRoute: AgencySettingsRoute,
@@ -1650,6 +1691,7 @@ const rootRouteChildren: RootRouteChildren = {
   LifeplusIndexRoute: LifeplusIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPaletteSearchRoute: ApiPaletteSearchRoute,
   ApiPublicEmailInboundRoute: ApiPublicEmailInboundRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
