@@ -33,6 +33,7 @@ import { Route as AgencyDomainRouteImport } from './routes/agency.domain'
 import { Route as AgencyEmailRouteImport } from './routes/agency.email'
 import { Route as AgencyGeospatialRouteImport } from './routes/agency.geospatial'
 import { Route as AgencyGraphRouteImport } from './routes/agency.graph'
+import { Route as AgencyIdentityRouteImport } from './routes/agency.identity'
 import { Route as AgencyImageRouteImport } from './routes/agency.image'
 import { Route as AgencyIpRouteImport } from './routes/agency.ip'
 import { Route as AgencyNetworkRouteImport } from './routes/agency.network'
@@ -204,6 +205,11 @@ const AgencyGeospatialRoute = AgencyGeospatialRouteImport.update({
 const AgencyGraphRoute = AgencyGraphRouteImport.update({
   id: '/graph',
   path: '/graph',
+  getParentRoute: () => AgencyRoute,
+} as any)
+const AgencyIdentityRoute = AgencyIdentityRouteImport.update({
+  id: '/identity',
+  path: '/identity',
   getParentRoute: () => AgencyRoute,
 } as any)
 const AgencyImageRoute = AgencyImageRouteImport.update({
@@ -484,6 +490,7 @@ export interface FileRoutesByFullPath {
   '/agency/email': typeof AgencyEmailRoute
   '/agency/geospatial': typeof AgencyGeospatialRoute
   '/agency/graph': typeof AgencyGraphRoute
+  '/agency/identity': typeof AgencyIdentityRoute
   '/agency/image': typeof AgencyImageRoute
   '/agency/ip': typeof AgencyIpRoute
   '/agency/network': typeof AgencyNetworkRoute
@@ -556,6 +563,7 @@ export interface FileRoutesByTo {
   '/agency/email': typeof AgencyEmailRoute
   '/agency/geospatial': typeof AgencyGeospatialRoute
   '/agency/graph': typeof AgencyGraphRoute
+  '/agency/identity': typeof AgencyIdentityRoute
   '/agency/image': typeof AgencyImageRoute
   '/agency/ip': typeof AgencyIpRoute
   '/agency/network': typeof AgencyNetworkRoute
@@ -633,6 +641,7 @@ export interface FileRoutesById {
   '/agency/email': typeof AgencyEmailRoute
   '/agency/geospatial': typeof AgencyGeospatialRoute
   '/agency/graph': typeof AgencyGraphRoute
+  '/agency/identity': typeof AgencyIdentityRoute
   '/agency/image': typeof AgencyImageRoute
   '/agency/ip': typeof AgencyIpRoute
   '/agency/network': typeof AgencyNetworkRoute
@@ -711,6 +720,7 @@ export interface FileRouteTypes {
     | '/agency/email'
     | '/agency/geospatial'
     | '/agency/graph'
+    | '/agency/identity'
     | '/agency/image'
     | '/agency/ip'
     | '/agency/network'
@@ -783,6 +793,7 @@ export interface FileRouteTypes {
     | '/agency/email'
     | '/agency/geospatial'
     | '/agency/graph'
+    | '/agency/identity'
     | '/agency/image'
     | '/agency/ip'
     | '/agency/network'
@@ -859,6 +870,7 @@ export interface FileRouteTypes {
     | '/agency/email'
     | '/agency/geospatial'
     | '/agency/graph'
+    | '/agency/identity'
     | '/agency/image'
     | '/agency/ip'
     | '/agency/network'
@@ -1112,6 +1124,13 @@ declare module '@tanstack/react-router' {
       path: '/graph'
       fullPath: '/agency/graph'
       preLoaderRoute: typeof AgencyGraphRouteImport
+      parentRoute: typeof AgencyRoute
+    }
+    '/agency/identity': {
+      id: '/agency/identity'
+      path: '/identity'
+      fullPath: '/agency/identity'
+      preLoaderRoute: typeof AgencyIdentityRouteImport
       parentRoute: typeof AgencyRoute
     }
     '/agency/image': {
@@ -1477,6 +1496,7 @@ interface AgencyRouteChildren {
   AgencyEmailRoute: typeof AgencyEmailRoute
   AgencyGeospatialRoute: typeof AgencyGeospatialRoute
   AgencyGraphRoute: typeof AgencyGraphRoute
+  AgencyIdentityRoute: typeof AgencyIdentityRoute
   AgencyImageRoute: typeof AgencyImageRoute
   AgencyIpRoute: typeof AgencyIpRoute
   AgencyNetworkRoute: typeof AgencyNetworkRoute
@@ -1504,6 +1524,7 @@ const AgencyRouteChildren: AgencyRouteChildren = {
   AgencyEmailRoute: AgencyEmailRoute,
   AgencyGeospatialRoute: AgencyGeospatialRoute,
   AgencyGraphRoute: AgencyGraphRoute,
+  AgencyIdentityRoute: AgencyIdentityRoute,
   AgencyImageRoute: AgencyImageRoute,
   AgencyIpRoute: AgencyIpRoute,
   AgencyNetworkRoute: AgencyNetworkRoute,

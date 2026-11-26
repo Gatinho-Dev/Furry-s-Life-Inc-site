@@ -9,7 +9,7 @@ export type { InvestigationStatus };
 
 export type EntityKind =
   | "domain" | "subdomain" | "ip" | "asn" | "organization" | "certificate"
-  | "url" | "cve" | "hash" | "username" | "email" | "person" | "note";
+  | "url" | "cve" | "hash" | "username" | "email" | "person" | "key" | "note";
 
 export type Entity = {
   id: string;
@@ -52,6 +52,8 @@ export type Investigation = {
   notes: Note[];
   timeline: TimelineEvent[];
   conclusion: string;
+  /** Optional seed used by the Case Seeder (public identifier that started the case). */
+  seed?: { kind: string; value: string };
 };
 
 export type GraphNode = {
@@ -144,6 +146,7 @@ export function createInvestigation(input: {
   objective?: string;
   tags?: string[];
   status?: InvestigationStatus;
+  seed?: { kind: string; value: string };
 }): Investigation {
   const now = new Date().toISOString();
   const inv: Investigation = {
@@ -159,8 +162,9 @@ export function createInvestigation(input: {
     entities: [],
     evidence: [],
     notes: [],
-    timeline: [{ id: uid("tl"), at: now, title: "Investigação criada" }],
+    timeline: [{ id: uid("tl"), at: now, title: "Investigação criada", detail: input.seed ? `Semente: ${input.seed.kind} ${input.seed.value}` : undefined }],
     conclusion: "",
+    seed: input.seed,
   };
   save(INV_KEY, [inv, ...load<Investigation[]>(INV_KEY, [])]);
   return inv;

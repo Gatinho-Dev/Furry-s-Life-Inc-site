@@ -87,6 +87,17 @@ export function analyzeInvestigation(inv: Investigation): AnalysisSection {
       if (typeof found === "number") unconfirmed.push(`${ev.input}: ${found} perfis públicos com o mesmo username — a identidade não está comprovada.`);
     }
 
+    if (ev.toolId.startsWith("identity-")) {
+      const profiles = (data.profiles as unknown[] | undefined)?.length ?? 0;
+      const rows = (data.signals as Array<{ confidence?: string }> | undefined) ?? [];
+      const confirmed = rows.filter((s) => s.confidence === "confirmed").length;
+      const probable = rows.filter((s) => s.confidence === "probable").length;
+      if (profiles) facts.push(`${ev.input}: ${profiles} perfil(is) público(s) consolidado(s) por ${ev.tool}.`);
+      if (confirmed) facts.push(`${ev.input}: ${confirmed} sinal(is) confirmado(s) por declaração/prova da própria fonte em ${ev.tool}.`);
+      if (probable) unconfirmed.push(`${ev.input}: ${probable} sinal(is) provável(is) em ${ev.tool} dependem de confirmação humana.`);
+      if (ev.toolId === "identity-correlation") hypotheses.push(`${ev.input}: correlações derivadas (avatar/contato) são compatíveis com a mesma pessoa, mas não a comprovam.`);
+    }
+
     if (ev.toolId === "cnpj") {
       const company = data.company as { legalName?: string; status?: string } | undefined;
       if (company?.legalName) facts.push(`${ev.input}: ${company.legalName} — situação cadastral ${company.status ?? "não informada"}.`);

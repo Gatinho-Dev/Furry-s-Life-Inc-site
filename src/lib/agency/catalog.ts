@@ -23,6 +23,7 @@ export type ToolPageKey =
   | "geospatial"
   | "threat"
   | "workspace"
+  | "identity"
   | "graph"
   | "reports"
   | "api"
@@ -57,6 +58,7 @@ export const NAV: NavItem[] = [
   { key: "cyber", label: "Cyber Intelligence", icon: "ShieldAlert", to: "/agency/cyber", group: "Cyber" },
   { key: "threat", label: "Threat Intelligence", icon: "Radar", to: "/agency/threat", group: "Cyber" },
   { key: "workspace", label: "Investigation Workspace", icon: "FolderOpen", to: "/agency/workspace", group: "Workbench" },
+  { key: "identity", label: "Case Seeder", icon: "Fingerprint", to: "/agency/identity", group: "Workbench", hint: "Identity correlation" },
   { key: "graph", label: "Link Analysis", icon: "Waypoints", to: "/agency/graph", group: "Workbench" },
   { key: "reports", label: "Report Center", icon: "FileBarChart", to: "/agency/reports", group: "Workbench" },
   { key: "tool-builder", label: "Tool Builder", icon: "Workflow", to: "/agency/tool-builder", group: "Workbench" },
@@ -112,6 +114,11 @@ export const SOURCES: SourceDef[] = [
   { id: "hibp", name: "Have I Been Pwned", category: "Breach", description: "Verificação de exposição em vazamentos conhecidos.", url: "https://haveibeenpwned.com/API/v3", access: "key-optional", keyEnv: "HIBP_API_KEY", limits: "Chave paga; catálogo de breaches público.", probe: "live" },
   { id: "safe-browsing", name: "Google Safe Browsing", category: "Reputation", description: "Verificação de URLs contra listas do Google.", url: "https://developers.google.com/safe-browsing", access: "key-optional", keyEnv: "GOOGLE_SAFE_BROWSING_KEY", limits: "Chave gratuita com cota diária.", probe: "none" },
   { id: "mastodon", name: "Mastodon (instâncias públicas)", category: "Social", description: "Busca pública de contas e status por instância.", url: "https://joinmastodon.org", access: "free", limits: "Depende da instância.", probe: "none" },
+  { id: "sherlock", name: "Sherlock Project (catálogo de sites)", category: "Identity", description: "Lista pública de 464 sites com URL de perfil e heurística de usuário inexistente.", url: "https://github.com/sherlock-project/sherlock", access: "free", limits: "MIT. Alguns sites bloqueiam datacenter (403/429) e SPAs devolvem 200 para perfis inexistentes.", probe: "none" },
+  { id: "keybase", name: "Keybase", category: "Identity", description: "Provas criptográficas que ligam contas de várias plataformas.", url: "https://keybase.io", access: "free", limits: "Somente perfis e provas públicas.", probe: "live" },
+  { id: "gravatar", name: "Gravatar (perfil público)", category: "Identity", description: "Perfil público associado ao hash MD5 de um e-mail.", url: "https://gravatar.com", access: "free", limits: "Só existe se o titular publicou o perfil; contas vinculadas podem estar desatualizadas.", probe: "live" },
+  { id: "gitlab", name: "GitLab Users API", category: "Identity", description: "Perfil público, site, e-mail público e redes declaradas.", url: "https://docs.gitlab.com/ee/api/users.html", access: "free", limits: "Rate limit público por IP.", probe: "live" },
+  { id: "devto", name: "dev.to API", category: "Identity", description: "Perfil público com GitHub e X vinculados.", url: "https://developers.forem.com/api", access: "free", limits: "API pública sem chave.", probe: "live" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -142,6 +149,9 @@ export const FRAMEWORK: FrameworkEntry[] = [
   { name: "WhatsMyName (conceito)", category: "Username Research", description: "Verificação de perfis públicos por plataforma.", url: "https://whatsmyname.app", access: "free", needsKey: false, status: "limited", limitations: "Algumas plataformas bloqueiam requisições de datacenter (403/429).", internal: "/agency/username" },
   { name: "GitHub Users API", category: "Username Research", description: "Perfil e repositórios públicos.", url: "https://docs.github.com/rest/users", access: "free", needsKey: false, status: "available", limitations: "60 requisições por hora sem token.", internal: "/agency/username" },
   { name: "Reddit JSON", category: "Username Research", description: "Perfil público e conteúdo recente.", url: "https://www.reddit.com/dev/api/", access: "free", needsKey: false, status: "limited", limitations: "Reddit bloqueia IPs de datacenter com frequência.", internal: "/agency/username" },
+  { name: "Sherlock Project (MIT)", category: "Username Research", description: "Catálogo aberto de 464 sites usado na varredura estendida.", url: "https://github.com/sherlock-project/sherlock", access: "free", needsKey: false, status: "available", limitations: "SPAs podem devolver 200 para perfis inexistentes; bloqueios de datacenter aparecem como tal.", internal: "/agency/identity" },
+  { name: "Keybase proofs", category: "Username Research", description: "Provas criptográficas ligando contas de várias plataformas.", url: "https://keybase.io", access: "free", needsKey: false, status: "available", limitations: "Depende de o titular ter publicado as provas.", internal: "/agency/identity" },
+  { name: "Gravatar", category: "Email Research", description: "Perfil público e contas vinculadas a um e-mail.", url: "https://gravatar.com", access: "free", needsKey: false, status: "available", limitations: "Só existe quando o perfil é público.", internal: "/agency/identity" },
   { name: "SPF / DMARC / DKIM (DNS)", category: "Email Research", description: "Validação de políticas de e-mail via TXT DNS.", url: "https://dns.google", access: "free", needsKey: false, status: "available", internal: "/agency/email" },
   { name: "Have I Been Pwned", category: "Email Research", description: "Consulta de exposição a vazamentos.", url: "https://haveibeenpwned.com/API/v3", access: "key-optional", needsKey: true, status: "limited", limitations: "A API de e-mail exige chave paga; o catálogo de breaches é público.", internal: "/agency/email" },
   { name: "Reddit Search", category: "Social Media Research", description: "Busca pública de posts e comunidades.", url: "https://www.reddit.com/search/", access: "free", needsKey: false, status: "limited", limitations: "Sujeito a bloqueio de datacenter.", internal: "/agency/social" },

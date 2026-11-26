@@ -165,6 +165,7 @@ function CaseDetail({ inv, onBack }: { inv: Investigation; onBack: () => void })
             <div className="ag-mono text-[10.5px] text-[var(--ag-faint)]">{inv.code}</div>
             <h1 className="text-[22px] font-bold leading-tight">{inv.name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-[10.5px] text-[var(--ag-faint)]">
+              {inv.seed && <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-cyan-200">semente: {inv.seed.value}</span>}
               <span>criado {formatDate(inv.createdAt)}</span>
               <span>· atualizado {timeAgo(inv.updatedAt)}</span>
               <span>· {inv.entities.length} entidades · {inv.evidence.length} evidências</span>
